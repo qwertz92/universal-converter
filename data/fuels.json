@@ -1,0 +1,4 @@
+{
+	"$comment": "Fuel catalog. EMPTY seed by the Engine agent — the Data agent fills this from verified research (spec §8.5). Envelope: { $comment, fuels: [...] }. Each fuel: { id, names[], aliases[], category, density?, heating_values[], emission_factor_ids[], phase?, source_refs[], notes?, warnings[] }. Every heating_value carries basis ('lhv'|'hhv'), value, unit (e.g. 'mj_per_kg'), and >=1 source_refs (rulebook C.1). density carries value+unit (e.g. 'kg_per_l')+>=1 source_refs. NO invented numbers — leave a property out and it shows 'not available'. See src/lib/data/schemas.ts (fuelSchema).",
+	"fuels": []
+}

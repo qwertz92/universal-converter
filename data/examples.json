@@ -1,0 +1,4 @@
+{
+	"$comment": "Quick-example inputs for the converter UI (spec §8.1 'Beispiele/Schnellstarter'). EMPTY seed by the Engine agent — the Frontend/Data agent populates it. Envelope: { $comment, examples: [...] }. Each: { id, input (free-text like '1 L diesel'), label?, category?, notes? }. See src/lib/data/schemas.ts (exampleSchema).",
+	"examples": []
+}

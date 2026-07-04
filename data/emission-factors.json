@@ -1,0 +1,4 @@
+{
+	"$comment": "Emission-factors catalog. EMPTY seed by the Engine agent — the Data agent fills this from verified research (spec §7.4, §8.5). Envelope: { $comment, emission_factors: [...] }. Each factor: { id, fuel_id?, pollutant ('CO2'|'CH4'|'N2O'|'CO2e'|'biogenic_CO2'), metric (e.g. 'mass_per_volume'), value, unit (e.g. 'kg_co2_per_l'), basis? ('lhv'|'hhv' where per-energy), scope, region?, year?, biogenic?, uncertainty?, source_id, source_table_or_page?, notes? }. CO2 and CO2e MUST be separate entries — never derive one from the other (rulebook C.5, D.6). Fuels reference these by id in their emission_factor_ids[]. See src/lib/data/schemas.ts (emissionFactorSchema).",
+	"emission_factors": []
+}

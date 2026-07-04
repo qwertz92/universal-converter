@@ -1,0 +1,33 @@
+{
+	"$comment": "Sources catalog. SEED (Engine agent): only unit-definition sources relied on by data/units.json are listed here. The Data agent extends this with fuel-property and emission-factor sources. Every non-exact data value must reference a source id here (enforced by validate-data.ts). ids are kebab-case.",
+	"sources": [
+		{
+			"id": "spec-conversion-rules",
+			"title": "Universal Converter — Conversion Rules (docs/conversion-rules.md)",
+			"publisher": "Universal Converter project (internal)",
+			"type": "internal-document",
+			"reliability": "Normative project rulebook; cites the definitional conventions (IT calorie/BTU, toe/tce/boe, therm, Julian year) used by v0.1. Placeholder citation to be upgraded to the primary external source by the Data/Research agent.",
+			"notes": "Used as the source_ref for standard_definition units whose primary external citation the Engine agent did not verify first-hand. NOT an external authority — it records the project's chosen convention and points at where the external citation belongs."
+		},
+		{
+			"id": "nist-sp811",
+			"title": "Guide for the Use of the International System of Units (SI), NIST Special Publication 811",
+			"publisher": "National Institute of Standards and Technology (NIST)",
+			"url": "https://physics.nist.gov/cuu/pdf/sp811.pdf",
+			"publication_year": 2008,
+			"license": "US Government work (public domain)",
+			"type": "standards-body",
+			"reliability": "Authoritative SI reference. Defines the exact factors for the pound (0.453 592 37 kg), US/imperial gallon, cubic foot, IT calorie (4.1868 J) and IT BTU. Citation added by the Engine agent for the factors it directly relies on; the Data agent may refine table/page references.",
+			"notes": "Appendix B lists exact conversion factors used here for lb, gallons, ft^3, cal_IT, BTU_IT."
+		},
+		{
+			"id": "iea-unit-conventions",
+			"title": "IEA / OECD Energy Statistics — unit conventions (toe, tce definitions)",
+			"publisher": "International Energy Agency (IEA)",
+			"url": "https://www.iea.org/data-and-statistics/data-tools/unit-converter",
+			"type": "international-organization",
+			"reliability": "Defines the tonne of oil equivalent (1 toe = 41.868 GJ, net basis) and tonne of coal equivalent conventions used in international energy balances. Placeholder-strength citation; the Data/Research agent should attach the exact IEA glossary page.",
+			"notes": "toe = 41.868 GJ (10^7 kcal_IT net); tce = 29.3076 GJ are the widely-cited IEA/UN conventions."
+		}
+	]
+}
