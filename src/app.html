@@ -4,6 +4,27 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
+		<meta name="theme-color" content="#0b1220" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
+		<!--
+			No-FOUC theme bootstrap: applied before the first paint so a dark-mode
+			user never sees a light flash. Reads the persisted choice, else the OS
+			preference. Inlining here is intentional (CSP-friendly, no external JS).
+		-->
+		<script>
+			(function () {
+				try {
+					var stored = localStorage.getItem('uc-theme');
+					var wantsDark =
+						stored === 'dark' ||
+						(stored === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+					if (wantsDark) document.documentElement.classList.add('dark');
+					document.documentElement.style.colorScheme = wantsDark ? 'dark' : 'light';
+				} catch (e) {
+					/* localStorage unavailable — fall back to CSS media query */
+				}
+			})();
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

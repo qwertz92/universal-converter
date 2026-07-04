@@ -1,1 +1,290 @@
 @import 'tailwindcss';
+
+/*
+ * Universal Converter design system (Tailwind 4, CSS-first config).
+ *
+ * Goals (spec §10): a serious, reference-tool `.org` feel — restrained accent,
+ * generous whitespace, clear hierarchy, tabular numerals on result values, and
+ * a coherent exactness-badge palette used identically everywhere.
+ *
+ * Dark mode is class-based (`.dark` on <html>), toggled + persisted by the
+ * theme store and bootstrapped without FOUC by the inline script in app.html.
+ */
+
+/* Enable class-based dark mode: `dark:` variants activate under `html.dark`. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+	/* Self-hosted system font stack — no external CDN (CSP + performance). */
+	--font-sans:
+		ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
+		'Apple Color Emoji', 'Segoe UI Emoji';
+	--font-mono:
+		ui-monospace, 'SFMono-Regular', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+
+	/* Restrained accent: a deep teal/blue that reads "technical", not "toy". */
+	--color-accent-50: #eef7f9;
+	--color-accent-100: #d6ecf1;
+	--color-accent-200: #aed9e3;
+	--color-accent-300: #79bfce;
+	--color-accent-400: #479db1;
+	--color-accent-500: #2f8296;
+	--color-accent-600: #1f6a7e;
+	--color-accent-700: #1d5566;
+	--color-accent-800: #1d4655;
+	--color-accent-900: #1b3b48;
+	--color-accent-950: #0d2530;
+
+	--radius-card: 0.875rem;
+}
+
+/*
+ * Semantic surface tokens. Defined as raw custom properties (not @theme) so we
+ * can flip them wholesale under `.dark`. Components reference them via
+ * `bg-[var(--surface)]` etc. and via the `.uc-*` utility classes below.
+ */
+:root {
+	--bg: #f8fafb;
+	--bg-subtle: #eef1f4;
+	--surface: #ffffff;
+	--surface-2: #f4f7f9;
+	--border: #dfe4ea;
+	--border-strong: #c6cdd6;
+	--text: #16202b;
+	--text-muted: #5b6672;
+	--text-faint: #8a94a0;
+	--accent: var(--color-accent-600);
+	--accent-hover: var(--color-accent-700);
+	--accent-contrast: #ffffff;
+	--ring: var(--color-accent-500);
+
+	/* Exactness badge palette (rulebook §A) — light. */
+	--badge-exact-bg: #e7f6ec;
+	--badge-exact-fg: #1f7a44;
+	--badge-exact-bd: #bfe6cd;
+
+	--badge-standard-bg: #e8f1fd;
+	--badge-standard-fg: #1e5bb8;
+	--badge-standard-bd: #c6dcf8;
+
+	--badge-source-bg: #f0ecfb;
+	--badge-source-fg: #6a43c9;
+	--badge-source-bd: #ddd2f5;
+
+	--badge-estimate-bg: #fdf3e2;
+	--badge-estimate-fg: #a5641a;
+	--badge-estimate-bd: #f5e2c2;
+
+	--badge-region-bg: #fef0e8;
+	--badge-region-fg: #b45327;
+	--badge-region-bd: #f8d8c6;
+
+	--badge-user-bg: #eaf6f8;
+	--badge-user-fg: #16717f;
+	--badge-user-bd: #c8e6ea;
+
+	--badge-context-bg: #eef1f4;
+	--badge-context-fg: #566373;
+	--badge-context-bd: #d3dae1;
+
+	--badge-unsupported-bg: #f6e9ea;
+	--badge-unsupported-fg: #a23b45;
+	--badge-unsupported-bd: #eecdd0;
+
+	/* Warning note tint. */
+	--warn-bg: #fdf6e7;
+	--warn-fg: #855611;
+	--warn-bd: #f0e0bb;
+}
+
+.dark {
+	--bg: #0b1220;
+	--bg-subtle: #0f1826;
+	--surface: #121d2e;
+	--surface-2: #16223500;
+	--surface-2: #172335;
+	--border: #253449;
+	--border-strong: #35485f;
+	--text: #e6edf5;
+	--text-muted: #9fb0c3;
+	--text-faint: #6e8199;
+	--accent: var(--color-accent-300);
+	--accent-hover: var(--color-accent-200);
+	--accent-contrast: #08202a;
+	--ring: var(--color-accent-400);
+
+	--badge-exact-bg: #10331f;
+	--badge-exact-fg: #7fd4a0;
+	--badge-exact-bd: #1f5033;
+
+	--badge-standard-bg: #10233f;
+	--badge-standard-fg: #86b6f2;
+	--badge-standard-bd: #234066;
+
+	--badge-source-bg: #221a3d;
+	--badge-source-fg: #b79cf0;
+	--badge-source-bd: #392c5e;
+
+	--badge-estimate-bg: #33260f;
+	--badge-estimate-fg: #e2b674;
+	--badge-estimate-bd: #52401d;
+
+	--badge-region-bg: #34210f;
+	--badge-region-fg: #eaa77c;
+	--badge-region-bd: #563820;
+
+	--badge-user-bg: #0e2a30;
+	--badge-user-fg: #7fcdd8;
+	--badge-user-bd: #1c4750;
+
+	--badge-context-bg: #1a2635;
+	--badge-context-fg: #a4b4c6;
+	--badge-context-bd: #32435a;
+
+	--badge-unsupported-bg: #3a1c22;
+	--badge-unsupported-fg: #ef9aa3;
+	--badge-unsupported-bd: #5a2a32;
+
+	--warn-bg: #2c2410;
+	--warn-fg: #e3c375;
+	--warn-bd: #4a3d1b;
+}
+
+html {
+	background-color: var(--bg);
+	color: var(--text);
+	scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+}
+
+body {
+	font-family: var(--font-sans);
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+	min-height: 100dvh;
+}
+
+/* Result magnitudes line up in columns: tabular numerals. */
+.uc-num {
+	font-variant-numeric: tabular-nums;
+	font-feature-settings: 'tnum' 1;
+}
+
+/* Reusable surface/border utilities bound to the semantic tokens. */
+.uc-surface {
+	background-color: var(--surface);
+	border: 1px solid var(--border);
+}
+.uc-surface-2 {
+	background-color: var(--surface-2);
+}
+.uc-border {
+	border-color: var(--border);
+}
+
+/* Consistent, visible focus ring across interactive elements. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+	outline: 2px solid var(--ring);
+	outline-offset: 2px;
+	border-radius: 0.35rem;
+}
+
+/* Prose defaults for Learn / long-form pages, tinted to the theme. */
+.uc-prose {
+	color: var(--text);
+	line-height: 1.7;
+}
+.uc-prose :where(h2) {
+	font-size: 1.35rem;
+	font-weight: 650;
+	margin-top: 2rem;
+	margin-bottom: 0.75rem;
+	letter-spacing: -0.01em;
+}
+.uc-prose :where(h3) {
+	font-size: 1.1rem;
+	font-weight: 620;
+	margin-top: 1.5rem;
+	margin-bottom: 0.5rem;
+}
+.uc-prose :where(p, ul, ol) {
+	margin-bottom: 1rem;
+}
+.uc-prose :where(ul, ol) {
+	padding-left: 1.35rem;
+}
+.uc-prose :where(ul) {
+	list-style: disc;
+}
+.uc-prose :where(ol) {
+	list-style: decimal;
+}
+.uc-prose :where(li) {
+	margin-bottom: 0.35rem;
+}
+.uc-prose :where(a) {
+	color: var(--accent);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+.uc-prose :where(a):hover {
+	color: var(--accent-hover);
+}
+.uc-prose :where(code) {
+	font-family: var(--font-mono);
+	font-size: 0.9em;
+	background-color: var(--surface-2);
+	border: 1px solid var(--border);
+	border-radius: 0.35rem;
+	padding: 0.05em 0.35em;
+}
+.uc-prose :where(strong) {
+	font-weight: 640;
+}
+.uc-prose :where(blockquote) {
+	border-left: 3px solid var(--border-strong);
+	padding-left: 1rem;
+	color: var(--text-muted);
+	margin-bottom: 1rem;
+}
+.uc-prose :where(table) {
+	width: 100%;
+	border-collapse: collapse;
+	margin-bottom: 1.25rem;
+	font-size: 0.925rem;
+}
+.uc-prose :where(th, td) {
+	border: 1px solid var(--border);
+	padding: 0.5rem 0.7rem;
+	text-align: left;
+	vertical-align: top;
+}
+.uc-prose :where(th) {
+	background-color: var(--surface-2);
+	font-weight: 620;
+}
+
+/* A gentle entrance for result cards (respects reduced-motion). */
+@keyframes uc-fade-in {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+.uc-animate-in {
+	animation: uc-fade-in 0.22s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+	.uc-animate-in {
+		animation: none;
+	}
+}
