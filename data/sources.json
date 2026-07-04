@@ -1,33 +1,121 @@
 {
-	"$comment": "Sources catalog. SEED (Engine agent): only unit-definition sources relied on by data/units.json are listed here. The Data agent extends this with fuel-property and emission-factor sources. Every non-exact data value must reference a source id here (enforced by validate-data.ts). ids are kebab-case.",
+	"$comment": "Sources catalog. Every non-exact data value references a source id here (enforced by validate-data.ts). ids are kebab-case. Unit-definition sources (Engine seed) PLUS fuel-property / emission-factor sources (Data agent, from docs/research-notes.md §2). retrieved_at is the date the Research/Data agent fetched the page (2026-07-04 for this pass). Reliability + license notes are verbatim from the research pass; see docs/research-notes.md §2/§5 for the full provenance discussion.",
 	"sources": [
 		{
 			"id": "spec-conversion-rules",
 			"title": "Universal Converter — Conversion Rules (docs/conversion-rules.md)",
 			"publisher": "Universal Converter project (internal)",
 			"type": "internal-document",
-			"reliability": "Normative project rulebook; cites the definitional conventions (IT calorie/BTU, toe/tce/boe, therm, Julian year) used by v0.1. Placeholder citation to be upgraded to the primary external source by the Data/Research agent.",
-			"notes": "Used as the source_ref for standard_definition units whose primary external citation the Engine agent did not verify first-hand. NOT an external authority — it records the project's chosen convention and points at where the external citation belongs."
+			"reliability": "Normative project rulebook; records the definitional conventions (IT calorie/BTU, toe/tce/boe, therm, Julian year) v0.1 adopts. Used as a source_ref only for the project's chosen conventions where an external primary citation is also attached (nist-sp811 / iea-unit-conventions).",
+			"notes": "NOT an external authority. It states the project's chosen convention and points at where the external citation belongs. Kept alongside the real external source on the affected units (rulebook self-reference)."
 		},
 		{
 			"id": "nist-sp811",
-			"title": "Guide for the Use of the International System of Units (SI), NIST Special Publication 811",
-			"publisher": "National Institute of Standards and Technology (NIST)",
-			"url": "https://physics.nist.gov/cuu/pdf/sp811.pdf",
+			"title": "Guide for the Use of the International System of Units (SI), NIST Special Publication 811 (2008 edition)",
+			"publisher": "National Institute of Standards and Technology (NIST), US Dept. of Commerce",
+			"url": "https://www.nist.gov/pml/special-publication-811",
+			"retrieved_at": "2026-07-04",
 			"publication_year": 2008,
-			"license": "US Government work (public domain)",
+			"license": "US federal government work — public domain, freely citable and reusable",
 			"type": "standards-body",
-			"reliability": "Authoritative SI reference. Defines the exact factors for the pound (0.453 592 37 kg), US/imperial gallon, cubic foot, IT calorie (4.1868 J) and IT BTU. Citation added by the Engine agent for the factors it directly relies on; the Data agent may refine table/page references.",
-			"notes": "Appendix B lists exact conversion factors used here for lb, gallons, ft^3, cal_IT, BTU_IT."
+			"reliability": "Very high — the canonical US reference for SI usage and exact conversion factors. Defines BTU_IT (1.05505585262 kJ), cal_IT (4.1868 J), cal_th (4.184 J), the avoirdupois pound, US/imperial gallon and cubic foot. 2008 edition not yet updated for the 2019 SI redefinition (NIST's own note), which does not affect the mechanical conversion factors used here.",
+			"notes": "Appendix B lists the exact conversion factors used for lb, gallons, ft^3, cal_IT and BTU_IT. DOI 10.6028/NIST.SP.811e2008. PDF mirror: https://physics.nist.gov/cuu/pdf/sp811.pdf"
 		},
 		{
 			"id": "iea-unit-conventions",
-			"title": "IEA / OECD Energy Statistics — unit conventions (toe, tce definitions)",
+			"title": "IEA Unit Converter (Data Tools) — energy-sector unit conventions (toe, tce)",
 			"publisher": "International Energy Agency (IEA)",
 			"url": "https://www.iea.org/data-and-statistics/data-tools/unit-converter",
+			"retrieved_at": "2026-07-04",
+			"publication_year": 2023,
+			"license": "CC BY 4.0 (the tool/page itself) — reusable with attribution. Distinct from IEA's paywalled statistical data products.",
 			"type": "international-organization",
-			"reliability": "Defines the tonne of oil equivalent (1 toe = 41.868 GJ, net basis) and tonne of coal equivalent conventions used in international energy balances. Placeholder-strength citation; the Data/Research agent should attach the exact IEA glossary page.",
-			"notes": "toe = 41.868 GJ (10^7 kcal_IT net); tce = 29.3076 GJ are the widely-cited IEA/UN conventions."
+			"reliability": "Medium-high for definitions (toe = 41.868 GJ net; tce = 29.3076 GJ). Tool last updated 30 Dec 2023. Shows no per-factor sourcing itself, so used only for the standard-definition energy-equivalence conventions.",
+			"notes": "toe = 41.868 GJ (10^7 kcal_IT, net basis); tce = 29.3076 GJ (7 Gcal_IT) are the widely-cited IEA/UN conventions. IEA's World Energy Balances (detailed country data) is paywalled and NOT used as a numeric source here (research-notes §5)."
+		},
+		{
+			"id": "uk-desnz-ghg-2025",
+			"title": "2025 Government GHG Conversion Factors for Company Reporting (Full Set)",
+			"publisher": "UK Department for Energy Security and Net Zero (DESNZ)",
+			"url": "https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025",
+			"retrieved_at": "2026-07-04",
+			"publication_year": 2025,
+			"license": "Open Government Licence v3.0 — explicit permission for commercial AND non-commercial reuse, adaptation and redistribution, with attribution ('Contains public sector information licensed under the Open Government Licence v3.0').",
+			"type": "government",
+			"reliability": "Very high — the single most valuable fuel source for this project: per-fuel density, NCV/GCV, CO2/CH4/N2O split and derived CO2e in one authoritative, actively maintained, licensing-friendly dataset. Data year 2025; next publication June 2026.",
+			"notes": "Full-set xlsx: https://assets.publishing.service.gov.uk/media/6846a4f55e92539572806125/ghg-conversion-factors-2025-full-set.xlsx . Fuel values extracted from the 'Fuels', 'Bioenergy', 'Fuel properties', 'UK electricity' and 'Outside of scopes' sheets. UK-context / general-purpose default per research-notes §6."
+		},
+		{
+			"id": "ipcc-2006-v2",
+			"title": "2006 IPCC Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy), Ch.1 & Ch.2",
+			"publisher": "IPCC / Institute for Global Environmental Strategies (IGES)",
+			"url": "https://www.ipcc-nggip.iges.or.jp/public/2006gl/vol2.html",
+			"retrieved_at": "2026-07-04",
+			"publication_year": 2006,
+			"license": "© IPCC 2006. Free reuse of short excerpts / individual default values with full attribution is authorized; bulk verbatim republication of full tables requires written permission. This catalog cites only the specific fuel rows it uses, each with its citation.",
+			"type": "international-organization",
+			"reliability": "Very high — the global Tier-1 default fallback for net calorific values (Vol.2 Ch.1 Table 1.2) and default CO2 emission factors (Vol.2 Ch.2 Table 2.2) when no better regional source exists. Used here as primary for crude oil, anthracite and lignite (rank-based, global), which DESNZ does not cover cleanly.",
+			"notes": "Ch.1 (NCV): https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/2_Volume2/V2_1_Ch1_Introduction.pdf ; Ch.2 (EF): https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/2_Volume2/V2_2_Ch2_Stationary_Combustion.pdf . Factors are in kg/TJ and NCVs in TJ/Gg (= GJ/tonne). 95% CI ranges recorded where given."
+		},
+		{
+			"id": "eia-heat-contents",
+			"title": "Energy units & calculators explained; Energy conversion calculators; CO2 emission coefficients",
+			"publisher": "US Energy Information Administration (EIA)",
+			"url": "https://www.eia.gov/energyexplained/units-and-calculators/",
+			"retrieved_at": "2026-07-04",
+			"publication_year": 2024,
+			"license": "US federal government work — public domain",
+			"type": "government",
+			"reliability": "High — the standard US-specific cross-check for heat contents and CO2 coefficients. Heat-content data year varies by table (Monthly Energy Review Appendix A, annual); CO2 coefficients based on 2022 data, used for 2023+ estimates; page release date 2024-09-18.",
+			"notes": "CO2 coefficients: https://www.eia.gov/environment/emissions/co2_vol_mass.php ; conversion calculators: https://www.eia.gov/energyexplained/units-and-calculators/energy-conversion-calculators.php . Used only as a US cross-check figure in notes, never averaged with DESNZ/IPCC."
+		},
+		{
+			"id": "epa-ghg-hub-2025",
+			"title": "GHG Emission Factors Hub (2025 edition)",
+			"publisher": "US EPA — Center for Corporate Climate Leadership",
+			"url": "https://www.epa.gov/climateleadership/ghg-emission-factors-hub",
+			"retrieved_at": "2026-07-04",
+			"publication_year": 2025,
+			"license": "US federal government work — public domain, freely reusable",
+			"type": "government",
+			"reliability": "High — 435 factors, Scope 1/2/3, widely used for US corporate GHG reporting; stationary-combustion factors trace to 40 CFR Part 98 / EPA's GHG Inventory. Published Jan 2025 ('last modified 15 January 2025').",
+			"notes": "PDF: https://www.epa.gov/system/files/documents/2025-01/ghg-emission-factors-hub-2025.pdf ; XLSX: https://www.epa.gov/system/files/other-files/2025-01/ghg-emission-factors-hub-2025.xlsx . Table 6 holds eGRID electricity factors (US average). US-specific cross-check only in v0.1."
+		},
+		{
+			"id": "h2tools",
+			"title": "Hydrogen Tools — Lower and Higher Heating Values of Hydrogen and Other Fuels; Basic Hydrogen Properties Chart",
+			"publisher": "Pacific Northwest National Laboratory (PNNL) for the US DOE Hydrogen Safety Panel / H2tools.org",
+			"url": "https://h2tools.org/hyarc/hydrogen-data/lower-and-higher-heating-values-hydrogen-and-other-fuels",
+			"retrieved_at": "2026-07-04",
+			"publication_year": 2016,
+			"license": "US DOE-funded public resource — citable with attribution",
+			"type": "government-lab",
+			"reliability": "High by reputation for hydrogen physical properties. The primary page still blocked automated fetch (HTTP 403) in the Data agent's follow-up pass. H2Tools republishes the DOE GREET / ORNL heating-value table; the fetchable primaries for these figures are that GREET/ORNL table and the NIST Chemistry WebBook (see nist-webbook). Values here are confirmed against those fetchable primaries, not recalled from memory.",
+			"notes": "Hydrogen: LHV 119.96 MJ/kg (~33.3 kWh/kg, NIST WebBook-traceable; DOE GREET gives 120.21), HHV 141.79 MJ/kg (~39.4 kWh/kg, NIST-printed; GREET gives 142.18), gas density 0.08988 kg/m³ at 0 °C/1 bar, liquid density 70.8 kg/m³ (NIST-precise 70.85) at boiling point (−252.87 °C). GREET/ORNL mirror: https://courses.grainger.illinois.edu/npre470/sp2018/web/Lower_and_Higher_Heating_Values_of_Gas_Liquid_and_Solid_Fuels.pdf ; basic properties chart: https://h2tools.org/basic-hydrogen-properties-chart"
+		},
+		{
+			"id": "nist-webbook",
+			"title": "NIST Chemistry WebBook, NIST Standard Reference Database Number 69",
+			"publisher": "National Institute of Standards and Technology (NIST), US Dept. of Commerce",
+			"url": "https://webbook.nist.gov/chemistry/",
+			"retrieved_at": "2026-07-04",
+			"publication_year": 2021,
+			"license": "US federal government work — public domain, freely citable",
+			"type": "standards-body",
+			"reliability": "Very high — the authoritative US thermochemical reference. Used for the NIST-traceable hydrogen heating values (LHV 119.96, HHV 141.79 MJ/kg, from the 25 °C heat-of-combustion / formation enthalpies) and hydrogen density (gas 0.08988 kg/m³, liquid 70.85 kg/m³ via NIST 'Thermophysical Properties of Hydrogen').",
+			"notes": "Used as the primary hydrogen-property citation since H2Tools blocked automated fetch. Confirmed 2026-07-04 by the Data agent via NIST-sourced heat-of-combustion / thermophysical-property tables. Cross-checked against DOE GREET/ORNL (see h2tools notes) — differences (~0.2%) noted, not averaged."
+		},
+		{
+			"id": "eea-electricity-intensity",
+			"title": "Greenhouse gas emission intensity of electricity generation in Europe",
+			"publisher": "European Environment Agency (EEA)",
+			"url": "https://www.eea.europa.eu/en/analysis/indicators/greenhouse-gas-emission-intensity-of-1",
+			"retrieved_at": "2026-07-04",
+			"publication_year": 2024,
+			"license": "EEA content generally reusable with attribution (standard EU-institution practice); not explicitly re-verified on this page in the research pass.",
+			"type": "international-organization",
+			"reliability": "Medium — good EU-aggregate cross-check for electricity carbon intensity. EU-27 2023 value 242 gCO2/kWh (down from 292 in 2022). The exact 2024 figure was not extractable from the fetched page; the 2023 figure is used with an explicit year caveat.",
+			"notes": "Used only for the illustrative, region+year-labeled EU electricity example — never as a default factor."
 		}
 	]
 }

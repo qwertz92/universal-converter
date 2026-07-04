@@ -5,10 +5,14 @@
  * pollutant so the engine can report it on a separate line (§C.5, §D.14).
  *
  * A factor's `metric` + `unit` tell us what physical amount it multiplies:
- *  - mass_per_volume  (kg_co2_per_l, kg_co2_per_m3)   → needs volume
- *  - mass_per_mass    (kg_co2_per_kg)                 → needs mass
+ *  - mass_per_volume  (kg_co2_per_l, kg_co2_per_m3,
+ *                      kg_co2e_per_l, kg_co2e_per_m3)  → needs volume
+ *  - mass_per_mass    (kg_co2_per_kg, kg_co2e_per_kg)  → needs mass
  *  - mass_per_energy  (kg_co2_per_gj, g_co2_per_kwh,
- *                      g_co2e_per_kwh)                → needs energy (basis-labeled)
+ *                      g_co2e_per_kwh)                 → needs energy (basis-labeled)
+ *
+ * The CO2 and CO2e unit families are handled by SEPARATE cases and SEPARATE data
+ * factors; CO2e is never derived from CO2 (rulebook §C.5, §D.6).
  */
 
 import Decimal from 'decimal.js';
@@ -57,6 +61,30 @@ function specForUnit(unit: string): FactorSpec | undefined {
 				inputUnitToFactorBasis: (a) => a,
 				outputMassScaleToKg: new Decimal(1),
 				displayUnit: 'kg CO2'
+			};
+		// CO2e variants (kg CO2e per L / m³ / kg). Separate factors from the CO2
+		// ones — CO2e is NEVER derived from CO2 (rulebook §C.5, §D.6); the engine
+		// keeps them apart by pollutant and by output unit id (kilogram_co2e).
+		case 'kg_co2e_per_l':
+			return {
+				inputKind: 'volume',
+				inputUnitToFactorBasis: (a) => a.times(1000),
+				outputMassScaleToKg: new Decimal(1),
+				displayUnit: 'kg CO2e'
+			};
+		case 'kg_co2e_per_m3':
+			return {
+				inputKind: 'volume',
+				inputUnitToFactorBasis: (a) => a,
+				outputMassScaleToKg: new Decimal(1),
+				displayUnit: 'kg CO2e'
+			};
+		case 'kg_co2e_per_kg':
+			return {
+				inputKind: 'mass',
+				inputUnitToFactorBasis: (a) => a,
+				outputMassScaleToKg: new Decimal(1),
+				displayUnit: 'kg CO2e'
 			};
 		// mass per energy
 		case 'kg_co2_per_gj':

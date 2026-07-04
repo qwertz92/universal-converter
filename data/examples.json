@@ -1,4 +1,138 @@
 {
-	"$comment": "Quick-example inputs for the converter UI (spec §8.1 'Beispiele/Schnellstarter'). EMPTY seed by the Engine agent — the Frontend/Data agent populates it. Envelope: { $comment, examples: [...] }. Each: { id, input (free-text like '1 L diesel'), label?, category?, notes? }. See src/lib/data/schemas.ts (exampleSchema).",
-	"examples": []
+	"$comment": "Quick-example inputs for the converter UI (spec §8.1, §8.2). Every spec §8.2 example is present. Each input parses via getConverter().convertText(...) without an unknown-unit/unknown-fuel error (tests/examples.test.ts). context_required results (e.g. electricity, or a mass/volume with no fuel) are expected and OK — they are not parse failures. Fuel phrases use names/aliases from data/fuels.json. Envelope: { $comment, examples: [...] }. See src/lib/data/schemas.ts (exampleSchema).",
+	"examples": [
+		{
+			"id": "ex-1-kwh",
+			"input": "1 kWh",
+			"label": "1 kWh",
+			"category": "energy",
+			"notes": "Kilowatt-hour → MJ, BTU, toe/boe/tce equivalents. Exact SI energy conversions."
+		},
+		{
+			"id": "ex-1-mwh",
+			"input": "1 MWh",
+			"label": "1 MWh",
+			"category": "energy",
+			"notes": "Megawatt-hour = 3.6 GJ exactly."
+		},
+		{
+			"id": "ex-1-mj",
+			"input": "1 MJ",
+			"label": "1 MJ",
+			"category": "energy",
+			"notes": "Megajoule → kWh, BTU, etc. Exact."
+		},
+		{
+			"id": "ex-1-gj",
+			"input": "1 GJ",
+			"label": "1 GJ",
+			"category": "energy",
+			"notes": "Gigajoule → kWh, MMBTU, toe. Exact."
+		},
+		{
+			"id": "ex-1-btu",
+			"input": "1 BTU",
+			"label": "1 BTU",
+			"category": "energy",
+			"notes": "International Table BTU = 1055.05585262 J (standard definition)."
+		},
+		{
+			"id": "ex-1-mmbtu",
+			"input": "1 MMBTU",
+			"label": "1 MMBTU",
+			"category": "energy",
+			"notes": "Million BTU = 1 dekatherm. Common in gas markets."
+		},
+		{
+			"id": "ex-1-therm",
+			"input": "1 therm",
+			"label": "1 therm",
+			"category": "energy",
+			"notes": "US therm = 100,000 BTU_IT (standard definition)."
+		},
+		{
+			"id": "ex-1-toe",
+			"input": "1 toe",
+			"label": "1 toe",
+			"category": "fuel_equivalents",
+			"notes": "Tonne of oil equivalent = 41.868 GJ (IEA convention; not a real oil property)."
+		},
+		{
+			"id": "ex-1-boe",
+			"input": "1 boe",
+			"label": "1 boe",
+			"category": "fuel_equivalents",
+			"notes": "Barrel of oil equivalent = 5.8 MMBTU convention (~6.1 GJ). NOT a physical barrel."
+		},
+		{
+			"id": "ex-1000-kcal",
+			"input": "1000 kcal",
+			"label": "1000 kcal",
+			"category": "energy",
+			"notes": "1 kcal (IT) = 4186.8 J. Note food 'Calorie' = kcal."
+		},
+		{
+			"id": "ex-1-l-diesel",
+			"input": "1 liter diesel",
+			"label": "1 L diesel",
+			"category": "fuel",
+			"notes": "Volume + mass (density) + energy (LHV/HHV) + CO2/CO2e emissions for diesel."
+		},
+		{
+			"id": "ex-1-l-gasoline",
+			"input": "1 L gasoline",
+			"label": "1 L gasoline",
+			"category": "fuel",
+			"notes": "Petrol: mass, energy, and CO2/CO2e emissions per litre."
+		},
+		{
+			"id": "ex-1-l-heating-oil",
+			"input": "1 liter heating oil",
+			"label": "1 L heating oil",
+			"category": "fuel",
+			"notes": "Heating oil (Fuel Oil grade): mass, energy, emissions."
+		},
+		{
+			"id": "ex-1-barrel-crude",
+			"input": "1 barrel crude oil",
+			"label": "1 barrel crude oil",
+			"category": "fuel",
+			"notes": "Physical barrel of crude → volume, mass and energy. Energy is an ESTIMATE (grade varies); not the same as boe."
+		},
+		{
+			"id": "ex-1-m3-natural-gas",
+			"input": "1 m3 natural gas",
+			"label": "1 m³ natural gas",
+			"category": "fuel",
+			"notes": "Natural gas m³ → kWh with a mandatory billing/reference-condition warning (not an exact identity)."
+		},
+		{
+			"id": "ex-1-kg-hydrogen",
+			"input": "1 kg hydrogen",
+			"label": "1 kg hydrogen",
+			"category": "fuel",
+			"notes": "Hydrogen mass → energy (LHV/HHV). Direct combustion CO2 = 0 (combustion only; upstream not included)."
+		},
+		{
+			"id": "ex-1-kg-hard-coal",
+			"input": "1 kg hard coal",
+			"label": "1 kg hard coal",
+			"category": "fuel",
+			"notes": "Hard coal (DESNZ industrial) mass → energy + CO2e. No density → no volume conversion."
+		},
+		{
+			"id": "ex-1-kg-lignite",
+			"input": "1 kg lignite",
+			"label": "1 kg lignite",
+			"category": "fuel",
+			"notes": "Lignite (IPCC global default) → energy (wide range) + CO2. Highly variable moisture."
+		},
+		{
+			"id": "ex-1-kg-wood-pellets",
+			"input": "1 kg wood pellets",
+			"label": "1 kg wood pellets",
+			"category": "fuel",
+			"notes": "Wood pellets mass → energy, Scope-1 CO2e, and separate biogenic CO2 line."
+		}
+	]
 }

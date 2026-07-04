@@ -32,7 +32,10 @@ export type PseudoDimension =
 	| 'emission_mass_co2e'
 	| 'energy_density_mass'
 	| 'energy_density_volume'
-	| 'emission_intensity';
+	| 'emission_intensity'
+	/** Mass per volume (fuel density: kg/L, kg/m³, g/cm³). Display/registry only —
+	 *  the fuel pipeline consumes it via resolveDensity, never auto-bridged. */
+	| 'mass_density';
 
 export type Dimension = BaseDimension | PseudoDimension;
 
@@ -49,7 +52,8 @@ export const PSEUDO_DIMENSIONS: readonly PseudoDimension[] = [
 	'emission_mass_co2e',
 	'energy_density_mass',
 	'energy_density_volume',
-	'emission_intensity'
+	'emission_intensity',
+	'mass_density'
 ] as const;
 
 /* ------------------------------------------------------------------ *

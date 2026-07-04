@@ -199,8 +199,8 @@
 			"is_exact": true,
 			"exactness": "standard_definition",
 			"system": "convention",
-			"notes": "1 kBTU = 1000 BTU_IT. (Note: 'MBTU' with a roman-numeral M also means 1000 BTU in some US industries — deliberately NOT aliased to avoid MMBTU confusion.)",
-			"source_refs": ["spec-conversion-rules"]
+			"notes": "1 kBTU = 1000 BTU_IT (derived from the NIST SP 811 IT BTU). (Note: 'MBTU' with a roman-numeral M also means 1000 BTU in some US industries — deliberately NOT aliased to avoid MMBTU confusion.)",
+			"source_refs": ["nist-sp811", "spec-conversion-rules"]
 		},
 		{
 			"id": "mmbtu",
@@ -212,8 +212,8 @@
 			"is_exact": true,
 			"exactness": "standard_definition",
 			"system": "convention",
-			"notes": "1 MMBTU = 10^6 BTU_IT. Equals one US dekatherm (10 therms).",
-			"source_refs": ["spec-conversion-rules"]
+			"notes": "1 MMBTU = 10^6 BTU_IT (derived from the NIST SP 811 IT BTU). Equals one US dekatherm (10 therms).",
+			"source_refs": ["nist-sp811", "spec-conversion-rules"]
 		},
 		{
 			"id": "therm",
@@ -225,8 +225,8 @@
 			"is_exact": true,
 			"exactness": "standard_definition",
 			"system": "convention",
-			"notes": "US therm = 100 000 BTU_IT = 1.05505585262e8 J (rulebook C.4). The EC therm differs at the ~1e-5 level; v0.1 uses the US therm and labels it.",
-			"source_refs": ["spec-conversion-rules"]
+			"notes": "US therm = 100 000 BTU_IT = 1.05505585262e8 J (rulebook C.4), derived from the NIST SP 811 IT BTU. DESNZ's 2025 Conversions tab gives the consistent derived figure 1 therm = 0.105506 GJ = 29.30711 kWh. The EC therm differs at the ~1e-5 level; v0.1 uses the US therm and labels it.",
+			"source_refs": ["nist-sp811", "uk-desnz-ghg-2025", "spec-conversion-rules"]
 		},
 		{
 			"id": "quad",
@@ -238,8 +238,8 @@
 			"is_exact": true,
 			"exactness": "standard_definition",
 			"system": "convention",
-			"notes": "1 quad = 10^15 BTU_IT.",
-			"source_refs": ["spec-conversion-rules"]
+			"notes": "1 quad = 10^15 BTU_IT (one quadrillion IT BTU; standard US definition, derived from the NIST SP 811 IT BTU). EIA uses the quad throughout US national energy statistics.",
+			"source_refs": ["nist-sp811", "eia-heat-contents", "spec-conversion-rules"]
 		},
 		{
 			"id": "toe",
@@ -290,8 +290,8 @@
 			"is_exact": true,
 			"exactness": "standard_definition",
 			"system": "convention",
-			"notes": "1 boe = 5.8 MMBTU_IT (US/IRS convention) = 6119323945.196 J (~6.12 GJ). This is an ENERGY-EQUIVALENCE unit, NOT a physical 42-gallon barrel (that is the 'barrel' volume unit) and NOT the measured energy of a specific crude (rulebook C.3, D.4, D.5). Other conventions exist (e.g. IEA ~7.15-7.40 boe/toe); results must state '5.8 MMBTU convention'.",
-			"source_refs": ["spec-conversion-rules"]
+			"notes": "1 boe = 5.8 MMBTU_IT (US/IRS convention) = 6119323945.196 J (~6.12 GJ), derived from the NIST SP 811 IT BTU. This is an ENERGY-EQUIVALENCE unit, NOT a physical 42-gallon barrel (that is the 'barrel' volume unit) and NOT the measured energy of a specific crude (rulebook C.3, D.4, D.5). boe is convention-dependent, NOT a physical constant: other conventions exist (e.g. USGS 6,000 scf gas = 1 boe; IEA ~7.15-7.40 boe/toe). Results must state '5.8 MMBTU convention'.",
+			"source_refs": ["nist-sp811", "spec-conversion-rules"]
 		},
 		{
 			"id": "tce",
@@ -303,10 +303,9 @@
 			"is_exact": true,
 			"exactness": "standard_definition",
 			"system": "convention",
-			"notes": "1 tce = 29.3076 GJ (convention; 1 toe = 1.428571... tce). Not a property of any real coal (rulebook C.3).",
-			"source_refs": ["spec-conversion-rules"]
+			"notes": "1 tce = 29.3076 GJ (IEA/UN convention = 7 Gcal_IT per tonne; 1 toe = 1.428571... tce). Not a property of any real coal (rulebook C.3). Analogous fixed-constant treatment to toe.",
+			"source_refs": ["iea-unit-conventions", "spec-conversion-rules"]
 		},
-
 		{
 			"id": "watt",
 			"dimension": "power",
@@ -368,7 +367,6 @@
 			"system": "SI",
 			"source_refs": ["nist-sp811"]
 		},
-
 		{
 			"id": "milligram",
 			"dimension": "mass",
@@ -458,7 +456,6 @@
 			"notes": "UK long ton = 2240 lb = 1016.046 908 8 kg exactly.",
 			"source_refs": ["nist-sp811"]
 		},
-
 		{
 			"id": "milliliter",
 			"dimension": "volume",
@@ -562,7 +559,6 @@
 			"notes": "Petroleum barrel = 42 US gallons = 0.158 987 294 928 m^3 exactly. A pure VOLUME unit; it does NOT 'contain' any fixed energy without a fuel + density + heating value. Distinct from 'boe' (rulebook C.3, D.4).",
 			"source_refs": ["nist-sp811", "spec-conversion-rules"]
 		},
-
 		{
 			"id": "second",
 			"dimension": "time",
@@ -626,7 +622,6 @@
 			"notes": "v0.1 defines 'year' as the Julian year = 365.25 days = 31 557 600 s, and labels it (rulebook B.1, D.13). It is never silently equated to 365 or 360 days.",
 			"source_refs": ["spec-conversion-rules"]
 		},
-
 		{
 			"id": "gram_co2",
 			"dimension": "emission_mass_co2",
@@ -703,7 +698,6 @@
 			"system": "SI",
 			"source_refs": ["spec-conversion-rules"]
 		},
-
 		{
 			"id": "mj_per_kg",
 			"dimension": "energy_density_mass",
@@ -850,6 +844,84 @@
 			"is_exact": true,
 			"exactness": "exact",
 			"system": "display",
+			"source_refs": ["spec-conversion-rules"]
+		},
+		{
+			"id": "kg_co2e_per_l",
+			"dimension": "emission_intensity",
+			"symbols": ["kgCO2e/L"],
+			"names": ["kilogram CO2e per liter"],
+			"aliases": ["kgco2e/l", "kg co2e/l"],
+			"to_base_factor": "1",
+			"is_exact": true,
+			"exactness": "exact",
+			"system": "display",
+			"notes": "CO2e metric — separate from the CO2 intensity unit. Used by DESNZ per-litre CO2e fuel factors.",
+			"source_refs": ["spec-conversion-rules"]
+		},
+		{
+			"id": "kg_co2e_per_kg",
+			"dimension": "emission_intensity",
+			"symbols": ["kgCO2e/kg"],
+			"names": ["kilogram CO2e per kilogram"],
+			"aliases": ["kgco2e/kg", "kg co2e/kg"],
+			"to_base_factor": "1",
+			"is_exact": true,
+			"exactness": "exact",
+			"system": "display",
+			"notes": "CO2e metric — separate from the CO2 intensity unit.",
+			"source_refs": ["spec-conversion-rules"]
+		},
+		{
+			"id": "kg_co2e_per_m3",
+			"dimension": "emission_intensity",
+			"symbols": ["kgCO2e/m3"],
+			"names": ["kilogram CO2e per cubic meter"],
+			"aliases": ["kgco2e/m3", "kg co2e/m3"],
+			"to_base_factor": "1",
+			"is_exact": true,
+			"exactness": "exact",
+			"system": "display",
+			"notes": "CO2e metric — separate from the CO2 intensity unit. Used by DESNZ per-m3 natural-gas CO2e factor.",
+			"source_refs": ["spec-conversion-rules"]
+		},
+		{
+			"id": "kg_per_l",
+			"dimension": "mass_density",
+			"symbols": ["kg/L"],
+			"names": ["kilogram per liter", "kilogram per litre"],
+			"aliases": ["kg/l", "kg per l", "kg per litre"],
+			"to_base_factor": "1000",
+			"is_exact": true,
+			"exactness": "exact",
+			"system": "display",
+			"notes": "Fuel-density unit (mass per volume). Display/registry only; the fuel pipeline consumes it via resolveDensity, never auto-bridged. to_base_factor (kg/L -> kg/m3) is nominal metadata; density conversion lives in src/lib/fuels/density.ts.",
+			"source_refs": ["spec-conversion-rules"]
+		},
+		{
+			"id": "kg_per_m3",
+			"dimension": "mass_density",
+			"symbols": ["kg/m3"],
+			"names": ["kilogram per cubic meter", "kilogram per cubic metre"],
+			"aliases": ["kg/m3", "kg per m3"],
+			"to_base_factor": "1",
+			"is_exact": true,
+			"exactness": "exact",
+			"system": "display",
+			"notes": "Fuel-density unit (mass per volume), SI base for density here. Display/registry only.",
+			"source_refs": ["spec-conversion-rules"]
+		},
+		{
+			"id": "g_per_cm3",
+			"dimension": "mass_density",
+			"symbols": ["g/cm3"],
+			"names": ["gram per cubic centimeter", "gram per cubic centimetre"],
+			"aliases": ["g/cm3", "g per cm3", "g/cc"],
+			"to_base_factor": "1000",
+			"is_exact": true,
+			"exactness": "exact",
+			"system": "display",
+			"notes": "Fuel-density unit (mass per volume). 1 g/cm3 = 1 kg/L = 1000 kg/m3. Display/registry only.",
 			"source_refs": ["spec-conversion-rules"]
 		}
 	]

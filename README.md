@@ -69,19 +69,19 @@ This starts the Vite dev server (default `http://localhost:5173`).
 
 ## npm scripts
 
-| Script | What it does |
-|---|---|
-| `npm run dev` | Start the Vite dev server. |
-| `npm run build` | Regenerate Cloudflare Worker types (`wrangler types --check`), then build the production bundle via Vite/SvelteKit. |
-| `npm run preview` | Serve the built output locally through `wrangler pages dev` (`.svelte-kit/cloudflare`, port 4173) — the closest local approximation of the Cloudflare runtime. |
-| `npm run check` | Regenerate Worker types, sync SvelteKit's generated files, then type-check with `svelte-check`. |
-| `npm run check:watch` | Same as `check`, in watch mode. |
-| `npm run lint` | Verify formatting with Prettier (`--check`) and lint with ESLint. |
-| `npm run format` | Auto-format the repo with Prettier. |
-| `npm test` | Run the Vitest suite once (`--run`). |
-| `npm run test:watch` | Run Vitest in watch mode. |
-| `npm run validate:data` | Run only the data-validation test file against `data/*.json`. |
-| `npm run gen` | Regenerate `worker-configuration.d.ts` from `wrangler types` (Cloudflare bindings/types). Also checked in as `wrangler types --check` runs as part of `build`/`check`. |
+| Script                  | What it does                                                                                                                                                           |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`           | Start the Vite dev server.                                                                                                                                             |
+| `npm run build`         | Regenerate Cloudflare Worker types (`wrangler types --check`), then build the production bundle via Vite/SvelteKit.                                                    |
+| `npm run preview`       | Serve the built output locally through `wrangler pages dev` (`.svelte-kit/cloudflare`, port 4173) — the closest local approximation of the Cloudflare runtime.         |
+| `npm run check`         | Regenerate Worker types, sync SvelteKit's generated files, then type-check with `svelte-check`.                                                                        |
+| `npm run check:watch`   | Same as `check`, in watch mode.                                                                                                                                        |
+| `npm run lint`          | Verify formatting with Prettier (`--check`) and lint with ESLint.                                                                                                      |
+| `npm run format`        | Auto-format the repo with Prettier.                                                                                                                                    |
+| `npm test`              | Run the Vitest suite once (`--run`).                                                                                                                                   |
+| `npm run test:watch`    | Run Vitest in watch mode.                                                                                                                                              |
+| `npm run validate:data` | Run only the data-validation test file against `data/*.json`.                                                                                                          |
+| `npm run gen`           | Regenerate `worker-configuration.d.ts` from `wrangler types` (Cloudflare bindings/types). Also checked in as `wrangler types --check` runs as part of `build`/`check`. |
 
 `prepare` runs `svelte-kit sync` automatically after `npm install`.
 
@@ -116,8 +116,8 @@ Every non-exact number in this project traces back to a cited, licensed
 source — "no number without a source" (spec §12, `AGENTS.md`).
 
 - **Primary fuel/emission source:** UK DESNZ (Department for Energy Security
-  and Net Zero) *2025 Government GHG Conversion Factors for Company
-  Reporting*, licensed under the **Open Government Licence v3.0**. It is the
+  and Net Zero) _2025 Government GHG Conversion Factors for Company
+  Reporting_, licensed under the **Open Government Licence v3.0**. It is the
   only source in our catalog that gives density, both NCV and GCV heating
   values, and a full CO2/CH4/N2O/CO2e split in one place under a genuinely
   reusable license.
@@ -141,19 +141,19 @@ Honest scope of what's exact vs. estimated vs. refused:
 
 ## Documentation map
 
-| Document | Contents |
-|---|---|
-| [`docs/spec-v0.1.md`](docs/spec-v0.1.md) | Authoritative product & engineering specification. |
-| [`docs/architecture.md`](docs/architecture.md) | System architecture, conversion pipeline, and user-flow diagrams; module map; data-file contract. |
-| [`docs/conversion-rules.md`](docs/conversion-rules.md) | Normative domain rulebook: exactness taxonomy, dimensional model, modeling decisions, pitfall catalog. |
-| [`docs/accuracy-and-limitations.md`](docs/accuracy-and-limitations.md) | Honest statement of what's exact, estimated, and refused. |
-| [`docs/data-model.md`](docs/data-model.md) | Data file schemas and structure (owned by the Data agent). |
-| [`docs/sources.md`](docs/sources.md) | Human-readable source register, licenses, and attribution. |
-| [`docs/research-notes.md`](docs/research-notes.md) | Raw research findings behind the source catalog. |
-| [`docs/roadmap.md`](docs/roadmap.md) | Phased roadmap, v0.1 scope, candidate next features. |
-| [`docs/deployment-cloudflare.md`](docs/deployment-cloudflare.md) | Cloudflare Pages deployment paths and operator checklist. |
-| [`docs/adr/`](docs/adr/) | Architecture decision records. |
-| [`docs/review-v0.1.md`](docs/review-v0.1.md) | Final review findings (Review agent). |
+| Document                                                               | Contents                                                                                               |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| [`docs/spec-v0.1.md`](docs/spec-v0.1.md)                               | Authoritative product & engineering specification.                                                     |
+| [`docs/architecture.md`](docs/architecture.md)                         | System architecture, conversion pipeline, and user-flow diagrams; module map; data-file contract.      |
+| [`docs/conversion-rules.md`](docs/conversion-rules.md)                 | Normative domain rulebook: exactness taxonomy, dimensional model, modeling decisions, pitfall catalog. |
+| [`docs/accuracy-and-limitations.md`](docs/accuracy-and-limitations.md) | Honest statement of what's exact, estimated, and refused.                                              |
+| [`docs/data-model.md`](docs/data-model.md)                             | Data file schemas and structure (owned by the Data agent).                                             |
+| [`docs/sources.md`](docs/sources.md)                                   | Human-readable source register, licenses, and attribution.                                             |
+| [`docs/research-notes.md`](docs/research-notes.md)                     | Raw research findings behind the source catalog.                                                       |
+| [`docs/roadmap.md`](docs/roadmap.md)                                   | Phased roadmap, v0.1 scope, candidate next features.                                                   |
+| [`docs/deployment-cloudflare.md`](docs/deployment-cloudflare.md)       | Cloudflare Pages deployment paths and operator checklist.                                              |
+| [`docs/adr/`](docs/adr/)                                               | Architecture decision records.                                                                         |
+| [`docs/review-v0.1.md`](docs/review-v0.1.md)                           | Final review findings (Review agent).                                                                  |
 
 ## Status
 

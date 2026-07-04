@@ -1,4 +1,845 @@
 {
-	"$comment": "Fuel catalog. EMPTY seed by the Engine agent — the Data agent fills this from verified research (spec §8.5). Envelope: { $comment, fuels: [...] }. Each fuel: { id, names[], aliases[], category, density?, heating_values[], emission_factor_ids[], phase?, source_refs[], notes?, warnings[] }. Every heating_value carries basis ('lhv'|'hhv'), value, unit (e.g. 'mj_per_kg'), and >=1 source_refs (rulebook C.1). density carries value+unit (e.g. 'kg_per_l')+>=1 source_refs. NO invented numbers — leave a property out and it shows 'not available'. See src/lib/data/schemas.ts (fuelSchema).",
-	"fuels": []
+	"$comment": "Fuel catalog v0.1 (spec §8.5). Values taken VERBATIM from docs/research-notes.md §4 with their source_id, basis and original unit. Primary source: UK DESNZ 2025 (uk-desnz-ghg-2025) — density + NCV/GCV both bases + CO2/CH4/N2O split. Global/rank fallback: IPCC 2006 (ipcc-2006-v2) for crude oil, anthracite, lignite. NOTE ON UNITS: DESNZ publishes gravimetric energy as GJ/tonne, which is numerically identical to MJ/kg (1 GJ/tonne = 1 MJ/kg) — stored as mj_per_kg with the GJ/tonne origin noted, no silent conversion. Per-litre / per-m³ figures are DESNZ's own kWh/L, kWh/m³ (Net/Gross CV) columns. IPCC NCVs in TJ/Gg = GJ/tonne = MJ/kg. Missing properties are OMITTED (UI shows 'not available') — never invented (rulebook, AGENTS.md). Every heating_value carries basis + >=1 source_refs; density carries >=1 source_refs. See src/lib/data/schemas.ts (fuelSchema).",
+	"fuels": [
+		{
+			"id": "crude-oil",
+			"names": ["crude oil", "crude petroleum"],
+			"aliases": ["crude", "rohöl", "rohoel", "petroleum crude", "crude-oil"],
+			"category": "oil",
+			"phase": "liquid",
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "42.3",
+					"unit": "mj_per_kg",
+					"range": { "low": "40.1", "high": "44.8" },
+					"source_refs": ["ipcc-2006-v2"],
+					"notes": "IPCC 2006 Vol.2 Ch.1 Table 1.2 'Crude Oil' NCV = 42.3 TJ/Gg = 42.3 GJ/tonne = 42.3 MJ/kg (global default, net/LHV basis). 95% CI 40.1–44.8. DESNZ 2025 has no generic 'crude oil' row (it covers refined products), so IPCC is primary here per research-notes §6."
+				}
+			],
+			"emission_factor_ids": ["crude-oil-co2-ipcc"],
+			"typical_ranges": "Physical crude density varies by grade (~800–950 kg/m³, light vs heavy); a serious primary density was NOT FOUND in this pass, so density is omitted. Energy per physical barrel is an estimate (~5.6–6.3 GJ) and is NOT the same as 'boe' (fixed 5.8 MMBTU convention).",
+			"source_refs": ["ipcc-2006-v2"],
+			"notes": "Generic crude oil, modeled on IPCC 2006 global defaults (rulebook C.3). No DESNZ entry. Density deliberately omitted (not available in a serious primary source in the v0.1 research pass) so volume↔mass shows 'not available' rather than an invented number.",
+			"warnings": [
+				"Crude oil is not a single substance: density and energy content vary by grade (API gravity). Any barrel↔energy or volume↔mass figure for crude is an ESTIMATE, not a measured property of a specific oil.",
+				"A physical barrel of crude is NOT the same as 'boe' (barrel of oil equivalent), which is a fixed 5.8 MMBTU energy-equivalence convention."
+			]
+		},
+		{
+			"id": "gasoline",
+			"names": ["gasoline", "petrol"],
+			"aliases": [
+				"benzin",
+				"motor gasoline",
+				"petrol (average biofuel blend)",
+				"mogas",
+				"gas (motor fuel)",
+				"super"
+			],
+			"category": "oil",
+			"phase": "liquid",
+			"density": {
+				"value": "746.204",
+				"unit": "kg_per_m3",
+				"reference_conditions": "15 °C (fuel-properties basis)",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Petrol (average biofuel blend)' density 746.204 kg/m³ (1340.116 L/tonne)."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "43.061",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Net CV 43.061 GJ/tonne = 43.061 MJ/kg (11.961 kWh/kg). 'Petrol (average biofuel blend)' — the UK forecourt-representative variant."
+				},
+				{
+					"basis": "lhv",
+					"value": "8.926",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Net CV 8.926 kWh/L (petrol, average biofuel blend)."
+				},
+				{
+					"basis": "hhv",
+					"value": "45.46",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Gross CV 45.46 GJ/tonne = 45.46 MJ/kg (12.628 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "9.423",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Gross CV 9.423 kWh/L (petrol, average biofuel blend)."
+				}
+			],
+			"emission_factor_ids": ["gasoline-co2-desnz", "gasoline-co2e-desnz"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "Defaults to the DESNZ 'Petrol (average biofuel blend)' variant (matches real UK forecourt fuel, per research-notes §6 pitfall 5). DESNZ also lists '100% mineral petrol' (density 741.84 kg/m³, NCV 44.65 GJ/tonne, GCV 47.0 GJ/tonne, 2.33984 kgCO2e/L). IPCC 2006 global default (Motor Gasoline) NCV 44.3 MJ/kg, CO2 69,300 kg/TJ. EIA US cross-check 120,214 Btu/gal, 9.46 kg CO2/gal — never averaged with the above.",
+			"warnings": []
+		},
+		{
+			"id": "diesel",
+			"names": ["diesel", "road diesel"],
+			"aliases": [
+				"derv",
+				"diesel (average biofuel blend)",
+				"diesel fuel",
+				"automotive gas oil",
+				"diesel oil"
+			],
+			"category": "oil",
+			"phase": "liquid",
+			"density": {
+				"value": "832.361",
+				"unit": "kg_per_m3",
+				"reference_conditions": "15 °C (fuel-properties basis)",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Diesel (average biofuel blend)' density 832.361 kg/m³ (1201.402 L/tonne)."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "42.839",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Net CV 42.839 GJ/tonne = 42.839 MJ/kg (11.9 kWh/kg). 'Diesel (average biofuel blend)'."
+				},
+				{
+					"basis": "lhv",
+					"value": "9.905",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Net CV 9.905 kWh/L (diesel, average biofuel blend)."
+				},
+				{
+					"basis": "hhv",
+					"value": "45.545",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Gross CV 45.545 GJ/tonne = 45.545 MJ/kg (12.651 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "10.531",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Gross CV 10.531 kWh/L (diesel, average biofuel blend)."
+				}
+			],
+			"emission_factor_ids": ["diesel-co2-desnz", "diesel-co2e-desnz"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "Defaults to DESNZ 'Diesel (average biofuel blend)' (UK forecourt-representative). DESNZ also lists '100% mineral diesel' (density 830.565 kg/m³, NCV 43.027 GJ/tonne, 2.66155 kgCO2e/L) and 'Gas oil' (red/off-road diesel, 853.971 kg/m³, NCV 42.569 GJ/tonne, 2.75541 kgCO2e/L). IPCC 2006 Gas/Diesel Oil NCV 43.0 MJ/kg, CO2 74,100 kg/TJ. EIA US cross-check 10.19 kg CO2/gal — never averaged.",
+			"warnings": []
+		},
+		{
+			"id": "heating-oil",
+			"names": ["heating oil", "fuel oil"],
+			"aliases": ["heizöl", "heizoel", "light fuel oil", "residual fuel oil", "hfo", "bunker oil"],
+			"category": "oil",
+			"phase": "liquid",
+			"density": {
+				"value": "983.284",
+				"unit": "kg_per_m3",
+				"reference_conditions": "15 °C (fuel-properties basis)",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Fuel Oil' density 983.284 kg/m³ (1017 L/tonne). This is the heavier boiler/industrial grade."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "40.752",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Fuel Oil' Net CV 40.752 GJ/tonne = 40.752 MJ/kg (11.32 kWh/kg)."
+				},
+				{
+					"basis": "lhv",
+					"value": "11.131",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Fuel Oil' Net CV 11.131 kWh/L."
+				},
+				{
+					"basis": "hhv",
+					"value": "43.353",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Fuel Oil' Gross CV 43.353 GJ/tonne = 43.353 MJ/kg (12.042 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "11.841",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Fuel Oil' Gross CV 11.841 kWh/L."
+				}
+			],
+			"emission_factor_ids": ["heating-oil-co2-desnz", "heating-oil-co2e-desnz"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ has no single 'heating oil' label. This entry uses DESNZ 'Fuel Oil' (heavier industrial/boiler grade). UK DOMESTIC heating oil is usually 'Gas Oil' (see diesel notes) or kerosene-type 'Burning Oil' (see kerosene). IPCC 2006 Residual Fuel Oil NCV 40.4 MJ/kg, CO2 77,400 kg/TJ; Gas/Diesel Oil is the alternative mapping. EIA US: No.2 heating oil ~138,500 Btu/gal.",
+			"warnings": [
+				"'Heating oil' is not one product: this entry models the heavier 'Fuel Oil' grade. UK domestic heating oil is typically kerosene-type burning oil or gas oil (diesel-grade) — pick the matching fuel for a domestic system."
+			]
+		},
+		{
+			"id": "kerosene",
+			"names": ["kerosene", "jet fuel"],
+			"aliases": [
+				"paraffin",
+				"burning oil",
+				"aviation turbine fuel",
+				"jet a-1",
+				"jet a",
+				"kerosin",
+				"petroleum",
+				"avtur",
+				"heating kerosene"
+			],
+			"category": "oil",
+			"phase": "liquid",
+			"density": {
+				"value": "800",
+				"unit": "kg_per_m3",
+				"reference_conditions": "15 °C (fuel-properties basis)",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Aviation Turbine Fuel' (Jet A-1) density 800 kg/m³ (1250 L/tonne). UK heating 'Burning Oil' is 802.568 kg/m³."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "43.905",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Aviation Turbine Fuel' Net CV 43.905 GJ/tonne = 43.905 MJ/kg (12.196 kWh/kg)."
+				},
+				{
+					"basis": "lhv",
+					"value": "9.757",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Aviation Turbine Fuel' Net CV 9.757 kWh/L."
+				},
+				{
+					"basis": "hhv",
+					"value": "46.215",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Aviation Turbine Fuel' Gross CV 46.215 GJ/tonne = 46.215 MJ/kg (12.838 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "10.27",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Aviation Turbine Fuel' Gross CV 10.27 kWh/L."
+				}
+			],
+			"emission_factor_ids": ["kerosene-co2-desnz", "kerosene-co2e-desnz"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "Modeled on DESNZ 'Aviation Turbine Fuel' (Jet A-1). DESNZ also lists 'Burning Oil' (UK heating kerosene: 802.568 kg/m³, NCV 43.865 GJ/tonne, 2.54016 kgCO2e/L) and 'Aviation Spirit' (avgas). IPCC 2006 Jet Kerosene NCV 44.1 MJ/kg, CO2 71,500 kg/TJ; Other Kerosene NCV 43.8 MJ/kg, CO2 71,900 kg/TJ.",
+			"warnings": [
+				"For high-altitude AVIATION, DESNZ states a 1.7× multiplier should be applied to the CO2 component to account for radiative-forcing (non-CO2 contrail/NOx) effects. The combustion CO2/CO2e factors here do NOT include that multiplier."
+			]
+		},
+		{
+			"id": "lpg",
+			"names": ["LPG", "liquefied petroleum gas"],
+			"aliases": ["autogas", "flüssiggas", "fluessiggas", "lp gas", "lpg (mixed)"],
+			"category": "gas",
+			"phase": "liquid",
+			"density": {
+				"value": "529.749",
+				"unit": "kg_per_m3",
+				"reference_conditions": "liquid phase (pressurised)",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'LPG' density 529.749 kg/m³ (1887.685 L/tonne), liquid phase."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "45.944",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'LPG' Net CV 45.944 GJ/tonne = 45.944 MJ/kg (12.762 kWh/kg)."
+				},
+				{
+					"basis": "lhv",
+					"value": "6.761",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'LPG' Net CV 6.761 kWh/L (liquid)."
+				},
+				{
+					"basis": "hhv",
+					"value": "49.333",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'LPG' Gross CV 49.333 GJ/tonne = 49.333 MJ/kg (13.704 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "7.259",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'LPG' Gross CV 7.259 kWh/L (liquid)."
+				}
+			],
+			"emission_factor_ids": ["lpg-co2-desnz", "lpg-co2e-desnz"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 'LPG' (mixed propane/butane). IPCC 2006 Liquefied Petroleum Gases NCV 47.3 MJ/kg, CO2 63,100 kg/TJ. See separate 'propane' and 'butane' entries for the pure gases.",
+			"warnings": [
+				"LPG density and energy per litre depend on the propane/butane mix and on the liquid vs gas phase. Litre figures here are for the pressurised liquid."
+			]
+		},
+		{
+			"id": "propane",
+			"names": ["propane"],
+			"aliases": ["c3h8", "r290", "propan"],
+			"category": "gas",
+			"phase": "liquid",
+			"density": {
+				"value": "514.933",
+				"unit": "kg_per_m3",
+				"reference_conditions": "liquid phase (pressurised)",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Propane' density 514.933 kg/m³ (1942 L/tonne), liquid phase."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "46.4",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Propane' Net CV 46.4 GJ/tonne = 46.4 MJ/kg (12.889 kWh/kg)."
+				},
+				{
+					"basis": "lhv",
+					"value": "6.637",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Propane' Net CV 6.637 kWh/L (liquid)."
+				},
+				{
+					"basis": "hhv",
+					"value": "50.4",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Propane' Gross CV 50.4 GJ/tonne = 50.4 MJ/kg (14 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "7.209",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Propane' Gross CV 7.209 kWh/L (liquid)."
+				}
+			],
+			"emission_factor_ids": ["propane-co2-desnz", "propane-co2e-desnz"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 'Propane'. EIA US cross-check: 5.75 kg CO2/gal, 91,452 Btu/gal, 62.88 kg CO2/MMBtu (2022 vintage) — never averaged with DESNZ.",
+			"warnings": []
+		},
+		{
+			"id": "butane",
+			"names": ["butane"],
+			"aliases": ["c4h10", "r600", "butan", "n-butane"],
+			"category": "gas",
+			"phase": "liquid",
+			"density": {
+				"value": "575.374",
+				"unit": "kg_per_m3",
+				"reference_conditions": "liquid phase (pressurised)",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Butane' density 575.374 kg/m³ (1738 L/tonne), liquid phase."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "45.3",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Butane' Net CV 45.3 GJ/tonne = 45.3 MJ/kg (12.583 kWh/kg)."
+				},
+				{
+					"basis": "lhv",
+					"value": "7.24",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Butane' Net CV 7.24 kWh/L (liquid)."
+				},
+				{
+					"basis": "hhv",
+					"value": "49.1",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Butane' Gross CV 49.1 GJ/tonne = 49.1 MJ/kg (13.639 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "7.847",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Butane' Gross CV 7.847 kWh/L (liquid)."
+				}
+			],
+			"emission_factor_ids": ["butane-co2-desnz", "butane-co2e-desnz"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 'Butane'.",
+			"warnings": []
+		},
+		{
+			"id": "natural-gas",
+			"names": ["natural gas"],
+			"aliases": [
+				"erdgas",
+				"pipeline gas",
+				"methane gas (grid)",
+				"grid gas",
+				"cng",
+				"compressed natural gas",
+				"natural gas (grid)"
+			],
+			"category": "gas",
+			"phase": "gas",
+			"density": {
+				"value": "0.802",
+				"unit": "kg_per_m3",
+				"reference_conditions": "gas phase; reference T/P NOT stated by DESNZ (see warning)",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Natural gas' gas-phase density 0.802 kg/m³ (inverse of 1,246,142.986 L/tonne). Reference temperature/pressure is NOT stated in the source."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "45.745",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Natural gas' Net CV 45.745 GJ/tonne = 45.745 MJ/kg (12.707 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "50.678",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Natural gas' Gross CV 50.678 GJ/tonne = 50.678 MJ/kg (14.077 kWh/kg). UK gas bills use the Gross/GCV basis."
+				},
+				{
+					"basis": "lhv",
+					"value": "10.191",
+					"unit": "kwh_per_m3",
+					"range": { "low": "9.4", "high": "11.0" },
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "Volumetric Net CV derived from DESNZ density 0.802 kg/m³ × 12.707 kWh/kg = 10.191 kWh/m³. DERIVED (not a verbatim DESNZ cell) — DESNZ's own per-litre-of-gas figure (0.01 kWh/L) rounds too coarsely to use directly. Range reflects typical pipeline-gas variability. Reference T/P unstated (see warning)."
+				},
+				{
+					"basis": "hhv",
+					"value": "11.290",
+					"unit": "kwh_per_m3",
+					"range": { "low": "10.3", "high": "12.0" },
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "Volumetric Gross CV derived from DESNZ density 0.802 kg/m³ × 14.077 kWh/kg = 11.290 kWh/m³. DERIVED from DESNZ density × gravimetric GCV (both verbatim), not a verbatim cell. ~11 kWh/m³ is the typical UK gas-bill figure. Reference T/P unstated (see warning)."
+				}
+			],
+			"emission_factor_ids": ["natural-gas-co2-desnz", "natural-gas-co2e-desnz"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 2025 'Natural gas' (UK grid mix). The per-m³ heating values are DERIVED from DESNZ's verbatim density and gravimetric CV (marked in each entry's notes), because DESNZ's volumetric cell is rounded to 0.01 kWh/L. IPCC 2006 Natural Gas NCV 48.0 MJ/kg, CO2 56,100 kg/TJ. EIA US: 1,036 Btu/scf, 54.81 kg CO2/Mcf. LNG, CNG and pure methane are separate entries.",
+			"warnings": [
+				"Natural gas m³→energy is NOT an exact identity. The reference temperature and pressure (normal m³ at 0 °C vs standard m³ at 15/25 °C) are NOT stated by the source, and real energy content varies by field, network and time.",
+				"This is NOT how a gas bill is calculated: billing uses your supplier's local calorific value (Brennwert) and a state-correction number (Zustandszahl) that maps your meter's operating-condition m³ to reference energy. Do not use this result for billing disputes."
+			]
+		},
+		{
+			"id": "methane",
+			"names": ["methane"],
+			"aliases": ["ch4", "methan", "pure methane"],
+			"category": "gas",
+			"phase": "gas",
+			"density": {
+				"value": "0.716",
+				"unit": "kg_per_m3",
+				"reference_conditions": "gas phase; reference T/P NOT stated by DESNZ",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Fuel properties' pure methane density 0.716 kg/m³ (gas phase)."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "50",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Fuel properties' pure methane Net CV 50 GJ/tonne = 50 MJ/kg (13.889 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "55.406",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Fuel properties' pure methane Gross CV 55.406 GJ/tonne = 55.406 MJ/kg (15.391 kWh/kg)."
+				}
+			],
+			"emission_factor_ids": [],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "Pure methane (CH4) physical properties from the DESNZ 2025 'Fuel properties' sheet. DESNZ lists NO combustion CO2/CO2e factor for pure methane as a distinct row (it is a properties reference). No emission factor is attached here rather than reusing natural gas's (which is a grid mix, not pure CH4) — a combustion CO2 for methane is therefore 'not available' in v0.1 sources. IPCC has no separate methane row either; natural gas is the closest analog.",
+			"warnings": [
+				"Pure methane is treated numerically close to natural gas but is NOT identical to the UK grid mix. No combustion CO2/CO2e factor is available for pure methane in the v0.1 sources, so emissions show 'not available'."
+			]
+		},
+		{
+			"id": "lng",
+			"names": ["LNG", "liquefied natural gas"],
+			"aliases": ["flüssigerdgas", "fluessigerdgas", "liquid natural gas"],
+			"category": "gas",
+			"phase": "liquid",
+			"density": {
+				"value": "452.489",
+				"unit": "kg_per_m3",
+				"reference_conditions": "liquefied (cryogenic, ~−162 °C)",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'LNG' liquefied density 452.489 kg/m³."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "45.745",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'LNG' Net CV 45.745 GJ/tonne = 45.745 MJ/kg (same molecular basis as natural gas — LNG is natural gas)."
+				},
+				{
+					"basis": "lhv",
+					"value": "5.750",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DERIVED: LNG liquid density 0.452489 kg/L × 12.707 kWh/kg (Net CV) = 5.750 kWh/L. Both factors are verbatim DESNZ cells; the product is derived (DESNZ gives no per-L LNG heating value)."
+				},
+				{
+					"basis": "hhv",
+					"value": "50.678",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'LNG' Gross CV 50.678 GJ/tonne = 50.678 MJ/kg."
+				},
+				{
+					"basis": "hhv",
+					"value": "6.370",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DERIVED: LNG liquid density 0.452489 kg/L × 14.077 kWh/kg (Gross CV) = 6.370 kWh/L. Both factors are verbatim DESNZ cells; the product is derived."
+				}
+			],
+			"emission_factor_ids": ["lng-co2e-desnz"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 2025 'LNG' — chemically natural gas, but ~600× denser in energy per volume than gaseous natural gas. Per-litre CO2e in DESNZ = 1.17797 kgCO2e/L. The per-L heating value is derived from DESNZ's liquid density × gravimetric CV.",
+			"warnings": [
+				"1 m³ (or 1 L) of LIQUEFIED natural gas is NOT the same as 1 m³ of GASEOUS natural gas: LNG is ~600× denser in energy per volume. Never convert LNG volume directly to gas volume — go via mass/energy. This entry is the liquid phase."
+			]
+		},
+		{
+			"id": "hydrogen",
+			"names": ["hydrogen"],
+			"aliases": ["h2", "wasserstoff", "dihydrogen", "hydrogen gas"],
+			"category": "hydrogen",
+			"phase": "gas",
+			"density": {
+				"value": "0.08988",
+				"unit": "kg_per_m3",
+				"reference_conditions": "gas at STP (0 °C, 1 atm)",
+				"source_refs": ["h2tools"],
+				"notes": "Gas density 0.08988 kg/m³ at STP (0 °C, 1 atm). Liquid hydrogen at its boiling point (−252.87 °C) is ~70.8 kg/m³ (not stored as the primary density — H2 is normally handled by mass). Source h2tools (cross-source-verified; see sources.json)."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "119.96",
+					"unit": "mj_per_kg",
+					"source_refs": ["h2tools"],
+					"notes": "LHV 119.96 MJ/kg (≈ 33.3 kWh/kg). h2tools / DOE-derived, cross-source-verified (primary page returned HTTP 403 on automated fetch; re-checked by follow-up)."
+				},
+				{
+					"basis": "hhv",
+					"value": "141.79",
+					"unit": "mj_per_kg",
+					"range": { "low": "141.79", "high": "142.18" },
+					"source_refs": ["h2tools", "nist-webbook"],
+					"notes": "HHV 141.79 MJ/kg (≈ 39.4 kWh/kg), NIST Chemistry WebBook (SRD 69)-traceable printed value (285.83 kJ/mol). The DOE GREET/ORNL table gives 142.18 MJ/kg (gaseous) — hence the range. Earlier project figure 141.88 was between these; corrected to the NIST-printed 141.79. The LHV/HHV gap is large for hydrogen (~18%) because all combustion product is water."
+				}
+			],
+			"emission_factor_ids": [],
+			"source_refs": ["h2tools"],
+			"notes": "Hydrogen physical properties. Direct combustion CO2 = 0 (no carbon in the molecule) — handled by the engine as an exact physical fact, NOT via an emission factor. NOT FOUND in DESNZ 2025 or IPCC 2006 (both are fossil/biomass-scoped). No upstream/production emission factor is included in v0.1 (grey/blue/green H2 differ enormously) — upstream is out of scope and must NOT be implied as zero.",
+			"warnings": [
+				"Direct combustion of hydrogen emits no CO2 (no carbon), but this is a COMBUSTION-ONLY figure. Upstream production emissions are NOT zero and depend entirely on the pathway (grey/SMR vs blue vs green) — they are not included here.",
+				"Hydrogen's LHV and HHV differ by ~18% — always check which basis a hydrogen energy figure uses."
+			]
+		},
+		{
+			"id": "hard-coal",
+			"names": ["hard coal", "coal"],
+			"aliases": [
+				"steinkohle",
+				"bituminous coal",
+				"black coal",
+				"coal (industrial)",
+				"industrial coal"
+			],
+			"category": "coal",
+			"phase": "solid",
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "25.405",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Coal (industrial)' Net CV 25.405 GJ/tonne = 25.405 MJ/kg (7.057 kWh/kg). UK-context 'hard coal'."
+				},
+				{
+					"basis": "hhv",
+					"value": "26.742",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Coal (industrial)' Gross CV 26.742 GJ/tonne = 26.742 MJ/kg (7.428 kWh/kg)."
+				}
+			],
+			"emission_factor_ids": ["hard-coal-co2e-desnz"],
+			"typical_ranges": "IPCC 2006 'Other Bituminous Coal' NCV 25.8 MJ/kg (range 19.9–30.5); DESNZ domestic/coking/generation coal categories differ (28.613 / 30.24 / 23.826 GJ/tonne).",
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "Modeled on DESNZ 'Coal (industrial)' (UK-context hard coal). DESNZ has no rank-based terms; its categories are functional (industrial/domestic/electricity-generation/coking). No density is given by DESNZ (coal is sold by mass) → volume↔mass shows 'not available'. IPCC 2006 Other Bituminous Coal NCV 25.8 MJ/kg, CO2 94,600 kg/TJ. For anthracite/lignite specifically, use the dedicated rank-based entries (IPCC-sourced).",
+			"warnings": [
+				"Coal energy and emission factors vary widely by rank, region and moisture/ash content. This entry is DESNZ 'Coal (industrial)' (UK context). No density is available (coal is sold by mass), so volume conversions are not available."
+			]
+		},
+		{
+			"id": "lignite",
+			"names": ["lignite", "brown coal"],
+			"aliases": ["braunkohle", "brown-coal", "lignite coal"],
+			"category": "coal",
+			"phase": "solid",
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "11.9",
+					"unit": "mj_per_kg",
+					"range": { "low": "5.50", "high": "21.6" },
+					"source_refs": ["ipcc-2006-v2"],
+					"notes": "IPCC 2006 Vol.2 Ch.1 Table 1.2 'Lignite' NCV = 11.9 TJ/Gg = 11.9 GJ/tonne = 11.9 MJ/kg (global default, net basis). 95% CI 5.50–21.6 — very wide, reflecting lignite's highly variable moisture/ash content. DESNZ 2025 has no 'lignite' row, so IPCC is primary here (research-notes §6)."
+				}
+			],
+			"emission_factor_ids": ["lignite-co2-ipcc"],
+			"source_refs": ["ipcc-2006-v2"],
+			"notes": "Lignite (brown coal), IPCC 2006 global default (rulebook §4.9, research-notes §6). DESNZ uses functional not rank-based coal categories, so IPCC's rank-based Table 1.2/2.2 is used. No density in the source → volume conversions not available. HHV/GCV not available from IPCC (Table 1.2 gives NCV only) → shows 'not available'.",
+			"warnings": [
+				"Lignite is extremely variable (moisture/ash): the IPCC net calorific value has a 95% range of 5.5–21.6 MJ/kg. Treat any lignite energy figure as a rough estimate. No density available → volume conversions not available."
+			]
+		},
+		{
+			"id": "anthracite",
+			"names": ["anthracite"],
+			"aliases": ["hard-coal-anthracite", "anthrazit", "anthracite coal"],
+			"category": "coal",
+			"phase": "solid",
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "26.7",
+					"unit": "mj_per_kg",
+					"range": { "low": "21.6", "high": "32.2" },
+					"source_refs": ["ipcc-2006-v2"],
+					"notes": "IPCC 2006 Vol.2 Ch.1 Table 1.2 'Anthracite' NCV = 26.7 TJ/Gg = 26.7 GJ/tonne = 26.7 MJ/kg (global default, net basis). 95% CI 21.6–32.2. DESNZ 2025 has no 'anthracite' row, so IPCC is primary (research-notes §6)."
+				}
+			],
+			"emission_factor_ids": ["anthracite-co2-ipcc"],
+			"source_refs": ["ipcc-2006-v2"],
+			"notes": "Anthracite, IPCC 2006 global default (rank-based). DESNZ has no rank-based term. No density in the source → volume conversions not available. HHV/GCV not available from IPCC Table 1.2 (NCV only) → shows 'not available'.",
+			"warnings": [
+				"No density available (coal is sold by mass) → volume conversions not available. HHV/GCV not available from the IPCC source used."
+			]
+		},
+		{
+			"id": "wood-logs",
+			"names": ["wood", "wood logs"],
+			"aliases": ["holz", "logs", "firewood", "brennholz", "scheitholz", "wood (logs)", "cordwood"],
+			"category": "biomass",
+			"phase": "solid",
+			"density": {
+				"value": "425",
+				"unit": "kg_per_m3",
+				"reference_conditions": "stacked/bulk, as sold",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Fuel properties' Wood Logs bulk density 425 kg/m³ (2352.941 L/tonne)."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "14.71",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Fuel properties' Wood Logs Net CV 14.71 GJ/tonne = 14.71 MJ/kg (4.086 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "16.256",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Fuel properties' Wood Logs Gross CV 16.256 GJ/tonne = 16.256 MJ/kg (4.516 kWh/kg)."
+				}
+			],
+			"emission_factor_ids": ["wood-logs-co2e-desnz", "wood-logs-biogenic-co2-desnz"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 2025 Wood Logs. Scope-1 CO2e (CH4+N2O only; biogenic CO2 netted to zero) is a separate factor from the biogenic combustion CO2 (reported 'outside of scopes'). IPCC 2006 Wood/Wood Waste NCV 15.6 MJ/kg (range 7.9–31.0), raw combustion CO2 112,000 kg/TJ (before biogenic accounting) — NOT directly comparable to the DESNZ split.",
+			"warnings": [
+				"Wood energy content depends strongly on species and MOISTURE content — a fresh/green log holds far less usable energy than seasoned wood. Treat the figure as a representative value.",
+				"Biogenic CO2 from wood combustion is reported on a SEPARATE line ('outside of scopes'), not folded into the Scope-1 total — it is not silently zeroed."
+			]
+		},
+		{
+			"id": "wood-pellets",
+			"names": ["wood pellets"],
+			"aliases": ["holzpellets", "pellets", "wood-pellets", "pellet", "holz pellets"],
+			"category": "biomass",
+			"phase": "solid",
+			"density": {
+				"value": "650",
+				"unit": "kg_per_m3",
+				"reference_conditions": "bulk, as sold",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Fuel properties' Wood Pellets bulk density 650 kg/m³ (1538.462 L/tonne)."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "17.28",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Fuel properties' Wood Pellets Net CV 17.28 GJ/tonne = 17.28 MJ/kg (4.8 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "18.694",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Fuel properties' Wood Pellets Gross CV 18.694 GJ/tonne = 18.694 MJ/kg (5.193 kWh/kg)."
+				}
+			],
+			"emission_factor_ids": ["wood-pellets-co2e-desnz", "wood-pellets-biogenic-co2-desnz"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 2025 Wood Pellets. Scope-1 CO2e (CH4+N2O) is separate from the biogenic combustion CO2 ('outside of scopes'). Wood chips are a related DESNZ product (NCV 13.6 MJ/kg, density 253 kg/m³) not separately catalogued in v0.1.",
+			"warnings": [
+				"Wood-pellet energy content depends on moisture and feedstock; the figure is representative, not exact.",
+				"Biogenic CO2 from pellet combustion is reported on a SEPARATE line ('outside of scopes'), not silently zeroed."
+			]
+		},
+		{
+			"id": "ethanol",
+			"names": ["ethanol", "bioethanol"],
+			"aliases": ["ethyl alcohol", "e100", "bio-ethanol", "ethanol (fuel)", "äthanol", "aethanol"],
+			"category": "biofuel",
+			"phase": "liquid",
+			"density": {
+				"value": "794",
+				"unit": "kg_per_m3",
+				"reference_conditions": "15 °C (fuel-properties basis)",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Fuel properties' Bioethanol density 794 kg/m³ (1259.446 L/tonne)."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "26.8",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Fuel properties' Bioethanol Net CV 26.8 GJ/tonne = 26.8 MJ/kg (7.444 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "29.7",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Fuel properties' Bioethanol Gross CV 29.7 GJ/tonne = 29.7 MJ/kg (8.25 kWh/kg)."
+				}
+			],
+			"emission_factor_ids": ["ethanol-co2e-desnz", "ethanol-biogenic-co2-desnz"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 2025 Bioethanol. Scope-1 CO2e (CH4+N2O; biogenic CO2 netted to zero) is a separate factor from the biogenic combustion CO2 ('outside of scopes'). IPCC 2006 Biogasoline NCV 27.0 MJ/kg (wide range 13.6–54.0, 'ethanol theoretical'), raw CO2 70,800 kg/TJ.",
+			"warnings": [
+				"Biogenic CO2 from ethanol combustion is reported on a SEPARATE line ('outside of scopes'), not silently zeroed."
+			]
+		},
+		{
+			"id": "biodiesel",
+			"names": ["biodiesel", "biodiesel ME"],
+			"aliases": ["fame", "b100", "bio-diesel", "biodiesel (me)", "methyl ester", "rme"],
+			"category": "biofuel",
+			"phase": "liquid",
+			"density": {
+				"value": "890",
+				"unit": "kg_per_m3",
+				"reference_conditions": "15 °C (fuel-properties basis)",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Fuel properties' Biodiesel (ME) density 890 kg/m³ (1123.596 L/tonne)."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "37.2",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Fuel properties' Biodiesel (ME) Net CV 37.2 GJ/tonne = 37.2 MJ/kg (10.333 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "38.7",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Fuel properties' Biodiesel (ME) Gross CV 38.7 GJ/tonne = 38.7 MJ/kg (10.75 kWh/kg)."
+				}
+			],
+			"emission_factor_ids": ["biodiesel-co2e-desnz", "biodiesel-biogenic-co2-desnz"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 2025 Biodiesel (ME) — fatty-acid methyl ester. DESNZ lists identical figures for 'from used cooking oil' and 'from tallow' variants, and a separate 'Biodiesel (BtL or HVO)' (NCV 44 MJ/kg, density 780 kg/m³, 0.03558 kgCO2e/L). Scope-1 CO2e (CH4+N2O) separate from biogenic combustion CO2. IPCC 2006 Biodiesels NCV 27.0 MJ/kg (wide range), raw CO2 70,800 kg/TJ.",
+			"warnings": [
+				"Biogenic CO2 from biodiesel combustion is reported on a SEPARATE line ('outside of scopes'), not silently zeroed."
+			]
+		},
+		{
+			"id": "biogas",
+			"names": ["biogas"],
+			"aliases": ["bio-gas", "biomethane", "digester gas", "sewage gas"],
+			"category": "biofuel",
+			"phase": "gas",
+			"density": {
+				"value": "1.15",
+				"unit": "kg_per_m3",
+				"reference_conditions": "gas phase; reference T/P NOT stated by DESNZ",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Fuel properties' Biogas gas-phase density 1.15 kg/m³."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "20",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Fuel properties' Biogas Net CV 20 GJ/tonne = 20 MJ/kg (5.556 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "21.978",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Fuel properties' Biogas Gross CV 21.978 GJ/tonne = 21.978 MJ/kg (6.105 kWh/kg)."
+				}
+			],
+			"emission_factor_ids": ["biogas-co2e-desnz", "biogas-biogenic-co2-desnz"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 2025 Biogas. Related DESNZ products: Biomethane (NCV 49 MJ/kg, density 0.725 kg/m³) and Landfill Gas (NCV 12.3 MJ/kg, density 1.3 kg/m³) — not separately catalogued in v0.1. Scope-1 CO2e (CH4+N2O) separate from biogenic combustion CO2. IPCC 2006 Other Biogas NCV 50.4 MJ/kg (methane-theoretical, wide range), raw CO2 54,600 kg/TJ. Note DESNZ biogas NCV (20 MJ/kg) is much lower than IPCC's (raw methane basis) because biogas is CO2-diluted.",
+			"warnings": [
+				"Biogas energy content varies with its methane fraction (typically 50–70% CH4, balance CO2). The figure is representative.",
+				"Biogenic CO2 from biogas combustion is reported on a SEPARATE line ('outside of scopes'), not silently zeroed."
+			]
+		}
+	]
 }
