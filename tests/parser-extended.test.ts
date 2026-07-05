@@ -65,17 +65,14 @@ describe('§13.2 parser — comma decimal & number formats', () => {
 	});
 
 	it(
-		'documents a parser ambiguity: "0,835" (3 digits after a lone comma) is read as ' +
-			'the THOUSANDS-GROUPED integer 835, not the decimal 0.835 (normalizeNumber heuristic ' +
-			'cannot distinguish "decimal fraction with exactly 3 digits" from "3-digit thousands ' +
-			'group" when the leading group has <=3 digits) — see final report',
+		'FIXED: "0,835" (3 digits after a lone comma, zero integer part) is read as the ' +
+			'decimal 0.835, not the thousands-grouped integer 835. Root cause was ' +
+			'normalizeNumber treating any lone comma with exactly 3 trailing digits as a ' +
+			'thousands separator; fixed by treating a "0" integer part as conclusive proof ' +
+			'of a decimal separator (a thousands group never has a zero leading part).',
 		() => {
 			const r = converter.parse('0,835 kg');
-			// Pinned to ACTUAL behaviour, not the (arguably more intuitive) 0.835 reading.
-			// A European user typing a density like "0,835 kg/L" as a bare number would be
-			// misread; this is a genuine minor ambiguity in normalizeNumber, not a bug fix
-			// made here (tests/** is the only path the Test agent may touch).
-			expect(r.ok && r.query.value).toBe('0835');
+			expect(r.ok && r.query.value).toBe('0.835');
 		}
 	);
 
@@ -83,6 +80,36 @@ describe('§13.2 parser — comma decimal & number formats', () => {
 		const r = converter.parse('1,5 kg');
 		expect(r.ok && r.query.value).toBe('1.5');
 	});
+
+	it('parses "12,25" (2-digit fraction) correctly as the decimal 12.25', () => {
+		const r = converter.parse('12,25 kg');
+		expect(r.ok && r.query.value).toBe('12.25');
+	});
+
+	it('parses "1,000,000" (multiple comma groups) as the thousands-grouped 1000000', () => {
+		const r = converter.parse('1,000,000 kg');
+		expect(r.ok && r.query.value).toBe('1000000');
+	});
+
+	it('parses "1.5" (dot decimal) as 1.5', () => {
+		const r = converter.parse('1.5 kg');
+		expect(r.ok && r.query.value).toBe('1.5');
+	});
+
+	it(
+		'genuinely ambiguous "1,500" (one comma, exactly 3 trailing digits, nonzero integer ' +
+			'part) keeps the THOUSANDS reading (1500), matching common EN formatting, but the ' +
+			'parser attaches a note flagging the interpretation rather than silently guessing',
+		() => {
+			const r = converter.parse('1,500 kg');
+			expect(r.ok && r.query.value).toBe('1500');
+			if (r.ok) {
+				expect(r.query.notes ?? []).toEqual(
+					expect.arrayContaining([expect.stringContaining('thousands separator')])
+				);
+			}
+		}
+	);
 });
 
 describe('§13.2 parser — case variants', () => {

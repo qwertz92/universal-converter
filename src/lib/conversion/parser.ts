@@ -41,7 +41,7 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 		});
 	}
 	const rawNumber = numMatch[1];
-	const value = normalizeNumber(rawNumber);
+	const { value, warning: numberWarning } = normalizeNumberWithWarning(rawNumber);
 	const rest = trimmed.slice(numMatch[0].length).trim();
 
 	if (rest === '') {
@@ -55,7 +55,7 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 	//    a trailing fuel phrase (if any) is peeled off first so multi-word units
 	//    like "kilowatt hour" and multi-word fuels like "wood pellets" coexist.
 	const words = rest.split(/\s+/);
-	const notes: string[] = [];
+	const notes: string[] = numberWarning ? [numberWarning] : [];
 
 	// First, try to interpret the WHOLE remainder as a unit (covers "kilowatt hour").
 	const wholeMatch = units.resolve(rest);
@@ -154,10 +154,29 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
  * Handles comma decimals ("1,5" → "1.5") and thousands separators
  * ("1,000" / "1.000" / "1 000" → "1000") heuristically:
  *  - if the token has BOTH a comma and a dot, the LAST one is the decimal sep;
- *  - a lone comma with exactly 3 trailing digits and length>4 is a thousands sep;
- *  - a lone comma otherwise is a decimal separator ("1,5").
+ *  - a LONE comma (no dot) is read as a DECIMAL separator when either:
+ *      (a) the integer part is "0" (e.g. "0,835" → 0.835 — a European decimal
+ *          density/quantity, never a thousands group with a "0" leading part), or
+ *      (b) the digits after the comma are NOT exactly 3 (e.g. "1,5" → 1.5,
+ *          "12,25" → 12.25 — a genuine 3-digit thousands group is the only
+ *          shape we'd ever read as thousands);
+ *  - MULTIPLE comma groups forming a valid thousands pattern (leading group
+ *    <=3 digits, every following group exactly 3 digits) are read as
+ *    thousands (e.g. "1,000,000" → 1000000);
+ *  - the single remaining genuinely AMBIGUOUS shape — one comma, exactly 3
+ *    trailing digits, and a nonzero integer part (e.g. "1,500") — keeps the
+ *    THOUSANDS reading (matches common EN formatting), but see
+ *    `normalizeNumberWithWarning`, which attaches a parser note flagging the
+ *    interpretation so the caller can surface it (rulebook: no silent guesses).
  */
 export function normalizeNumber(raw: string): string {
+	return normalizeNumberWithWarning(raw).value;
+}
+
+/** Like `normalizeNumber`, but also returns a warning note for the one
+ *  genuinely ambiguous shape (single comma, exactly 3 trailing digits,
+ *  nonzero integer part) where we keep the thousands-separator reading. */
+export function normalizeNumberWithWarning(raw: string): { value: string; warning?: string } {
 	let s = raw.replace(/\s+/g, '');
 	const hasComma = s.includes(',');
 	const hasDot = s.includes('.');
@@ -169,16 +188,50 @@ export function normalizeNumber(raw: string): string {
 		} else {
 			s = s.replace(/,/g, '');
 		}
-	} else if (hasComma) {
-		const parts = s.split(',');
-		// "1,000" style thousands: every group after the first is exactly 3 digits.
-		const looksThousands =
-			parts.length > 1 && parts.slice(1).every((p) => p.length === 3) && parts[0].length <= 3;
-		s = looksThousands ? parts.join('') : s.replace(',', '.');
+		return { value: s };
 	}
+
+	if (hasComma) {
+		const parts = s.split(',');
+		const trailingGroups = parts.slice(1);
+		const leadingOk = parts[0].length >= 1 && parts[0].length <= 3;
+		const allTrailingAreThreeDigits = trailingGroups.every((p) => p.length === 3);
+
+		if (parts.length > 2) {
+			// Multiple comma groups: only a valid thousands pattern is accepted
+			// ("1,000,000"); anything else is left for downstream validation.
+			if (leadingOk && allTrailingAreThreeDigits) {
+				return { value: parts.join('') };
+			}
+			return { value: s.replace(/,/g, '') };
+		}
+
+		// Single comma.
+		const integerPart = parts[0];
+		const fraction = parts[1] ?? '';
+		const integerIsZero = /^0+$/.test(integerPart);
+
+		if (integerIsZero) {
+			// "0,835" -> 0.835: never a thousands group with a zero leading part.
+			return { value: `${integerPart}.${fraction}` };
+		}
+		if (fraction.length !== 3) {
+			// "1,5" -> 1.5, "12,25" -> 12.25: only an exact 3-digit trailing group
+			// is even a candidate for a thousands separator.
+			return { value: `${integerPart}.${fraction}` };
+		}
+		// Genuinely ambiguous: one comma, exactly 3 trailing digits, nonzero
+		// integer part (e.g. "1,500"). Keep the thousands reading (common EN
+		// formatting), but flag it — never guess silently.
+		return {
+			value: `${integerPart}${fraction}`,
+			warning: `read "${raw}" as ${integerPart}${fraction} (thousands separator); write "${integerPart}.${fraction}" if you meant the decimal ${integerPart}.${fraction}`
+		};
+	}
+
 	// Lone dots are already valid decimals; multiple dots as thousands are rare
 	// and left to fail validation downstream rather than guessed wrongly.
-	return s;
+	return { value: s };
 }
 
 function aliasNote(
