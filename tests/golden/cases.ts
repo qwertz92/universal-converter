@@ -493,13 +493,40 @@ export const GOLDEN_CASES: GoldenCase[] = [
 
 	// ---------------------------------------------------------------- *
 	// Electricity: context_required without region/year (spec §13.4/§9.6)
-	// See final report: data/fuels.json has NO "electricity" fuel entry, so
-	// this input cannot be parsed against the real catalog (documented gap).
-	// This case is intentionally OMITTED from GOLDEN_CASES; the guard tests
-	// (tests/guards.test.ts) cover the engine behaviour via the synthetic
-	// fixture instead. See tests/golden/data-gaps.test.ts for the documented
-	// probe against the real data.
+	// data/fuels.json HAS an "electricity" fuel entry (category "electricity").
+	// "1 kWh electricity" parses against the real catalog: energy converts
+	// exactly (1 kWh = 3.6 MJ, an SI identity), while emissions is
+	// context_required (no region/year given) and surfaces both illustrative
+	// examples wired via emission_factor_ids — UK 2025 CO2e (uk-desnz-ghg-2025)
+	// and EU-27 2023 CO2 (eea-electricity-intensity). See
+	// tests/golden/data-gaps.test.ts for the fuller documented probe (including
+	// the region+year-supplied path) against the real data.
 	// ---------------------------------------------------------------- *
+	{
+		id: 'golden-1-kwh-electricity-energy-exact-emissions-context-required',
+		input: '1 kWh electricity',
+		derivation:
+			'Energy: 1 kWh = 3.6 MJ exactly (SI definitional identity, no fuel context needed). ' +
+			'Emissions: data/fuels.json "electricity" fuel has no density/heating-value (pure grid ' +
+			'commodity) and its emission_factor_ids reference two region+year-tagged illustrative ' +
+			'factors (electricity-uk-2025-co2e, electricity-eu27-2023-co2) — with no region/year ' +
+			'supplied, the engine returns context_required (missing region+year) and surfaces both ' +
+			'as illustrative_examples rather than guessing a default grid.',
+		checks: [
+			{
+				category: 'energy',
+				unit_id: 'megajoule',
+				exactness: 'exact',
+				exactRaw: '3.6'
+			},
+			{
+				category: 'emissions',
+				unit_id: 'g_co2e_per_kwh',
+				exactness: 'context_required',
+				valueIsNull: true
+			}
+		]
+	},
 
 	// ---------------------------------------------------------------- *
 	// toe/boe/tce fuel-equivalents for a plain energy input (spec §8.3/§C.8)

@@ -85,8 +85,17 @@
 		// satisfies svelte/no-navigation-without-resolve (it returns a ResolvedPathname).
 		// A literal route prefix ('/' or '/convert') lets the typed router validate the
 		// ?q=/?basis= search suffix; the converter only mounts on those two routes.
+		// When there are no params, skip the '?' branch entirely so an empty
+		// submit doesn't leave a bare trailing '?' in the URL.
 		const onConvert = page.route.id === '/convert';
-		goto(onConvert ? resolve(`/convert?${params}`) : resolve(`/?${params}`), {
+		const target = params
+			? onConvert
+				? resolve(`/convert?${params}`)
+				: resolve(`/?${params}`)
+			: onConvert
+				? resolve('/convert')
+				: resolve('/');
+		goto(target, {
 			replaceState: true,
 			keepFocus: true,
 			noScroll: true

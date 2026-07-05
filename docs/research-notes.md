@@ -656,3 +656,90 @@ session).
     calorie (4.184 kJ) differ by ~0.04%, small but real, and different
     conventions (food-energy labeling vs. engineering) pick different ones in
     practice. Surface the choice, don't hide it.
+
+---
+
+## Post-review addendum (2026-07-05)
+
+> Added after `docs/review-v0.1.md` (P1-D) found that two classes of shipped
+> value — the corrected hydrogen HHV and the DESNZ "Outside of scopes"
+> biogenic CO2 figures — were used in `data/fuels.json` /
+> `data/emission-factors.json` (properly `source_refs`-cited there and in
+> `data/sources.json`) but had never been recorded in this file, breaking the
+> "every number traces to research-notes" provenance-ledger contract (spec
+> §24 in the review's numbering). Both value sets below are copied verbatim
+> from the shipped data/source files — no new research was performed for
+> this addendum.
+
+### §4.8 addendum — Hydrogen HHV correction
+
+The original §4.8 entry above recorded HHV as "141.88 MJ/kg ≈ 39.4 kWh/kg
+(also cited as 141.86 kJ/g)" from `h2tools` secondary citations. The value
+actually **shipped** in `data/fuels.json` is:
+
+- **HHV: 141.79 MJ/kg** (≈ 39.4 kWh/kg), range `{ low: 141.79, high: 142.18 }`.
+- **Source:** `nist-webbook` (NIST Chemistry WebBook, NIST Standard Reference
+  Database Number 69), derived from the 25 °C heat-of-combustion / formation
+  enthalpy for water (285.83 kJ/mol) — a NIST-printed figure, used in place of
+  the h2tools secondary citation specifically because it resolves to a primary
+  thermochemical constant rather than a cross-cited web figure.
+- **Cross-check, not averaged:** DOE GREET/ORNL gives 142.18 MJ/kg (gaseous)
+  — hence the `range.high` of 142.18 — recorded as a documented spread, per
+  the "diverging sources are never averaged" rule (rulebook §D.16), not
+  blended into the 141.79 figure.
+- Verbatim from `data/fuels.json` hydrogen heating-value `notes` field: "HHV
+  141.79 MJ/kg (≈ 39.4 kWh/kg), NIST Chemistry WebBook (SRD 69)-traceable
+  printed value (285.83 kJ/mol). The DOE GREET/ORNL table gives 142.18 MJ/kg
+  (gaseous) — hence the range. Earlier project figure 141.88 was between
+  these; corrected to the NIST-printed 141.79. The LHV/HHV gap is large for
+  hydrogen (~18%) because all combustion product is water."
+- LHV is unchanged from the original §4.8 entry: 119.96 MJ/kg (≈ 33.3 kWh/kg),
+  still sourced to `h2tools`/`nist-webbook` cross-verification.
+
+### §4.10/§4.11 addendum — DESNZ "Outside of scopes" biogenic CO2 figures
+
+§4.10 and §4.11 above (and pitfall #8 and gap-note §4.12) flagged the DESNZ
+"Outside of scopes" sheet as **not yet extracted** in the original research
+pass. It has since been extracted and populated into
+`data/emission-factors.json` as five `biogenic_CO2` pollutant entries, each
+`source_id: "uk-desnz-ghg-2025"`. Recorded verbatim below (values and notes
+copied from the shipped `emission-factors.json` entries, not re-derived):
+
+- **Wood logs** (`wood-logs-biogenic-co2-desnz`): **1.43623 kg CO2/kg** (LHV
+  basis) — "DESNZ 2025 'Outside of scopes' biogenic combustion CO2 for Wood
+  Logs = 1436.23 kg per tonne = 1.43623 kg CO2/kg (and 0.35 kg/kWh). This is
+  the true stack CO2 that Scope 1 nets to zero for biogenic carbon; reported
+  on a SEPARATE line, never folded into the total or silently zeroed.
+  scope_3_upstream is used to route it as a memo item outside the main
+  scopes. Converted tonne→kg by ÷1000 (exact)." Source table/page: `'Outside
+  of scopes' sheet, 'Wood logs' (col 'kg CO2e of CO2 per unit', net CV
+  basis)`.
+- **Wood pellets** (`wood-pellets-biogenic-co2-desnz`): **1.67718 kg CO2/kg**
+  (LHV basis) — "DESNZ 2025 'Outside of scopes' biogenic combustion CO2 for
+  Wood Pellets = 1677.18 kg per tonne = 1.67718 kg CO2/kg (and 0.35 kg/kWh).
+  Reported separately, never zeroed. Converted tonne→kg by ÷1000 (exact)."
+  Source table/page: `'Outside of scopes' sheet, 'Wood pellets' (col 'kg CO2e
+  of CO2 per unit', net CV basis)`.
+- **Ethanol** (`ethanol-biogenic-co2-desnz`): **1.52 kg CO2/L** (LHV basis) —
+  "DESNZ 2025 'Outside of scopes' biogenic combustion CO2 for Bioethanol =
+  1.52 kg CO2/L (also 71.37 kg/GJ, 1.91 kg/kg). Reported separately, never
+  zeroed." Source table/page: `'Outside of scopes' sheet, 'Bioethanol' (col
+  'kg CO2e of CO2 per unit', net CV basis)`.
+- **Biodiesel** (`biodiesel-biogenic-co2-desnz`): **2.39 kg CO2/L** (LHV
+  basis) — "DESNZ 2025 'Outside of scopes' biogenic combustion CO2 for
+  Biodiesel ME = 2.39 kg CO2/L (also 72.16 kg/GJ, 2.68 kg/kg). Reported
+  separately, never zeroed." Source table/page: `'Outside of scopes' sheet,
+  'Biodiesel ME' (col 'kg CO2e of CO2 per unit', net CV basis)`.
+- **Biogas** (`biogas-biogenic-co2-desnz`): **1.1056695 kg CO2/kg** (LHV
+  basis) — "DESNZ 2025 'Outside of scopes' biogenic combustion CO2 for Biogas
+  = 1105.6695 kg per tonne = 1.1056695 kg CO2/kg (also 0.19902 kg/kWh).
+  Reported separately, never zeroed. Converted tonne→kg by ÷1000 (exact)."
+  Source table/page: `'Outside of scopes' sheet, 'Biogas' (col 'kg CO2e of
+  CO2 per unit', net CV basis)`.
+
+All five are `scope: "scope_3_upstream"` (used as the routing value for a
+memo-item line outside the main Scope 1/2/3 columns — see pitfall #1 above)
+and `region: "UK"`, `year: 2025`, `biogenic: true`. This closes the gap noted
+in §4.12 ("DESNZ 'Outside of scopes' biogenic CO2 figures: not yet
+extracted") and satisfies the review's provenance-ledger check (P1-D):
+every shipped value now resolves to a research-notes entry.

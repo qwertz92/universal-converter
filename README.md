@@ -157,13 +157,18 @@ Honest scope of what's exact vs. estimated vs. refused:
 
 ## Status
 
-**v0.1, under active construction.** The conversion engine (units, fuels,
-emissions, parser, guards) is implemented with 79 passing Vitest tests. The
-fuel and emission-factor data catalog and the SvelteKit UI routes are being
-built out to match the engine's contract. Treat this as a serious work in
-progress, not a finished product — see
-[`docs/roadmap.md`](docs/roadmap.md) for what's shipped vs. planned and
-[`docs/review-v0.1.md`](docs/review-v0.1.md) for the latest review findings.
+**v0.1, shipped.** The conversion engine (units, fuels, emissions, parser,
+guards), the full data catalog (73 units, 21 fuels, 33 emission factors, 10
+sources, 20 quick examples), and the SvelteKit UI (converter, unit/fuel
+detail pages, 14 Learn pages, Sources and Methodology pages, dark mode,
+prerendered where applicable) are all implemented and passing **325 Vitest
+tests**. This is v0.1, not a finished/final product — known gaps and honest
+limitations (e.g. crude-oil density, methane's own combustion factor,
+hydrogen upstream emissions) are documented in
+[`docs/accuracy-and-limitations.md`](docs/accuracy-and-limitations.md), and
+planned follow-on work is tracked in [`docs/roadmap.md`](docs/roadmap.md).
+See [`docs/review-v0.1.md`](docs/review-v0.1.md) for the latest review
+findings.
 
 ## License
 

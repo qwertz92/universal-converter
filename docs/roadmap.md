@@ -25,33 +25,32 @@
   (CO2/CO2e separation, biogenic CO2 handling, hydrogen combustion=0
   labeling), and all guards (no silent kW→kWh, no CO2↔CO2e path,
   `context_required` for missing fuel/region/year/density).
-- Zod-validated data files with strict envelopes (`data/units.json` populated
-  with 67 units; `data/sources.json` seeded with the unit-definition sources).
-- 79 passing Vitest tests across exact conversions, the parser, the fuel
-  pipeline, emissions, formatting, guards, and data validation — comfortably
-  past the spec's 30-test minimum (§13).
+- Zod-validated data files with strict envelopes: `data/units.json` populated
+  with **73 units**; `data/fuels.json` with **21 fuels** (incl. electricity);
+  `data/emission-factors.json` with **33 emission factors** (12 CO2, 16 CO2e,
+  5 biogenic CO2); `data/sources.json` with **10 sources**; `data/examples.json`
+  with **20 quick examples**.
+- **325 passing Vitest tests** (16 files) across exact conversions, the
+  parser, the fuel pipeline, emissions, formatting, guards, golden
+  end-to-end cases against the real catalog, and data validation —
+  comfortably past the spec's 30-test minimum (§13).
 - Domain documentation: `docs/conversion-rules.md` and
   `docs/accuracy-and-limitations.md` (Domain agent).
 - Research and source catalog: `docs/research-notes.md` (Research agent),
   identifying DESNZ 2025 as the primary fuel/emission data source (OGL v3),
   IPCC 2006 as the global fallback, EPA/EIA as US cross-checks, and NIST SP
   811 for exact unit-definition constants.
-
-**In progress at the time of writing** (being built in parallel by other
-agents; not yet reflected in the numbers above):
-
-- `data/fuels.json` and `data/emission-factors.json` population from the
-  DESNZ/IPCC research (Data agent) — both files exist with a valid empty
-  envelope but no entries yet.
-- The SvelteKit UI itself: the main converter page, result-group cards,
+- The full SvelteKit UI: the main converter page, result-group cards,
   exactness badges, unit/fuel detail pages, the 14 Learn pages, and the
-  Sources/Methodology pages (Frontend agent). Only the root layout and a
-  placeholder landing page exist in `src/routes` so far.
-- Final acceptance-criteria review (`docs/review-v0.1.md`, Review agent).
+  Sources/Methodology pages (Frontend agent) — all implemented, not
+  placeholders.
+- Final acceptance-criteria review (`docs/review-v0.1.md`, Review agent) —
+  24 PASS / 6 PARTIAL (documentation drift only) / 0 FAIL against the spec
+  §17 acceptance criteria.
 
-**Read `docs/review-v0.1.md` once it exists for the authoritative "is 0.1
-actually done" verdict** — this roadmap describes scope and intent, not a
-live build-status dashboard.
+**Read `docs/review-v0.1.md` for the authoritative "is 0.1 actually done"
+verdict** — this roadmap describes scope and intent, not a live
+build-status dashboard.
 
 ### 0.2 — Better natural-gas models, region/year electricity factors, import/export, advanced search, more fuels, better uncertainty display, public API draft
 

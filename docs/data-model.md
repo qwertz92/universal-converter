@@ -20,10 +20,10 @@ The catalog is five JSON files, each a strict envelope validated by Zod:
 | File | Envelope | Entity | Count (v0.1) |
 |---|---|---|---|
 | `data/units.json` | `{ $comment?, units: [...] }` | `Unit` | 73 |
-| `data/fuels.json` | `{ $comment?, fuels: [...] }` | `Fuel` | 20 |
+| `data/fuels.json` | `{ $comment?, fuels: [...] }` | `Fuel` | 21 |
 | `data/emission-factors.json` | `{ $comment?, emission_factors: [...] }` | `EmissionFactor` | 33 |
 | `data/sources.json` | `{ $comment?, sources: [...] }` | `Source` | 10 |
-| `data/examples.json` | `{ $comment?, examples: [...] }` | `Example` | 19 |
+| `data/examples.json` | `{ $comment?, examples: [...] }` | `Example` | 20 |
 
 `$comment` is an optional human-readable header. All other keys are rejected
 (`.strict()`), so a typo fails loudly at load time (`src/lib/data/load-data.ts`)
@@ -324,10 +324,19 @@ no density in that source); coal has no density (sold by mass).
 | ethanol | biofuel | Y | Y | Y | — | Y | Y | DESNZ 2025 |
 | biodiesel | biofuel | Y | Y | Y | — | Y | Y | DESNZ 2025 |
 | biogas | biofuel | Y | Y | Y | — | Y | Y | DESNZ 2025 |
+| electricity | electricity | — | — | — | †EU-27 only | †UK only | — | DESNZ 2025 (UK) / EEA (EU-27), illustrative only |
 
 `*` Hydrogen combustion CO2 = 0 is an **exact physical fact** (no carbon), emitted
 by the engine directly, not via an emission-factor row. Upstream (grey/blue/green)
 emissions are out of scope for v0.1 and deliberately **not** implied as zero.
+
+`†` Electricity has no density/heating-value fields (a pure grid commodity, not
+a combustible material) and no default emissions figure. Its two shipped
+factors (`electricity-uk-2025-co2e`, `electricity-eu27-2023-co2`) are
+**illustrative region+year examples only**, each `region_year_specific` —
+never a default. With no region/year supplied, the engine returns
+`context_required` (missing `region`+`year`) and surfaces both as
+`illustrative_examples` rather than guessing a grid mix (spec §13.4/§9.6).
 
 **Factor totals:** 33 emission factors — **12 CO2**, **16 CO2e**, **5 biogenic
 CO2** (wood-logs, wood-pellets, ethanol, biodiesel, biogas) — plus 2 illustrative
