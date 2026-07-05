@@ -194,15 +194,26 @@ describe('§13.5 fuel aliases do not collide across fuels (no alias maps to two 
 
 describe('§13.5 unit aliases: case-insensitive-loose collisions across DIFFERENT units', () => {
 	/**
-	 * NOTE ON DESIGN: names/aliases are matched case-INSENSITIVELY, but symbols
-	 * are matched case-SENSITIVELY (units/aliases.ts normalizeSymbol vs
-	 * normalizeLoose) precisely so that e.g. "cal" (calorie) and "Cal" (food
-	 * Calorie/kcal) can coexist as distinct SYMBOLS (rulebook §C.4/§D.7 — this
-	 * is intentional and not a collision at the symbol level).
+	 * NOTE ON DESIGN: names are matched case-INSENSITIVELY; symbols AND aliases
+	 * are first tried as an exact case-SENSITIVE match (units/registry.ts
+	 * `bySymbol`, fed from both `symbols` and `aliases`), falling back to a
+	 * case-insensitive match only when no case-sensitive hit exists (see
+	 * units/aliases.ts normalizeSymbol vs normalizeLoose). This lets:
+	 *  - "cal" (calorie) and "Cal" (food Calorie/kcal) coexist as distinct
+	 *    SYMBOLS (rulebook §C.4/§D.7);
+	 *  - "mg" (milligram symbol/alias) and "Mg" (SI megagram = tonne alias)
+	 *    coexist as distinct case-sensitive ALIASES (fixed: see the dedicated
+	 *    test below — this used to be a genuine factor-of-1e9 bug where "Mg"
+	 *    silently misparsed as milligram).
 	 *
 	 * This block checks for collisions in the LOOSE (lowercased) namespace,
-	 * which is what actually happens during alias/name resolution (and what a
-	 * symbol falls back to when no case-sensitive symbol match is found).
+	 * which is what the registry falls back to ONLY when no case-sensitive
+	 * symbol/alias match exists. A loose-key collision between two units that
+	 * are each other's case-sensitively-distinct symbol/alias (like "mg"/"Mg")
+	 * is NOT a real collision — case-sensitive resolution disambiguates it
+	 * before the loose map is ever consulted, and the one genuinely ambiguous
+	 * case (a loose-cased query like "MG", matching neither "mg" nor "Mg"
+	 * exactly) is now reported as `ambiguous`, never silently picked.
 	 */
 	it('lists every loose-key collision across different units for inspection', () => {
 		const map = new Map<string, string>();
@@ -218,16 +229,10 @@ describe('§13.5 unit aliases: case-insensitive-loose collisions across DIFFEREN
 				}
 			}
 		}
-		// Documented, understood collisions:
-		//  - "cal" <-> "Cal": INTENTIONAL by design (rulebook §C.4/§D.7) — "cal"
-		//    (calorie) and "Cal" (food Calorie = kcal) are meant to be distinct
-		//    SYMBOLS, disambiguated by case-sensitive symbol matching; they only
-		//    collide in this loose (lowercased) view, which the engine does not
-		//    actually use for symbol resolution (see units/registry.ts bySymbol).
-		//  - "mg" <-> "Mg": a GENUINE BUG (see the dedicated test below) — "Mg"
-		//    (megagram/tonne alias) is not a registered symbol, so it falls
-		//    through to this loose map and collides with milligram's "mg".
-		// No OTHER collisions are tolerated.
+		// Documented, understood collisions — both are case-sensitively distinct
+		// symbols/aliases ("cal" vs "Cal", "mg" vs "Mg"), resolved via the
+		// case-sensitive pass in units/registry.ts before ever reaching this
+		// loose (lowercased) view. No OTHER collisions are tolerated.
 		const known = new Set(['mg', 'cal']);
 		const unexpected = collisions.filter((c) => !known.has(c.key));
 		expect(unexpected, JSON.stringify(unexpected)).toHaveLength(0);
@@ -236,26 +241,40 @@ describe('§13.5 unit aliases: case-insensitive-loose collisions across DIFFEREN
 	});
 
 	it(
-		'BUG (engine, not fixed here): "Mg" (SI symbol for megagram = tonne, listed as a ' +
-			'tonne alias) is silently misparsed as milligram — a factor-of-1e9 unit-confusion ' +
-			'error. Root cause: units/registry.ts falls back to the case-INSENSITIVE `byLoose` ' +
-			'map for any token that is not an exact case-sensitive SYMBOL match; "Mg" is only an ' +
-			'ALIAS (not a symbol) of tonne, so it never hits the symbol path, and lowercasing ' +
-			'collides it with milligram\'s own "mg" symbol/alias, which was registered first. ' +
-			'See final report for the precise repro and suggested fix (case-sensitive alias ' +
-			'lookup, or removing ambiguous "Mg"/"mg" pairing from the alias lists).',
+		'FIXED: "Mg" (SI symbol for megagram = tonne, listed as a tonne alias) now ' +
+			'resolves to tonne, not milligram. Root cause was units/registry.ts falling back ' +
+			'to the case-INSENSITIVE `byLoose` map for any token that is not an exact ' +
+			'case-sensitive SYMBOL match; "Mg" was only an ALIAS (not a symbol) of tonne, so it ' +
+			'never hit the symbol path, and lowercasing collided it with milligram\'s own "mg" ' +
+			'symbol/alias. Fix: the registry now runs a case-sensitive pass across BOTH symbols ' +
+			'AND aliases before any case-insensitive fallback.',
 		() => {
 			const registry = new UnitRegistry(units);
-			const match = registry.resolve('Mg');
-			// PINS DOWN THE BUG'S CURRENT (WRONG) BEHAVIOUR so a future fix is visible
-			// as a passing-test change here, not a silent regression elsewhere.
-			expect(match.kind).toBe('match');
-			if (match.kind === 'match') {
-				// This SHOULD be 'tonne' (megagram); it is actually 'milligram'.
-				expect(match.unit.id).toBe('milligram');
+			const mg = registry.resolve('Mg');
+			expect(mg.kind).toBe('match');
+			if (mg.kind === 'match') {
+				expect(mg.unit.id).toBe('tonne');
+			}
+
+			// Lowercase "mg" still resolves to milligram, unaffected.
+			const lower = registry.resolve('mg');
+			expect(lower.kind).toBe('match');
+			if (lower.kind === 'match') {
+				expect(lower.unit.id).toBe('milligram');
 			}
 		}
 	);
+
+	it('an all-caps "MG" (matching neither "mg" nor "Mg" exactly) is reported as ambiguous, not silently picked', () => {
+		const registry = new UnitRegistry(units);
+		const match = registry.resolve('MG');
+		expect(match.kind).toBe('ambiguous');
+		if (match.kind === 'ambiguous') {
+			const ids = match.interpretations.map((i) => i.unit_id);
+			expect(ids).toEqual(expect.arrayContaining(['milligram', 'tonne']));
+			expect(ids).toHaveLength(2);
+		}
+	});
 });
 
 describe('§13.5 every spec §8.5 fuel exists in the catalog', () => {

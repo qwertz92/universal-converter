@@ -3,8 +3,17 @@
  * free-text token to a unit (or a structured ambiguity/unknown result).
  *
  * Matching rules (spec §8.2):
- *  - symbols match case-SENSITIVELY (design-forward for mW vs MW; rulebook B/D);
- *  - names and aliases match case-INSENSITIVELY;
+ *  - symbols AND aliases are first tried as an exact case-SENSITIVE match
+ *    (design-forward for mW vs MW, and for SI-style aliases like "Mg"
+ *    (megagram/tonne) vs "mg" (milligram) — rulebook B/D). Names are not part
+ *    of the case-sensitive pass; they are conventionally written out in full
+ *    and matched case-insensitively only.
+ *  - if no case-sensitive symbol/alias match is found, we fall back to a
+ *    case-INSENSITIVE match over names/aliases/symbols. If that loose key is
+ *    shared by MORE THAN ONE unit (e.g. "mg" the milligram symbol and "Mg" the
+ *    tonne alias both lowercase to "mg"), the fallback is AMBIGUOUS and is
+ *    reported as such rather than silently picking whichever unit happened to
+ *    be registered first;
  *  - the bare tokens "ton" and "gallon" are AMBIGUOUS and returned as such so the
  *    parser can disambiguate rather than silently pick (rulebook D.9, D.10).
  */
@@ -39,8 +48,12 @@ export type UnitMatch =
 
 export class UnitRegistry {
 	private readonly byId = new Map<string, Unit>();
+	/** Case-SENSITIVE exact-string index over symbols AND aliases. */
 	private readonly bySymbol = new Map<string, Unit>();
+	/** First-registered unit per case-INSENSITIVE (loose) key — for fuzzy suggestions. */
 	private readonly byLoose = new Map<string, Unit>();
+	/** ALL units sharing a given loose key, so ambiguity can be detected on fallback. */
+	private readonly byLooseAll = new Map<string, Unit[]>();
 	/** Loose keys of every name/alias/symbol, for fuzzy suggestions. */
 	private readonly looseKeys: string[] = [];
 
@@ -48,12 +61,27 @@ export class UnitRegistry {
 		for (const u of units) {
 			this.byId.set(u.id, u);
 			for (const sym of u.symbols) {
-				this.bySymbol.set(normalizeSymbol(sym), u);
+				this.addExact(sym, u);
 				this.addLoose(sym, u);
 			}
 			for (const name of u.names) this.addLoose(name, u);
-			for (const alias of u.aliases) this.addLoose(alias, u);
+			for (const alias of u.aliases) {
+				this.addExact(alias, u);
+				this.addLoose(alias, u);
+			}
 			this.addLoose(u.id, u);
+		}
+	}
+
+	/** Register a case-sensitive symbol/alias key. Exact matches never collide
+	 *  silently: if two different units already claim the identical exact
+	 *  string, the later one is simply not indexed here (case-sensitive
+	 *  collisions on the SAME string across DIFFERENT units are a data bug,
+	 *  caught by the data-validation tests, not something to guess at here). */
+	private addExact(token: string, unit: Unit): void {
+		const key = normalizeSymbol(token);
+		if (!this.bySymbol.has(key)) {
+			this.bySymbol.set(key, unit);
 		}
 	}
 
@@ -62,6 +90,12 @@ export class UnitRegistry {
 		if (!this.byLoose.has(key)) {
 			this.byLoose.set(key, unit);
 			this.looseKeys.push(key);
+		}
+		const bucket = this.byLooseAll.get(key);
+		if (bucket) {
+			if (!bucket.includes(unit)) bucket.push(unit);
+		} else {
+			this.byLooseAll.set(key, [unit]);
 		}
 	}
 
@@ -89,11 +123,29 @@ export class UnitRegistry {
 			return { kind: 'ambiguous', token: trimmed, interpretations };
 		}
 
-		// Case-sensitive symbol match.
+		// Case-SENSITIVE match across both symbols and aliases (e.g. "Mg" -> tonne,
+		// "mg" -> milligram; "cal" -> calorie, "Cal" -> food_calorie).
 		const symMatch = this.bySymbol.get(normalizeSymbol(trimmed));
-		if (symMatch) return { kind: 'match', unit: symMatch, via: 'symbol' };
+		if (symMatch) {
+			const via = symMatch.symbols.some((s) => normalizeSymbol(s) === normalizeSymbol(trimmed))
+				? 'symbol'
+				: 'alias';
+			return { kind: 'match', unit: symMatch, via };
+		}
 
-		// Case-insensitive name/alias match.
+		// Case-insensitive fallback over names/aliases/symbols. If the loose key is
+		// shared by more than one DIFFERENT unit, that's a genuine ambiguity (e.g.
+		// "MG" lowercases to "mg", which is claimed by both milligram and tonne) —
+		// report it instead of silently picking whichever was registered first.
+		const candidates = this.byLooseAll.get(loose);
+		if (candidates && candidates.length > 1) {
+			const interpretations: Interpretation[] = candidates.map((u) => ({
+				unit_id: u.id,
+				label: u.names[0],
+				note: u.notes
+			}));
+			return { kind: 'ambiguous', token: trimmed, interpretations };
+		}
 		const looseMatch = this.byLoose.get(loose);
 		if (looseMatch) {
 			const via = looseMatch.names.some((n) => normalizeLoose(n) === loose) ? 'name' : 'alias';
