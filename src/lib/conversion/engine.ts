@@ -28,6 +28,7 @@ import type {
 	EngineOptions,
 	Fuel,
 	HeatingBasis,
+	IllustrativeExample,
 	ParsedQuery,
 	ParseError,
 	Quantity,
@@ -675,8 +676,34 @@ export function createConverter(data: DataBundle): Converter {
 			missing: ['region', 'year'],
 			assumptions: [],
 			warnings: [],
-			source_refs: []
+			source_refs: [],
+			illustrative_examples: illustrativeElectricityExamples(fuel)
 		};
+	}
+
+	/**
+	 * Region+year-tagged illustrative (never default) electricity factors for the
+	 * "Illustrative examples" sub-block (rulebook §C.6: "(region, year, gCO2e/kWh,
+	 * source) rows"). Shown as the factor's own per-kWh RATE, not a mass computed
+	 * for the caller's input amount — these are reference examples of what a real
+	 * region+year factor looks like, not a computed answer for this query.
+	 */
+	function illustrativeElectricityExamples(fuel: Fuel): IllustrativeExample[] | undefined {
+		const examples: IllustrativeExample[] = [];
+		for (const fid of fuel.emission_factor_ids ?? []) {
+			const factor = factorsById.get(fid);
+			if (!factor || !factor.region || factor.year === undefined) continue;
+			if (factorInputKind(factor) !== 'energy') continue;
+			examples.push({
+				label: `${factor.region} ${factor.year}`,
+				value: factor.value,
+				unit_label: factor.unit,
+				region: factor.region,
+				year: factor.year,
+				source_refs: [factor.source_id]
+			});
+		}
+		return examples.length ? examples : undefined;
 	}
 
 	/* -------------------------------------------------------------- *

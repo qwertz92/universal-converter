@@ -7,10 +7,10 @@
  * gasoline L->CO2; natural gas m3->CO2; hydrogen combustion CO2=0 with
  * "combustion only" labeling; wood pellets -> biogenic CO2 on a separate line,
  * NOT added to fossil CO2; ethanol/biodiesel biogenic separation; electricity
- * kWh->CO2e without region/year (documented as a data gap — see
- * tests/golden/data-gaps.test.ts); CO2 never derived from CO2e or vice versa
- * (assert no CO2e result exists for a fuel that only has a CO2 factor, and
- * vice versa).
+ * kWh->CO2e without region/year -> context_required (see
+ * tests/golden/data-gaps.test.ts for the full illustrative-examples account);
+ * CO2 never derived from CO2e or vice versa (assert no CO2e result exists for
+ * a fuel that only has a CO2 factor, and vice versa).
  */
 
 import { describe, expect, it } from 'vitest';
@@ -142,10 +142,14 @@ describe('§13.4 ethanol/biodiesel biogenic separation (uk-desnz-ghg-2025 "Outsi
 	});
 });
 
-describe('§13.4 electricity kWh -> CO2e without region/year: documented data gap', () => {
-	it('is NOT reachable via the real catalog today (see tests/golden/data-gaps.test.ts for the full account)', () => {
+describe('§13.4 electricity kWh -> CO2e without region/year: context_required (fixed, see tests/golden/data-gaps.test.ts)', () => {
+	it('"1 kWh electricity" parses against the real catalog and its emissions are context_required', () => {
 		const out = converter.convertText('1 kWh electricity');
-		expect('error' in out).toBe(true);
+		expect('error' in out).toBe(false);
+		if ('error' in out) return;
+		const emissions = out.groups.find((g) => g.key === 'emissions')?.results ?? [];
+		expect(emissions[0]?.exactness).toBe('context_required');
+		expect(emissions[0]?.value).toBeNull();
 	});
 });
 
