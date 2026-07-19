@@ -13,11 +13,18 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
-	import type { ConversionResultSet, ParseError, HeatingBasis, Fuel } from '$lib/conversion/types';
+	import type {
+		ConversionResult,
+		ConversionResultSet,
+		ParseError,
+		HeatingBasis,
+		Fuel
+	} from '$lib/conversion/types';
 	import { engine, allUnits, allFuels } from '$lib/ui/engine';
 	import { debounce, searchFuels } from '$lib/ui/search';
 	import { buildQueryString, readUrlState } from '$lib/ui/query-state';
 	import OptionsBar from './OptionsBar.svelte';
+	import GridPicker from './GridPicker.svelte';
 	import QuickExamples from './QuickExamples.svelte';
 	import StructuredInput from './StructuredInput.svelte';
 	import ResultSet from '$lib/components/results/ResultSet.svelte';
@@ -37,7 +44,24 @@
 	);
 	let queryText = $state(initial.q);
 	let basis = $state<HeatingBasis>(initial.basis);
+	// Grid region/year for electricity (rulebook §C.6), encoded "region|year"; '' = unset.
+	let grid = $state(
+		initial.region !== undefined && initial.year !== undefined
+			? `${initial.region}|${initial.year}`
+			: ''
+	);
 	let showStructured = $state(false);
+
+	/** Decode the `grid` selection into engine options ({} when unset/invalid). */
+	function gridParts(g: string): { region?: string; year?: number } {
+		if (!g) return {};
+		const sep = g.lastIndexOf('|');
+		if (sep <= 0) return {};
+		const region = g.slice(0, sep);
+		const year = Number.parseInt(g.slice(sep + 1), 10);
+		if (!region || !Number.isInteger(year)) return {};
+		return { region, year };
+	}
 
 	let resultSet = $state<ConversionResultSet | null>(null);
 	let parseError = $state<ParseError | null>(null);
@@ -65,7 +89,7 @@
 				if (f) effective = `${trimmed} ${f.names[0]}`;
 			}
 		}
-		const out = conv.convertText(effective, { basis });
+		const out = conv.convertText(effective, { basis, ...gridParts(grid) });
 		if ('error' in out) {
 			parseError = out.error;
 			resultSet = null;
@@ -80,7 +104,7 @@
 	function pushUrl(): void {
 		if (!syncUrl || !browser) return;
 		// `params` is the query string WITHOUT a leading '?', or '' when empty.
-		const params = buildQueryString({ q: queryText, basis }).replace(/^\?/, '');
+		const params = buildQueryString({ q: queryText, basis, ...gridParts(grid) }).replace(/^\?/, '');
 		// resolve() keeps the URL base-path safe and, as the direct goto() argument,
 		// satisfies svelte/no-navigation-without-resolve (it returns a ResolvedPathname).
 		// A literal route prefix ('/' or '/convert') lets the typed router validate the
@@ -141,11 +165,14 @@
 	}
 
 	// ---- effects --------------------------------------------------------------
-	// Recompute when basis changes (keep results live). Reading `basis` into a
-	// const registers the reactive dependency without a bare-expression statement.
+	// Recompute when basis or the grid region/year changes (keep results live).
+	// Reading them into consts registers the reactive dependencies without a
+	// bare-expression statement.
 	$effect(() => {
 		const _basis = basis; // track basis changes
+		const _grid = grid; // track grid region/year changes
 		void _basis;
+		void _grid;
 		untrack(() => {
 			if (queryText.trim()) {
 				runConversion(queryText);
@@ -236,7 +263,7 @@
 			{/if}
 		</div>
 
-		<OptionsBar bind:basis />
+		<OptionsBar bind:basis bind:grid />
 	{/if}
 
 	<!-- Fuel context prompt (rulebook §C.8: "pick a material") -->
@@ -269,12 +296,20 @@
 		</div>
 	{/if}
 
+	<!-- Grid picker rendered inside emissions rows that need (or used) region/year.
+	     Present in compact mode too, where the OptionsBar picker is not shown. -->
+	{#snippet gridControl(result: ConversionResult)}
+		{#if result.category === 'emissions' && ((result.exactness === 'context_required' && result.missing?.includes('region')) || result.exactness === 'region_year_specific')}
+			<GridPicker bind:value={grid} id="uc-grid-inline" />
+		{/if}
+	{/snippet}
+
 	<!-- Results / errors -->
 	<div aria-live="polite" aria-atomic="false">
 		{#if parseError}
 			<ParseErrorNote error={parseError} onpick={onErrorPick} />
 		{:else if resultSet}
-			<ResultSet {resultSet} />
+			<ResultSet {resultSet} contextControl={gridControl} />
 		{:else if !compact}
 			<div
 				class="rounded-[var(--radius-card)] border border-dashed p-8 text-center"

@@ -10,6 +10,7 @@
  */
 
 import { getConverter, loadDataBundle } from '$lib';
+import { factorInputKind } from '$lib/emissions/factors';
 import type {
 	Converter,
 	DataBundle,
@@ -100,6 +101,48 @@ export function fuelCategories(): string[] {
 	const seen: string[] = [];
 	for (const f of bundle().fuels) if (!seen.includes(f.category)) seen.push(f.category);
 	return seen;
+}
+
+/* ------------------------------------------------------------------ *
+ * Grid electricity factors (rulebook §C.6, roadmap 0.2)
+ * ------------------------------------------------------------------ */
+
+/** One selectable region/year grid-intensity option, straight from the catalog. */
+export interface GridIntensityOption {
+	region: string;
+	year: number;
+	/** The factor's metric — 'CO2' and 'CO2e' stay visually distinct (§D.6). */
+	pollutant: string;
+	value: string;
+	unit: string;
+	source_id: string;
+}
+
+/**
+ * Region/year combinations for which a cited, energy-based grid factor exists.
+ * Data-driven: derived from the electricity fuel's emission_factor_ids — the
+ * UI never offers a combination the engine cannot answer.
+ */
+export function gridIntensityOptions(): GridIntensityOption[] {
+	const b = bundle();
+	const electricity = b.fuels.find((f) => f.category === 'electricity');
+	if (!electricity) return [];
+	const byId = new Map(b.emissionFactors.map((f) => [f.id, f]));
+	const out: GridIntensityOption[] = [];
+	for (const id of electricity.emission_factor_ids ?? []) {
+		const f = byId.get(id);
+		if (!f || !f.region || f.year === undefined) continue;
+		if (factorInputKind(f) !== 'energy') continue;
+		out.push({
+			region: f.region,
+			year: f.year,
+			pollutant: f.pollutant,
+			value: f.value,
+			unit: f.unit,
+			source_id: f.source_id
+		});
+	}
+	return out.sort((a, b2) => a.region.localeCompare(b2.region) || b2.year - a.year);
 }
 
 /* ------------------------------------------------------------------ *
