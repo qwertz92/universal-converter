@@ -1,6 +1,8 @@
 <script lang="ts">
-	/** Site footer: honest v0.1 positioning + section links. */
+	/** Site footer: honest versioned positioning, section links, OGL attribution
+	 *  (docs/sources.md: DESNZ-derived figures require the standard OGL line). */
 	import { resolve } from '$app/paths';
+	import pkg from '../../../../package.json';
 	const cols = [
 		{
 			title: 'Convert',
@@ -66,9 +68,23 @@
 			style="border-color:var(--border);color:var(--text-faint)"
 		>
 			<span
-				>&copy; {year} Universal Converter · v0.1 — an explanatory reference tool, not a compliance calculator.</span
+				>&copy; {year} Universal Converter · v{pkg.version} — an explanatory reference tool, not a
+				compliance calculator.</span
 			>
 			<span>Sources over invented numbers · exact vs. estimate kept distinct.</span>
 		</div>
+		<p class="mt-3 text-xs leading-relaxed" style="color:var(--text-faint)">
+			Contains public sector information licensed under the
+			<a
+				href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+				rel="license external"
+				class="underline decoration-dotted underline-offset-2 hover:text-[var(--accent)]"
+				>Open Government Licence v3.0</a
+			>
+			(UK DESNZ 2025 GHG conversion factors) — see
+			<a href={resolve('/sources')} class="underline decoration-dotted underline-offset-2 hover:text-[var(--accent)]"
+				>all sources &amp; licenses</a
+			>.
+		</p>
 	</div>
 </footer>
