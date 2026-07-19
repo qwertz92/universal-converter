@@ -23,6 +23,8 @@
 	import { engine, allUnits, allFuels } from '$lib/ui/engine';
 	import { debounce, searchFuels } from '$lib/ui/search';
 	import { buildQueryString, readUrlState } from '$lib/ui/query-state';
+	import { exportFilename, resultSetToCsv, resultSetToJson } from '$lib/ui/export';
+	import CopyButton from '$lib/components/results/CopyButton.svelte';
 	import OptionsBar from './OptionsBar.svelte';
 	import GridPicker from './GridPicker.svelte';
 	import QuickExamples from './QuickExamples.svelte';
@@ -207,6 +209,34 @@
 			g.results.some((r) => r.exactness === 'context_required' && r.missing?.includes('fuel'))
 		);
 	});
+
+	// ---- export (roadmap 0.2 import/export slice) -----------------------------
+	function downloadFile(content: string, filename: string, mime: string): void {
+		const blob = new Blob([content], { type: mime });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = filename;
+		a.click();
+		URL.revokeObjectURL(url);
+	}
+
+	function downloadJson(): void {
+		if (!resultSet) return;
+		downloadFile(resultSetToJson(resultSet), exportFilename(resultSet, 'json'), 'application/json');
+	}
+
+	function downloadCsv(): void {
+		if (!resultSet) return;
+		downloadFile(resultSetToCsv(resultSet), exportFilename(resultSet, 'csv'), 'text/csv');
+	}
+
+	/** Link to the same conversion on the public JSON API (draft). The base goes
+	 *  through resolve(); the search suffix is appended manually because the
+	 *  typed router models search-string suffixes for pages but not endpoints. */
+	const apiHref = $derived(
+		`${resolve('/api/convert')}${buildQueryString({ q: queryText, basis, ...gridParts(grid) })}`
+	);
 </script>
 
 <div class="space-y-4">
@@ -322,6 +352,39 @@
 			<ParseErrorNote error={parseError} onpick={onErrorPick} />
 		{:else if resultSet}
 			<ResultSet {resultSet} contextControl={gridControl} />
+
+			<!-- Export toolbar: take the whole grouped, sourced result set with you. -->
+			<div class="mt-3 flex flex-wrap items-center gap-2 text-xs" style="color:var(--text-faint)">
+				<span class="font-semibold tracking-wide uppercase">Export</span>
+				<CopyButton text={resultSetToJson(resultSet)} label="Copy JSON" compact />
+				<button
+					type="button"
+					class="rounded-md border px-2 py-1 font-medium hover:bg-[var(--surface-2)]"
+					style="border-color:var(--border);color:var(--text-muted)"
+					onclick={downloadJson}
+				>
+					Download JSON
+				</button>
+				<button
+					type="button"
+					class="rounded-md border px-2 py-1 font-medium hover:bg-[var(--surface-2)]"
+					style="border-color:var(--border);color:var(--text-muted)"
+					onclick={downloadCsv}
+				>
+					Download CSV
+				</button>
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- apiHref is resolve('/api/convert') + a query string; the typed router has no endpoint search-suffix form -->
+				<a
+					href={apiHref}
+					target="_blank"
+					rel="noopener"
+					class="rounded-md border px-2 py-1 font-medium hover:bg-[var(--surface-2)]"
+					style="border-color:var(--border);color:var(--text-muted)"
+					title="The same conversion on the public JSON API (draft)"
+				>
+					API ↗
+				</a>
+			</div>
 		{:else if !compact}
 			<div
 				class="rounded-[var(--radius-card)] border border-dashed p-8 text-center"
