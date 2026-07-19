@@ -68,8 +68,8 @@
 			style="border-color:var(--border);color:var(--text-faint)"
 		>
 			<span
-				>&copy; {year} Universal Converter · v{pkg.version} — an explanatory reference tool, not a
-				compliance calculator.</span
+				>&copy; {year} Universal Converter · v{pkg.version} — an explanatory reference tool, not a compliance
+				calculator.</span
 			>
 			<span>Sources over invented numbers · exact vs. estimate kept distinct.</span>
 		</div>
@@ -82,7 +82,9 @@
 				>Open Government Licence v3.0</a
 			>
 			(UK DESNZ 2025 GHG conversion factors) — see
-			<a href={resolve('/sources')} class="underline decoration-dotted underline-offset-2 hover:text-[var(--accent)]"
+			<a
+				href={resolve('/sources')}
+				class="underline decoration-dotted underline-offset-2 hover:text-[var(--accent)]"
 				>all sources &amp; licenses</a
 			>.
 		</p>
