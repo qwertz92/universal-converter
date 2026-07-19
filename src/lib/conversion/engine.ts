@@ -606,6 +606,9 @@ export function createConverter(data: DataBundle): Converter {
 
 			const warnings: Warning[] = [representativeValueWarning()];
 			if (biogenic) warnings.push(biogenicCo2Warning());
+			if (factor.uncertainty) {
+				warnings.push({ kind: 'factor_uncertainty', severity: 'info', text: factor.uncertainty });
+			}
 
 			builder.add({
 				value: formatValue(massDisplay, exactness),
@@ -977,6 +980,7 @@ function emissionExplanation(factor: {
 	basis?: HeatingBasis;
 	region?: string;
 	year?: number;
+	source_table_or_page?: string;
 }): string {
 	const parts = [
 		`metric: ${POLLUTANT_LABEL[factor.pollutant]}`,
@@ -985,6 +989,9 @@ function emissionExplanation(factor: {
 	if (factor.basis) parts.push(`basis: ${basisLabel(factor.basis)}`);
 	if (factor.region) parts.push(`region: ${factor.region}`);
 	if (factor.year) parts.push(`year: ${factor.year}`);
+	// Cell-level provenance (e.g. "'Fuels' sheet, 'Diesel (average biofuel blend)'")
+	// — the traceability this product exists for, surfaced instead of shelved.
+	if (factor.source_table_or_page) parts.push(`source table: ${factor.source_table_or_page}`);
 	return parts.join(' · ');
 }
 
