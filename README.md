@@ -152,23 +152,28 @@ Honest scope of what's exact vs. estimated vs. refused:
 | [`docs/research-notes.md`](docs/research-notes.md)                     | Raw research findings behind the source catalog.                                                       |
 | [`docs/roadmap.md`](docs/roadmap.md)                                   | Phased roadmap, v0.1 scope, candidate next features.                                                   |
 | [`docs/deployment-cloudflare.md`](docs/deployment-cloudflare.md)       | Cloudflare Pages deployment paths and operator checklist.                                              |
+| [`docs/api.md`](docs/api.md)                                           | `/api/convert` public API draft: parameters, response shape, guarantees.                               |
 | [`docs/adr/`](docs/adr/)                                               | Architecture decision records.                                                                         |
-| [`docs/review-v0.1.md`](docs/review-v0.1.md)                           | Final review findings (Review agent).                                                                  |
+| [`docs/review-v0.1.md`](docs/review-v0.1.md)                           | v0.1 review findings (Review agent).                                                                   |
+| [`CHANGELOG.md`](CHANGELOG.md)                                         | Versioned change history.                                                                              |
 
 ## Status
 
-**v0.1, shipped.** The conversion engine (units, fuels, emissions, parser,
-guards), the full data catalog (73 units, 21 fuels, 34 emission factors, 10
-sources, 20 quick examples), and the SvelteKit UI (converter, unit/fuel
-detail pages, 14 Learn pages, Sources and Methodology pages, dark mode,
-prerendered where applicable) are all implemented and passing **325 Vitest
-tests**. This is v0.1, not a finished/final product — known gaps and honest
-limitations (e.g. crude-oil density, methane's own combustion factor,
-hydrogen upstream emissions) are documented in
-[`docs/accuracy-and-limitations.md`](docs/accuracy-and-limitations.md), and
-planned follow-on work is tracked in [`docs/roadmap.md`](docs/roadmap.md).
-See [`docs/review-v0.1.md`](docs/review-v0.1.md) for the latest review
-findings.
+**v0.2.0, shipped** (see [`CHANGELOG.md`](CHANGELOG.md)). On top of the v0.1
+foundation — the conversion engine (units, fuels, emissions, parser, guards),
+the sourced data catalog (73 units, 21 fuels, 34 emission factors, 10
+sources, 20 quick examples) and the full SvelteKit UI — 0.2 adds the grid
+electricity **region/year picker** (cited factors only, CO2 vs CO2e labeled),
+the **`/api/convert` public API draft** ([`docs/api.md`](docs/api.md)),
+result **export** (JSON/CSV/API link), per-unit **converted ranges** with an
+honest `estimated` label for wide-spread fuels, a Time result group, SEO
+(sitemap, OG card, breadcrumb JSON-LD, `/units/kwh`-style short slugs),
+CI, and a broad accessibility pass — all passing **382 Vitest tests**.
+Known gaps and honest limitations (e.g. crude-oil density, methane's own
+combustion factor, hydrogen upstream emissions, no US grid factor until the
+EPA table is re-extracted at full fidelity) are documented in
+[`docs/accuracy-and-limitations.md`](docs/accuracy-and-limitations.md);
+follow-on work is tracked in [`docs/roadmap.md`](docs/roadmap.md).
 
 ## License
 

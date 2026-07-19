@@ -8,10 +8,13 @@
 > `wrangler types --check && vite build`; the `preview` script is
 > `wrangler pages dev .svelte-kit/cloudflare --port 4173`; there is a `gen`
 > script (`wrangler types`) and no separate `deploy` script (path B below
-> covers the equivalent CLI command directly). No Node-version file
-> (`.nvmrc`/`.node-version`) or `engines` field is committed, so the Node
-> version must be pinned via the Cloudflare dashboard's `NODE_VERSION`
-> environment variable (see Path A, step 5).
+> covers the equivalent CLI command directly). Since 0.2 the repo pins Node
+> via `.nvmrc` (22) and an `engines` field (`>=20`) — Cloudflare Pages reads
+> `.nvmrc` automatically; a dashboard `NODE_VERSION` environment variable
+> (Path A, step 5) still works and takes precedence if set. Note: with
+> `/api/convert` (0.2) the deployment is no longer purely static — the
+> adapter emits a Pages Function for it, which the Git-integration build
+> handles automatically.
 
 ## Deployment flow
 

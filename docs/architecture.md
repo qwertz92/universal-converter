@@ -55,6 +55,12 @@ flowchart TB
     style Data fill:#fee,stroke:#644
 ```
 
+Since 0.2 the app additionally exposes two server routes on top of the same
+engine: `/api/convert` (the public JSON API draft — the one **non**-prerendered
+route, a Cloudflare Pages Function wrapping the framework-independent handler
+in `src/lib/api/convert-endpoint.ts`; see `docs/api.md`) and a prerendered
+`/sitemap.xml`. Everything else remains fully prerendered (SSG).
+
 **Layer boundary rule (non-negotiable, `AGENTS.md`):** `src/lib/conversion`,
 `src/lib/units`, `src/lib/fuels`, `src/lib/emissions`, and `src/lib/data`
 contain no Svelte/SvelteKit imports. Svelte components and SvelteKit routes
