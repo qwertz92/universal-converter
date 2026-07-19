@@ -11,15 +11,7 @@
 
 import { getConverter, loadDataBundle } from '$lib';
 import { factorInputKind } from '$lib/emissions/factors';
-import type {
-	Converter,
-	DataBundle,
-	Fuel,
-	Source,
-	Unit,
-	BaseDimension,
-	Dimension
-} from '$lib/conversion/types';
+import type { Converter, DataBundle, Fuel, Source, Unit, Dimension } from '$lib/conversion/types';
 
 let _bundle: DataBundle | undefined;
 
@@ -75,15 +67,6 @@ export const DIMENSION_ORDER: Dimension[] = [
 	'mass_density'
 ];
 
-/** Dimensions a user can pick as a conversion target in the structured combobox. */
-export const CONVERTIBLE_DIMENSIONS: BaseDimension[] = [
-	'energy',
-	'power',
-	'mass',
-	'volume',
-	'time'
-];
-
 /* ------------------------------------------------------------------ *
  * Fuels
  * ------------------------------------------------------------------ */
@@ -94,13 +77,6 @@ export function allFuels(): Fuel[] {
 
 export function fuelById(id: string): Fuel | undefined {
 	return bundle().fuels.find((f) => f.id === id);
-}
-
-/** Distinct fuel categories present in the catalog, in first-seen order. */
-export function fuelCategories(): string[] {
-	const seen: string[] = [];
-	for (const f of bundle().fuels) if (!seen.includes(f.category)) seen.push(f.category);
-	return seen;
 }
 
 /* ------------------------------------------------------------------ *

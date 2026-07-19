@@ -14,12 +14,23 @@
 	] as const;
 
 	let menuOpen = $state(false);
+	let menuButtonEl = $state<HTMLButtonElement | null>(null);
 
 	function isActive(href: string): boolean {
 		const p = page.url.pathname;
 		return p === href || p.startsWith(href + '/');
 	}
+
+	function onHeaderKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape' && menuOpen) {
+			e.preventDefault();
+			menuOpen = false;
+			menuButtonEl?.focus();
+		}
+	}
 </script>
+
+<svelte:window onkeydown={onHeaderKeydown} />
 
 <header
 	class="sticky top-0 z-40 border-b backdrop-blur"
@@ -49,8 +60,10 @@
 			{#each links as link (link.href)}
 				<a
 					href={resolve(link.href)}
-					class="rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-[var(--surface-2)]"
-					style={isActive(link.href) ? 'color:var(--accent)' : 'color:var(--text-muted)'}
+					class="rounded-lg border-b-2 px-3 py-2 text-sm font-medium transition-colors hover:bg-[var(--surface-2)]"
+					style={isActive(link.href)
+						? 'color:var(--accent);border-color:var(--accent)'
+						: 'color:var(--text-muted);border-color:transparent'}
 					aria-current={isActive(link.href) ? 'page' : undefined}
 				>
 					{link.label}
@@ -62,6 +75,7 @@
 			<ThemeToggle />
 			<button
 				type="button"
+				bind:this={menuButtonEl}
 				class="inline-flex h-9 w-9 items-center justify-center rounded-lg border md:hidden"
 				style="border-color:var(--border)"
 				aria-label="Toggle navigation menu"
@@ -91,8 +105,8 @@
 
 	{#if menuOpen}
 		<nav
-			class="border-t px-4 pb-3 md:hidden"
-			style="border-color:var(--border)"
+			class="absolute top-full right-0 left-0 z-40 border-t px-4 pb-3 shadow-lg md:hidden"
+			style="border-color:var(--border);background:var(--bg)"
 			aria-label="Primary mobile"
 		>
 			{#each links as link (link.href)}

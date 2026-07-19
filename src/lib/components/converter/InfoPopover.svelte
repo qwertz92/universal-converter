@@ -7,17 +7,29 @@
 
 	let open = $state(false);
 	let rootEl = $state<HTMLSpanElement | null>(null);
+	let triggerEl = $state<HTMLButtonElement | null>(null);
 
 	function onFocusOut(e: FocusEvent) {
 		const next = e.relatedTarget as Node | null;
 		if (next && rootEl?.contains(next)) return;
 		open = false;
 	}
+
+	function onKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape' && open) {
+			e.preventDefault();
+			open = false;
+			triggerEl?.focus();
+		}
+	}
 </script>
+
+<svelte:window onkeydown={onKeydown} />
 
 <span class="relative inline-flex" bind:this={rootEl} onfocusout={onFocusOut}>
 	<button
 		type="button"
+		bind:this={triggerEl}
 		class="inline-flex h-5 w-5 items-center justify-center rounded-full border text-[0.7rem] font-semibold"
 		style="border-color:var(--border);color:var(--text-faint)"
 		aria-label={label}
@@ -28,7 +40,7 @@
 	</button>
 	{#if open}
 		<div
-			class="absolute top-6 left-0 z-30 w-72 rounded-lg border p-3 text-sm leading-snug shadow-lg"
+			class="absolute top-6 left-0 z-30 w-[min(18rem,calc(100vw-2rem))] rounded-lg border p-3 text-sm leading-snug shadow-lg"
 			style="background:var(--surface);border-color:var(--border);color:var(--text-muted)"
 			role="tooltip"
 		>

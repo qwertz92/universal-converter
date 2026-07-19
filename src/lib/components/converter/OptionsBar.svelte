@@ -9,15 +9,33 @@
 	import InfoPopover from './InfoPopover.svelte';
 	import GridPicker from './GridPicker.svelte';
 
-	let {
-		basis = $bindable(),
-		grid = $bindable('')
-	}: { basis: HeatingBasis; grid?: string } = $props();
+	let { basis = $bindable(), grid = $bindable('') }: { basis: HeatingBasis; grid?: string } =
+		$props();
 
 	const options: { id: HeatingBasis; label: string }[] = [
 		{ id: 'lhv', label: 'LHV / NCV' },
 		{ id: 'hhv', label: 'HHV / GCV' }
 	];
+
+	let radioEls: (HTMLButtonElement | null)[] = $state([]);
+
+	/**
+	 * Roving-tabindex radiogroup keyboard pattern (WAI-ARIA APG): arrow keys
+	 * move focus AND selection to the adjacent radio, wrapping at the ends.
+	 */
+	function onRadioKeydown(e: KeyboardEvent, index: number) {
+		let next: number;
+		if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+			next = (index + 1) % options.length;
+		} else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+			next = (index - 1 + options.length) % options.length;
+		} else {
+			return;
+		}
+		e.preventDefault();
+		basis = options[next].id;
+		radioEls[next]?.focus();
+	}
 </script>
 
 <div
@@ -47,16 +65,19 @@
 		role="radiogroup"
 		aria-label="Heating value basis"
 	>
-		{#each options as opt (opt.id)}
+		{#each options as opt, i (opt.id)}
 			<button
 				type="button"
+				bind:this={radioEls[i]}
 				role="radio"
 				aria-checked={basis === opt.id}
+				tabindex={basis === opt.id ? 0 : -1}
 				class="px-3 py-1.5 text-sm font-medium transition-colors"
 				style={basis === opt.id
 					? 'background:var(--accent);color:var(--accent-contrast)'
 					: 'background:var(--surface);color:var(--text-muted)'}
 				onclick={() => (basis = opt.id)}
+				onkeydown={(e) => onRadioKeydown(e, i)}
 			>
 				{opt.label}
 			</button>

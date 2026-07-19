@@ -7,10 +7,15 @@
 
 	let { warnings, title = 'Warnings' }: { warnings: Warning[]; title?: string } = $props();
 
-	const hasCritical = $derived(warnings.some((w) => w.severity === 'critical'));
 	let open = $state(false);
 	$effect(() => {
-		if (hasCritical) open = true;
+		// Read `warnings` itself (not a memoized boolean) so the dependency is on
+		// the array the parent passes in: a brand-new result set that is ALSO
+		// critical must still re-open a note the user had collapsed, even though
+		// "has a critical warning" was already true before and after — a
+		// `$derived` boolean wouldn't re-notify subscribers when its value is
+		// unchanged, so the check has to run again directly off the array here.
+		if (warnings.some((w) => w.severity === 'critical')) open = true;
 	});
 </script>
 
@@ -51,10 +56,19 @@
 			<ul class="mt-2 space-y-1.5 pl-1">
 				{#each warnings as w, i (w.kind + i)}
 					<li class="flex gap-2">
-						<span aria-hidden="true" class="mt-0.5 shrink-0 opacity-70">
+						<span
+							aria-hidden="true"
+							class="mt-0.5 shrink-0 {w.severity === 'critical'
+								? 'text-red-600 dark:text-red-400'
+								: 'opacity-70'}"
+						>
 							{w.severity === 'critical' ? '‼' : w.severity === 'caution' ? '△' : 'ℹ'}
 						</span>
-						<span class="leading-snug">{w.text}</span>
+						<span
+							class="leading-snug {w.severity === 'critical'
+								? 'text-red-600 dark:text-red-400'
+								: ''}">{w.text}</span
+						>
 					</li>
 				{/each}
 			</ul>

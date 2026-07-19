@@ -45,6 +45,7 @@
 	</div>
 
 	<!-- Value groups (already in canonical order) -->
+	<h2 class="sr-only">Conversion results</h2>
 	<div class="grid gap-4 md:grid-cols-2">
 		{#each valueGroups as group (group.key)}
 			<ResultGroupCard {group} {contextControl} />

@@ -3,8 +3,8 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="text-scale" content="scale" />
-		<meta name="theme-color" content="#0b1220" />
+		<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8fafb" />
+		<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b1220" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
 		<!--
 			No-FOUC theme bootstrap: applied before the first paint so a dark-mode
@@ -15,9 +15,13 @@
 			(function () {
 				try {
 					var stored = localStorage.getItem('uc-theme');
+					// Fallback semantics must match readStored() in theme.svelte.ts: any
+					// value other than the two explicit choices (including a corrupted
+					// or unrecognized stored value, not just a missing one) is 'system'.
+					var mode = stored === 'light' || stored === 'dark' ? stored : 'system';
 					var wantsDark =
-						stored === 'dark' ||
-						(stored === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+						mode === 'dark' ||
+						(mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 					if (wantsDark) document.documentElement.classList.add('dark');
 					document.documentElement.style.colorScheme = wantsDark ? 'dark' : 'light';
 				} catch (e) {
