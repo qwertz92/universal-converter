@@ -20,6 +20,7 @@ const GROUP_TITLES: Record<ResultGroupKey, string> = {
 	power: 'Power',
 	mass: 'Mass',
 	volume: 'Volume',
+	time: 'Time',
 	fuel_equivalents: 'Fuel Equivalents',
 	emissions: 'Emissions',
 	energy_density: 'Energy Density',

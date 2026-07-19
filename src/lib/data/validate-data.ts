@@ -14,7 +14,11 @@
  *  - every unit whose exactness is NOT exact/standard_definition has >=1 source_ref;
  *  - every fuel heating value is labeled with a basis and cites a source;
  *  - every fuel emission_factor_id resolves; every factor's fuel_id (if set) resolves;
- *  - CO2 and CO2e factors are never the same entry (metric separation sanity).
+ *  - CO2 and CO2e factors are never the same entry (metric separation sanity);
+ *  - every density / heating value / emission factor value is strictly positive
+ *    and every range has low < high (a zero density would flow "Infinity"
+ *    silently into user-facing values — decimal.js divides by zero without
+ *    throwing).
  */
 
 import type { ZodType, z } from 'zod';
@@ -115,6 +119,8 @@ export function validateAll(): ValidationReport {
 		}
 		if (f.density) {
 			checkUnitRef(issues, 'fuels', `fuels[${i}] (${f.id}).density.unit`, f.density.unit, unitIds);
+			checkPositive(issues, 'fuels', `fuels[${i}] (${f.id}).density`, f.density.value);
+			checkRange(issues, 'fuels', `fuels[${i}] (${f.id}).density.range`, f.density.range);
 			for (const ref of f.density.source_refs) {
 				if (!sourceIds.has(ref)) {
 					issues.push({
@@ -141,6 +147,8 @@ export function validateAll(): ValidationReport {
 				hv.unit,
 				unitIds
 			);
+			checkPositive(issues, 'fuels', `fuels[${i}] (${f.id}).heating_values[${j}]`, hv.value);
+			checkRange(issues, 'fuels', `fuels[${i}] (${f.id}).heating_values[${j}].range`, hv.range);
 			for (const ref of hv.source_refs) {
 				if (!sourceIds.has(ref)) {
 					issues.push({
@@ -186,6 +194,7 @@ export function validateAll(): ValidationReport {
 			ef.unit,
 			unitIds
 		);
+		checkPositive(issues, 'emission-factors', `emission_factors[${i}] (${ef.id})`, ef.value);
 	}
 
 	return { ok: issues.length === 0, issues };
@@ -238,6 +247,41 @@ function checkUnitRef(
 			file,
 			path,
 			message: `unit '${unit}' does not resolve to a units.json entry`
+		});
+	}
+}
+
+/** Physical data values must be strictly positive (schema guarantees "finite decimal"). */
+function checkPositive(
+	issues: ValidationIssue[],
+	file: ValidationIssue['file'],
+	path: string,
+	value: string
+): void {
+	if (!(Number(value) > 0)) {
+		issues.push({
+			file,
+			path,
+			message: `value '${value}' must be strictly positive`
+		});
+	}
+}
+
+/** Ranges must be well-formed: low < high, both positive. */
+function checkRange(
+	issues: ValidationIssue[],
+	file: ValidationIssue['file'],
+	path: string,
+	range: { low: string; high: string } | undefined
+): void {
+	if (!range) return;
+	const low = Number(range.low);
+	const high = Number(range.high);
+	if (!(low > 0) || !(high > 0) || !(low < high)) {
+		issues.push({
+			file,
+			path,
+			message: `range [${range.low}, ${range.high}] must satisfy 0 < low < high`
 		});
 	}
 }

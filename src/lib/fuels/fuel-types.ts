@@ -13,8 +13,3 @@ export function isElectricity(fuel: Fuel): boolean {
 export function isHydrogen(fuel: Fuel): boolean {
 	return fuel.category === 'hydrogen' || fuel.id === 'hydrogen';
 }
-
-/** Whether the fuel is (partly) biogenic — its biogenic CO2 is reported separately. */
-export function isBiogenic(fuel: Fuel): boolean {
-	return fuel.category === 'biomass' || fuel.category === 'biofuel';
-}

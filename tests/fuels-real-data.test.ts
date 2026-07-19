@@ -169,7 +169,12 @@ describe('§13.3 every fuel in the catalog: available heating values produce bas
 			const withValue = results.filter((r) => r.value !== null);
 			expect(withValue.length, `${fuelId} energy results`).toBeGreaterThan(0);
 			for (const r of withValue) {
-				expect(r.exactness, `${fuelId} exactness`).toBe('source_based');
+				// Rank-variable fuels whose OWN source records a wide spread
+				// (>25% high/low: lignite, anthracite) are honestly `estimated`;
+				// single tabulated values stay `source_based` (engine heuristic).
+				expect(['source_based', 'estimated'], `${fuelId} exactness (${r.exactness})`).toContain(
+					r.exactness
+				);
 				expect(r.source_refs.length, `${fuelId} source_refs`).toBeGreaterThan(0);
 			}
 			// At least one assumption on every energy result states the HV basis.

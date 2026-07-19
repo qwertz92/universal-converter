@@ -5,28 +5,9 @@
 
 import type { Warning } from './types';
 
-export function gasBillingWarning(): Warning {
-	return {
-		kind: 'gas_billing',
-		severity: 'critical',
-		text:
-			'This is NOT how a gas bill is calculated. The tool does not know your local ' +
-			'calorific value (Brennwert) or your meter’s state number (Zustandszahl / correction ' +
-			'factor) that maps operating-condition m³ to reference-condition energy. Use your ' +
-			'supplier’s invoice and meter data for an exact figure; do not use this for billing disputes.'
-	};
-}
-
-export function gasReferenceConditionWarning(condition: string): Warning {
-	return {
-		kind: 'gas_reference_condition',
-		severity: 'caution',
-		text:
-			`Gas volume is taken at ${condition}. A "normal" m³ (0 °C), a "standard" m³ ` +
-			'(15/25 °C) and your operating-condition m³ are different volumes; the tool does ' +
-			'not treat them as interchangeable.'
-	};
-}
+// NOTE: the gas-billing / reference-condition / phase warnings users see come
+// from the fuel catalog's own `warnings[]` entries (data-driven, kind
+// 'fuel_warning'); dedicated builders for them were removed as dead duplicates.
 
 export function boeConventionWarning(): Warning {
 	return {
@@ -58,17 +39,6 @@ export function hydrogenCombustionWarning(): Warning {
 			'Combustion only: H₂ contains no carbon, so direct-combustion CO2 = 0. Upstream ' +
 			'emissions depend entirely on the production pathway (grey/SMR, blue, green) and are ' +
 			'NOT included here — a bare "hydrogen = 0 CO2" is not a lifecycle claim.'
-	};
-}
-
-export function phaseDistinctionWarning(phase: string): Warning {
-	return {
-		kind: 'phase_distinction',
-		severity: 'caution',
-		text:
-			`This result is for the ${phase} phase. Liquefied natural gas (LNG) and gaseous ` +
-			'natural gas are not interchangeable by volume (~600× different energy per volume); ' +
-			'conversions go through mass/energy, never m³-LNG ↔ m³-gas directly.'
 	};
 }
 

@@ -12,13 +12,19 @@ export function normalizeLoose(token: string): string {
 		.toLowerCase()
 		.replace(/[³]/g, '3') // ³ -> 3 so "m³" and "m3" collide
 		.replace(/[²]/g, '2')
+		.replace(/[μ]/g, 'µ') // Greek mu U+03BC -> micro sign U+00B5 (one canonical form)
 		.replace(/\s+/g, ' ')
 		.trim();
 }
 
-/** Symbols keep case but still normalise superscripts and whitespace. */
+/** Symbols keep case but still normalise superscripts, mu variants and whitespace. */
 export function normalizeSymbol(token: string): string {
-	return token.replace(/[³]/g, '3').replace(/[²]/g, '2').replace(/\s+/g, ' ').trim();
+	return token
+		.replace(/[³]/g, '3')
+		.replace(/[²]/g, '2')
+		.replace(/[μ]/g, 'µ')
+		.replace(/\s+/g, ' ')
+		.trim();
 }
 
 /** Levenshtein distance for "did you mean" suggestions on unknown units. */

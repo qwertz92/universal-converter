@@ -15,6 +15,7 @@ export const GROUP_META: Record<ResultGroupKey, GroupMeta> = {
 	power: { title: 'Power', blurb: 'Rate of energy — not energy itself.' },
 	mass: { title: 'Mass' },
 	volume: { title: 'Volume' },
+	time: { title: 'Time' },
 	fuel_equivalents: {
 		title: 'Fuel equivalents',
 		blurb: 'Convention-defined energy-equivalence units (toe, boe, tce).'

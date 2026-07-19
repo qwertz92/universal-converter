@@ -141,3 +141,19 @@ export function applyFactor(factor: EmissionFactor, amountBase: string): Applied
 export function factorInputKind(factor: EmissionFactor): FactorInputKind | undefined {
 	return specForUnit(factor.unit)?.inputKind;
 }
+
+/** Human-readable label for a factor's unit id (e.g. "g_co2e_per_kwh" → "gCO2e/kWh"). */
+export function factorUnitLabel(unit: string): string {
+	const map: Record<string, string> = {
+		kg_co2_per_l: 'kgCO2/L',
+		kg_co2_per_m3: 'kgCO2/m³',
+		kg_co2_per_kg: 'kgCO2/kg',
+		kg_co2_per_gj: 'kgCO2/GJ',
+		kg_co2e_per_l: 'kgCO2e/L',
+		kg_co2e_per_m3: 'kgCO2e/m³',
+		kg_co2e_per_kg: 'kgCO2e/kg',
+		g_co2_per_kwh: 'gCO2/kWh',
+		g_co2e_per_kwh: 'gCO2e/kWh'
+	};
+	return map[unit] ?? unit;
+}
