@@ -158,7 +158,7 @@ Honest scope of what's exact vs. estimated vs. refused:
 ## Status
 
 **v0.1, shipped.** The conversion engine (units, fuels, emissions, parser,
-guards), the full data catalog (73 units, 21 fuels, 33 emission factors, 10
+guards), the full data catalog (73 units, 21 fuels, 34 emission factors, 10
 sources, 20 quick examples), and the SvelteKit UI (converter, unit/fuel
 detail pages, 14 Learn pages, Sources and Methodology pages, dark mode,
 prerendered where applicable) are all implemented and passing **325 Vitest

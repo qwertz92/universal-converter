@@ -27,7 +27,7 @@
   `context_required` for missing fuel/region/year/density).
 - Zod-validated data files with strict envelopes: `data/units.json` populated
   with **73 units**; `data/fuels.json` with **21 fuels** (incl. electricity);
-  `data/emission-factors.json` with **33 emission factors** (12 CO2, 16 CO2e,
+  `data/emission-factors.json` with **34 emission factors** (13 CO2, 16 CO2e,
   5 biogenic CO2); `data/sources.json` with **10 sources**; `data/examples.json`
   with **20 quick examples**.
 - **325 passing Vitest tests** (16 files) across exact conversions, the

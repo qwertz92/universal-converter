@@ -66,11 +66,11 @@ describe('electricity + matching region/year → region_year_specific mass', () 
 });
 
 describe('electricity without a matching factor stays context_required', () => {
-	it('no region/year → context_required with both illustrative examples', () => {
+	it('no region/year → context_required with all three illustrative examples', () => {
 		const r = emissionsFor('1 kWh electricity');
 		expect(r?.exactness).toBe('context_required');
 		expect(r?.missing).toEqual(expect.arrayContaining(['region', 'year']));
-		expect(r?.illustrative_examples?.length).toBe(2);
+		expect(r?.illustrative_examples?.length).toBe(3);
 	});
 
 	it('a region/year combination NOT in the catalog (DE 2024) → context_required, nothing invented', () => {
@@ -78,7 +78,15 @@ describe('electricity without a matching factor stays context_required', () => {
 		expect(r?.exactness).toBe('context_required');
 		expect(r?.value).toBeNull();
 		expect(r?.explanation).toContain('DE 2024');
-		expect(r?.illustrative_examples?.length).toBe(2);
+		expect(r?.illustrative_examples?.length).toBe(3);
+	});
+
+	it('1 kWh electricity, EU-27 2022 → 0.292 kg CO2 (prior-year factor, year-dependence visible)', () => {
+		const r = emissionsFor('1 kWh electricity', { region: 'EU-27', year: 2022 });
+		expect(r?.exactness).toBe('region_year_specific');
+		expect(r?.raw).toBe('0.292');
+		expect(r?.unit_id).toBe('kilogram_co2');
+		expect(r?.source_refs).toEqual(['eea-electricity-intensity']);
 	});
 
 	it('a matching region with the WRONG year (UK 2023) → context_required', () => {

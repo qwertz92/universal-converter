@@ -21,7 +21,7 @@ The catalog is five JSON files, each a strict envelope validated by Zod:
 |---|---|---|---|
 | `data/units.json` | `{ $comment?, units: [...] }` | `Unit` | 73 |
 | `data/fuels.json` | `{ $comment?, fuels: [...] }` | `Fuel` | 21 |
-| `data/emission-factors.json` | `{ $comment?, emission_factors: [...] }` | `EmissionFactor` | 33 |
+| `data/emission-factors.json` | `{ $comment?, emission_factors: [...] }` | `EmissionFactor` | 34 |
 | `data/sources.json` | `{ $comment?, sources: [...] }` | `Source` | 10 |
 | `data/examples.json` | `{ $comment?, examples: [...] }` | `Example` | 20 |
 
@@ -331,17 +331,20 @@ by the engine directly, not via an emission-factor row. Upstream (grey/blue/gree
 emissions are out of scope for v0.1 and deliberately **not** implied as zero.
 
 `†` Electricity has no density/heating-value fields (a pure grid commodity, not
-a combustible material) and no default emissions figure. Its two shipped
-factors (`electricity-uk-2025-co2e`, `electricity-eu27-2023-co2`) are
-**illustrative region+year examples only**, each `region_year_specific` —
-never a default. With no region/year supplied, the engine returns
-`context_required` (missing `region`+`year`) and surfaces both as
-`illustrative_examples` rather than guessing a grid mix (spec §13.4/§9.6).
+a combustible material) and no default emissions figure. Its three shipped
+factors (`electricity-uk-2025-co2e`, `electricity-eu27-2023-co2`,
+`electricity-eu27-2022-co2`) are **illustrative region+year examples only**,
+each `region_year_specific` — never a default. With no region/year supplied,
+the engine returns `context_required` (missing `region`+`year`) and surfaces
+all of them as `illustrative_examples` rather than guessing a grid mix (spec
+§13.4/§9.6). With a matching region+year (0.2 picker), the engine multiplies
+the input energy through the chosen factor.
 
-**Factor totals:** 33 emission factors — **12 CO2**, **16 CO2e**, **5 biogenic
-CO2** (wood-logs, wood-pellets, ethanol, biodiesel, biogas) — plus 2 illustrative
-electricity-intensity factors (UK 2025 0.177 kgCO2e/kWh; EU-27 2023 242 gCO2/kWh),
-each explicitly region + year tagged.
+**Factor totals:** 34 emission factors — **13 CO2**, **16 CO2e**, **5 biogenic
+CO2** (wood-logs, wood-pellets, ethanol, biodiesel, biogas) — including 3
+illustrative electricity-intensity factors (UK 2025 0.177 kgCO2e/kWh; EU-27
+2023 242 gCO2/kWh; EU-27 2022 292 gCO2/kWh), each explicitly region + year
+tagged.
 
 ### Gaps deliberately left open (v0.1)
 

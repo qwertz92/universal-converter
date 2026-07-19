@@ -846,9 +846,13 @@
 			"names": ["electricity"],
 			"aliases": ["strom", "power grid", "grid electricity", "mains electricity"],
 			"category": "electricity",
-			"emission_factor_ids": ["electricity-uk-2025-co2e", "electricity-eu27-2023-co2"],
+			"emission_factor_ids": [
+				"electricity-uk-2025-co2e",
+				"electricity-eu27-2023-co2",
+				"electricity-eu27-2022-co2"
+			],
 			"source_refs": ["uk-desnz-ghg-2025", "eea-electricity-intensity"],
-			"notes": "Grid electricity is not a combustible material: it has no density and no heating value (mass/volume conversions are not applicable and are correctly omitted, not 'not available'). '1 kWh electricity' converts as pure energy (kWh/MJ/BTU/etc., exact SI conversions); its CO2e is `context_required` by default because grid carbon intensity depends on country/region, year, and even time of day (rulebook §C.6, spec §9.6). The two linked emission_factor_ids are ILLUSTRATIVE region+year examples (UK 2025, EU-27 2023), not global defaults — see docs/conversion-rules.md §C.6.",
+			"notes": "Grid electricity is not a combustible material: it has no density and no heating value (mass/volume conversions are not applicable and are correctly omitted, not 'not available'). '1 kWh electricity' converts as pure energy (kWh/MJ/BTU/etc., exact SI conversions); its CO2e is `context_required` by default because grid carbon intensity depends on country/region, year, and even time of day (rulebook §C.6, spec §9.6). The linked emission_factor_ids are ILLUSTRATIVE region+year examples (UK 2025, EU-27 2023, EU-27 2022), not global defaults — see docs/conversion-rules.md §C.6. Shipping two EU years side by side makes the year-dependence of grid intensity directly visible.",
 			"warnings": [
 				"Grid electricity CO2e has no single correct global factor — it depends on the country/region, the year, and even the time of day. Pick a region and year for a real figure; the values shown without one are illustrative examples only, not defaults.",
 				"Illustrative region+year electricity factors are generation-only / location-based (see each factor's own uncertainty note) and are not updated in real time."
