@@ -7,6 +7,7 @@
 	 * notes rather than errors (rulebook §A.2, §C.6).
 	 */
 	import type { ConversionResult } from '$lib/conversion/types';
+	import { formatRange } from '$lib/formatting/numbers';
 	import { resolveSources } from '$lib/ui/engine';
 	import ExactnessBadge from '$lib/components/badges/ExactnessBadge.svelte';
 	import CopyButton from './CopyButton.svelte';
@@ -24,26 +25,35 @@
 	let expanded = $state(false);
 
 	const hasValue = $derived(result.value !== null);
+	// Value-less rows already show their explanation inline — the disclosure is
+	// only worth rendering when it adds something beyond that.
 	const hasDetail = $derived(
 		Boolean(
 			result.formula ||
 			result.assumptions.length ||
 			result.warnings.length ||
 			result.source_refs.length ||
-			result.explanation
+			(hasValue && result.explanation)
 		)
 	);
 
 	// Plain value for copy (strip the ~ estimate marker and thousands separators).
 	const copyValue = $derived((result.raw ?? result.value ?? '').toString());
 
-	// "Copy citation": value + unit + first source publisher/title.
+	// Range formatted through the exactness-bounded formatter (sig-fig cap + ~),
+	// in THIS row's target unit — the engine converts it per unit (§C.7 rule 2).
+	const rangeDisplay = $derived(
+		result.range ? formatRange(result.range.low, result.range.high, result.exactness) : ''
+	);
+
+	// "Copy citation": value + unit (+ range) + first source publisher/title.
 	const citation = $derived.by(() => {
 		if (!hasValue) return '';
 		const srcs = resolveSources(result.source_refs);
 		const src = srcs[0];
 		const srcStr = src ? ` — source: ${src.publisher ?? src.title}` : '';
-		return `${result.value} ${result.unit_label} (${result.exactness})${srcStr}`;
+		const rangeStr = rangeDisplay ? `, range ${rangeDisplay} ${result.unit_label}` : '';
+		return `${result.value} ${result.unit_label} (${result.exactness}${rangeStr})${srcStr}`;
 	});
 </script>
 
@@ -54,13 +64,18 @@
 	<div class="flex items-start justify-between gap-3">
 		<div class="min-w-0 flex-1">
 			{#if hasValue}
-				<div class="flex items-baseline gap-2">
+				<div class="flex flex-wrap items-baseline gap-x-2">
 					<span class="uc-num text-xl font-semibold tracking-tight" style="color:var(--text)">
-						{result.range ? `${result.range.low}–${result.range.high}` : result.value}
+						{result.value}
 					</span>
 					<span class="text-sm font-medium" style="color:var(--text-muted)"
 						>{result.unit_label}</span
 					>
+					{#if rangeDisplay}
+						<span class="uc-num text-xs" style="color:var(--text-muted)"
+							>range {rangeDisplay} {result.unit_label}</span
+						>
+					{/if}
 				</div>
 			{:else}
 				<div class="flex items-center gap-2 text-sm font-medium" style="color:var(--text-muted)">
@@ -115,8 +130,17 @@
 			<ul class="space-y-1">
 				{#each result.illustrative_examples as ex, i (ex.label + i)}
 					<li class="flex items-baseline justify-between gap-3 text-sm">
-						<span style="color:var(--text-muted)">
-							{ex.label}{ex.region ? ` · ${ex.region}` : ''}{ex.year ? ` ${ex.year}` : ''}
+						<span class="flex items-baseline gap-1.5" style="color:var(--text-muted)">
+							{ex.label}
+							{#if ex.pollutant}
+								<!-- CO2 vs CO2e are different metrics — label each row so two
+								     examples are never read as directly comparable (§D.6). -->
+								<span
+									class="rounded-full border px-1.5 text-[0.62rem] font-semibold whitespace-nowrap"
+									style="border-color:var(--border-strong);color:var(--text)"
+									title="Metric — CO2 and CO2e are not comparable">{ex.pollutant}</span
+								>
+							{/if}
 						</span>
 						<span class="uc-num" style="color:var(--text)">{ex.value} {ex.unit_label}</span>
 					</li>
@@ -125,8 +149,10 @@
 		</div>
 	{/if}
 
-	<!-- Expandable detail (formula / assumptions / warnings / sources). -->
-	{#if hasValue && hasDetail}
+	<!-- Expandable detail (formula / assumptions / warnings / sources).
+	     Also shown for value-less rows: their warnings/sources would otherwise
+	     only appear unattributed in the set-level panels. -->
+	{#if hasDetail}
 		<div class="mt-2">
 			<button
 				type="button"
@@ -154,7 +180,7 @@
 					class="mt-2 space-y-3 rounded-lg px-3 py-2.5 text-sm"
 					style="background:var(--surface-2)"
 				>
-					{#if result.explanation}
+					{#if hasValue && result.explanation}
 						<p class="leading-snug" style="color:var(--text-muted)">{result.explanation}</p>
 					{/if}
 

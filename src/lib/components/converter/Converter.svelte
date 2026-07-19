@@ -108,10 +108,12 @@
 		// resolve() keeps the URL base-path safe and, as the direct goto() argument,
 		// satisfies svelte/no-navigation-without-resolve (it returns a ResolvedPathname).
 		// A literal route prefix ('/' or '/convert') lets the typed router validate the
-		// ?q=/?basis= search suffix; the converter only mounts on those two routes.
+		// ?q=/?basis= search suffix. Derive "am I on /convert" from the actual
+		// pathname (not route.id) so a future third mount point degrades to the
+		// nearest sensible base instead of silently syncing to '/'.
 		// When there are no params, skip the '?' branch entirely so an empty
 		// submit doesn't leave a bare trailing '?' in the URL.
-		const onConvert = page.route.id === '/convert';
+		const onConvert = page.url.pathname.endsWith('/convert');
 		const target = params
 			? onConvert
 				? resolve(`/convert?${params}`)
@@ -161,31 +163,41 @@
 
 	function onPickFuel(id: string | undefined): void {
 		pickedFuelId = id;
-		if (id) runConversion(queryText);
+		if (!id) return;
+		// Materialise the pick into the query text so the URL (and any shared
+		// link) carries the fuel — a pick that only lives in component state
+		// would silently vanish from the shareable state.
+		const f = fuels.find((x) => x.id === id);
+		const conv = engine();
+		const parsed = conv.parse(queryText.trim());
+		if (f && parsed.ok && !parsed.query.fuel_id) {
+			queryText = `${queryText.trim()} ${f.names[0]}`;
+			pickedFuelId = undefined; // the text now carries the fuel
+		}
+		runConversion(queryText);
+		pushUrl();
 	}
 
 	// ---- effects --------------------------------------------------------------
-	// Recompute when basis or the grid region/year changes (keep results live).
-	// Reading them into consts registers the reactive dependencies without a
-	// bare-expression statement.
+	// One effect covers both the mount-time seed (URL-shared query) and later
+	// basis / grid changes. The first run converts WITHOUT pushUrl — issuing an
+	// unsolicited replaceState navigation on a deep-linked page load (and
+	// double-running the conversion via a second mount effect) was audit finding
+	// UI#2. Reading basis/grid into consts registers the reactive dependencies.
+	let booted = false;
 	$effect(() => {
 		const _basis = basis; // track basis changes
 		const _grid = grid; // track grid region/year changes
 		void _basis;
 		void _grid;
+		if (!browser) return;
 		untrack(() => {
 			if (queryText.trim()) {
 				runConversion(queryText);
-				pushUrl();
+				if (booted) pushUrl();
 			}
+			booted = true;
 		});
-	});
-
-	// Run once on mount if the URL seeded a query (shareable links).
-	$effect(() => {
-		if (browser && untrack(() => initial.q)) {
-			runConversion(untrack(() => initial.q));
-		}
 	});
 
 	// Does the current result set contain a "pick a fuel" context prompt?
