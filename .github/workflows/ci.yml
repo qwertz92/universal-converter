@@ -1,12 +1,10 @@
-# CI — lint, type-check, test, build on every push and PR.
+# CI - lint, type-check, test, build on every push and PR.
 # Mirrors the four local gates (AGENTS.md): npm run lint / check / test / build.
 name: CI
 
 on:
   push:
-    branches: ['**']
   pull_request:
-    branches: [main]
 
 jobs:
   ci:
