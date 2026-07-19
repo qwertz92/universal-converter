@@ -369,10 +369,10 @@ export function createConverter(data: DataBundle): Converter {
 		applyFuelWarnings(builder, fuel);
 		const energyJ = toBaseValue(value, unit);
 
-		// Electricity: energy is the input; emissions are context_required (§C.6).
+		// Electricity: energy is the input; emissions need region+year (§C.6).
 		// No mass/volume derivation — electricity is not a bulk fuel.
 		if (isElectricity(fuel)) {
-			addEmissions(builder, fuel, _options, {});
+			addEmissions(builder, fuel, _options, { energyJ });
 			return;
 		}
 
@@ -538,11 +538,11 @@ export function createConverter(data: DataBundle): Converter {
 		builder: ResultSetBuilder,
 		fuel: Fuel,
 		options: EngineOptions,
-		amount: { volumeM3?: string; massKg?: string }
+		amount: { volumeM3?: string; massKg?: string; energyJ?: string }
 	): void {
-		// Electricity → CO2e is region_year_specific; default is context_required (§C.6).
+		// Electricity → CO2/CO2e is region_year_specific; default is context_required (§C.6).
 		if (isElectricity(fuel)) {
-			builder.add(electricityContextRequired(fuel, options));
+			builder.add(electricityEmissions(fuel, options, amount.energyJ));
 			return;
 		}
 
@@ -639,30 +639,70 @@ export function createConverter(data: DataBundle): Converter {
 		return e?.joules;
 	}
 
-	function electricityContextRequired(fuel: Fuel, options: EngineOptions): ConversionResult {
-		const haveContext = Boolean(options.region && options.year);
-		if (haveContext) {
-			// A region+year factor would be applied here if present in data (v0.1: none seeded).
+	/**
+	 * Grid-electricity emissions (§C.6). With a matching region+year factor the
+	 * input energy is multiplied through `applyFactor` and the result is
+	 * `region_year_specific`, labeled with the factor's own metric (CO2 vs CO2e
+	 * stay separate — §D.6). Without region+year (or with a combination the
+	 * catalog has no factor for) the result stays `context_required` with the
+	 * illustrative examples; no default grid is ever assumed.
+	 */
+	function electricityEmissions(
+		fuel: Fuel,
+		options: EngineOptions,
+		energyJ?: string
+	): ConversionResult {
+		const haveContext = Boolean(options.region && options.year !== undefined);
+		if (haveContext && energyJ !== undefined) {
 			const factorId = (fuel.emission_factor_ids ?? []).find((id) => {
 				const f = factorsById.get(id);
-				return f && f.region === options.region && f.year === options.year;
+				return (
+					f &&
+					f.region === options.region &&
+					f.year === options.year &&
+					factorInputKind(f) === 'energy'
+				);
 			});
 			const factor = factorId ? factorsById.get(factorId) : undefined;
-			if (factor) {
+			const applied = factor ? applyFactor(factor, energyJ) : undefined;
+			if (factor && applied) {
+				const isCo2e = factor.pollutant === 'CO2e';
+				const massDisplay = kgToKgDisplay(applied.massKg);
+				const warnings: Warning[] = [];
+				if (factor.uncertainty) {
+					warnings.push({ kind: 'factor_uncertainty', severity: 'info', text: factor.uncertainty });
+				}
 				return {
-					value: `${factor.value}`,
-					raw: `${factor.value}`,
-					unit_id: 'g_co2e_per_kwh',
-					unit_label: factor.unit,
+					value: formatValue(massDisplay, 'region_year_specific'),
+					raw: applied.massKg,
+					unit_id: isCo2e ? 'kilogram_co2e' : 'kilogram_co2',
+					unit_label: applied.displayUnit,
 					category: 'emissions',
 					exactness: 'region_year_specific',
-					explanation: `Grid CO2e intensity for ${options.region} ${options.year}.`,
-					assumptions: [],
-					warnings: [],
+					explanation: emissionExplanation(factor),
+					formula: step(
+						'electricity amount',
+						'×',
+						`${factor.value} ${factor.unit} [${POLLUTANT_LABEL[factor.pollutant]}, ${SCOPE_LABEL[factor.scope]}, ${factor.region} ${factor.year}]`,
+						`${formatValue(massDisplay, 'region_year_specific')} ${applied.displayUnit}`
+					),
+					assumptions: [
+						{
+							kind: 'grid_intensity',
+							text: `grid intensity ${factor.region} ${factor.year}: ${factor.value} ${factor.unit.replace(/_per_/, '/').replace(/_/g, ' ')} (${POLLUTANT_LABEL[factor.pollutant]}, ${SCOPE_LABEL[factor.scope]})`,
+							value: factor.value,
+							unit: factor.unit,
+							source_refs: [factor.source_id]
+						}
+					],
+					warnings,
 					source_refs: [factor.source_id]
 				};
 			}
 		}
+		const unmatched = haveContext
+			? ` No cited factor for "${options.region} ${options.year}" is in the catalog — pick one of the available region/year combinations below; nothing is estimated.`
+			: '';
 		return {
 			value: null,
 			raw: null,
@@ -671,8 +711,9 @@ export function createConverter(data: DataBundle): Converter {
 			category: 'emissions',
 			exactness: 'context_required',
 			explanation:
-				'Grid electricity CO2e intensity depends on the country/region, the year, and even ' +
-				'the time of day — there is no single correct global factor. Pick a region and year.',
+				'Grid electricity CO2/CO2e intensity depends on the country/region, the year, and even ' +
+				'the time of day — there is no single correct global factor. Pick a region and year.' +
+				unmatched,
 			missing: ['region', 'year'],
 			assumptions: [],
 			warnings: [],

@@ -87,13 +87,19 @@ describe('electricity fuel wired into the shipped catalog (spec §13.4, §9.6, r
 		expect(eu?.source_refs).toContain('eea-electricity-intensity');
 	});
 
-	it('"1 kWh electricity" with region+year=UK/2025 returns the real region_year_specific factor, not context_required', () => {
+	it('"1 kWh electricity" with region+year=UK/2025 returns the real region_year_specific MASS, not context_required', () => {
 		const out = getConverter().convertText('1 kWh electricity', { region: 'UK', year: 2025 });
 		if ('error' in out) throw new Error('parse failed');
 		const emissions = out.groups.flatMap((g) => g.results).find((r) => r.category === 'emissions');
 		expect(emissions?.exactness).toBe('region_year_specific');
-		expect(emissions?.value).toBe('177');
+		// 1 kWh × 177 g CO2e/kWh = 177 g = 0.177 kg CO2e — the engine answers for the
+		// user's amount (mass), with the intensity itself in formula + assumption.
+		expect(emissions?.raw).toBe('0.177');
+		expect(emissions?.value).toBe('~0.177');
+		expect(emissions?.unit_id).toBe('kilogram_co2e');
+		expect(emissions?.unit_label).toBe('kg CO2e');
 		expect(emissions?.source_refs).toContain('uk-desnz-ghg-2025');
+		expect(emissions?.assumptions.some((a) => a.kind === 'grid_intensity')).toBe(true);
 	});
 
 	it('the illustrative factors are individually well-formed region_year_specific data (region+year+source present)', () => {
