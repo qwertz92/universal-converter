@@ -87,6 +87,13 @@ export type Exactness =
 	/** Not meaningful, not in scope, or dimensionally impossible even in principle. */
 	| 'unsupported';
 
+/**
+ * The 8 levels in PRESENTATION order (rulebook §A listing) — used for legends
+ * and docs. This array's order is NOT the combining order: exactness floors
+ * are computed from `EXACTNESS_ORDER` below, which ranks `user_assumption`
+ * between `standard_definition` and `source_based`. Don't "fix" one to match
+ * the other — they serve different purposes.
+ */
 export const EXACTNESS_LEVELS: readonly Exactness[] = [
 	'exact',
 	'standard_definition',
@@ -305,7 +312,8 @@ export interface Warning {
  * ------------------------------------------------------------------ */
 
 /** Machine-readable list of what's missing when exactness is `context_required`. */
-export type MissingContext = 'time' | 'fuel' | 'density' | 'region' | 'year' | 'basis';
+export type MissingContext =
+	'time' | 'fuel' | 'density' | 'region' | 'year' | 'heating_value' | 'emission_factor';
 
 /**
  * A single conversion result (spec §7.6, extended by rulebook §A/§C.7).
@@ -346,6 +354,9 @@ export interface IllustrativeExample {
 	label: string;
 	value: string;
 	unit_label: string;
+	/** The factor's metric (e.g. "CO2" vs "CO2e") so examples with different
+	 *  metrics are never read as directly comparable (§D.6). */
+	pollutant?: string;
 	region?: string;
 	year?: number;
 	source_refs: SourceRef[];
@@ -360,6 +371,7 @@ export type ResultGroupKey =
 	| 'power'
 	| 'mass'
 	| 'volume'
+	| 'time'
 	| 'fuel_equivalents'
 	| 'emissions'
 	| 'energy_density'
@@ -369,12 +381,13 @@ export type ResultGroupKey =
 	| 'sources'
 	| 'formula';
 
-/** Canonical order of result groups (rulebook §C.8). */
+/** Canonical order of result groups (rulebook §C.8; `time` added in 0.2). */
 export const RESULT_GROUP_ORDER: readonly ResultGroupKey[] = [
 	'energy',
 	'power',
 	'mass',
 	'volume',
+	'time',
 	'fuel_equivalents',
 	'emissions',
 	'energy_density',
@@ -429,7 +442,9 @@ export interface ParseError {
 		| 'unknown_unit'
 		| 'ambiguous_unit'
 		| 'unknown_fuel'
-		| 'no_unit';
+		| 'no_unit'
+		/** Value magnitude/length outside supported bounds (guards, not physics). */
+		| 'unsupported_value';
 	message: string;
 	/** For unknown_unit: closest-match unit ids to suggest. */
 	suggestions?: string[];

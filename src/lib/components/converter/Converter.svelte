@@ -13,11 +13,20 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
-	import type { ConversionResultSet, ParseError, HeatingBasis, Fuel } from '$lib/conversion/types';
+	import type {
+		ConversionResult,
+		ConversionResultSet,
+		ParseError,
+		HeatingBasis,
+		Fuel
+	} from '$lib/conversion/types';
 	import { engine, allUnits, allFuels } from '$lib/ui/engine';
 	import { debounce, searchFuels } from '$lib/ui/search';
 	import { buildQueryString, readUrlState } from '$lib/ui/query-state';
+	import { exportFilename, resultSetToCsv, resultSetToJson } from '$lib/ui/export';
+	import CopyButton from '$lib/components/results/CopyButton.svelte';
 	import OptionsBar from './OptionsBar.svelte';
+	import GridPicker from './GridPicker.svelte';
 	import QuickExamples from './QuickExamples.svelte';
 	import StructuredInput from './StructuredInput.svelte';
 	import ResultSet from '$lib/components/results/ResultSet.svelte';
@@ -37,7 +46,24 @@
 	);
 	let queryText = $state(initial.q);
 	let basis = $state<HeatingBasis>(initial.basis);
+	// Grid region/year for electricity (rulebook §C.6), encoded "region|year"; '' = unset.
+	let grid = $state(
+		initial.region !== undefined && initial.year !== undefined
+			? `${initial.region}|${initial.year}`
+			: ''
+	);
 	let showStructured = $state(false);
+
+	/** Decode the `grid` selection into engine options ({} when unset/invalid). */
+	function gridParts(g: string): { region?: string; year?: number } {
+		if (!g) return {};
+		const sep = g.lastIndexOf('|');
+		if (sep <= 0) return {};
+		const region = g.slice(0, sep);
+		const year = Number.parseInt(g.slice(sep + 1), 10);
+		if (!region || !Number.isInteger(year)) return {};
+		return { region, year };
+	}
 
 	let resultSet = $state<ConversionResultSet | null>(null);
 	let parseError = $state<ParseError | null>(null);
@@ -65,7 +91,7 @@
 				if (f) effective = `${trimmed} ${f.names[0]}`;
 			}
 		}
-		const out = conv.convertText(effective, { basis });
+		const out = conv.convertText(effective, { basis, ...gridParts(grid) });
 		if ('error' in out) {
 			parseError = out.error;
 			resultSet = null;
@@ -80,14 +106,16 @@
 	function pushUrl(): void {
 		if (!syncUrl || !browser) return;
 		// `params` is the query string WITHOUT a leading '?', or '' when empty.
-		const params = buildQueryString({ q: queryText, basis }).replace(/^\?/, '');
+		const params = buildQueryString({ q: queryText, basis, ...gridParts(grid) }).replace(/^\?/, '');
 		// resolve() keeps the URL base-path safe and, as the direct goto() argument,
 		// satisfies svelte/no-navigation-without-resolve (it returns a ResolvedPathname).
 		// A literal route prefix ('/' or '/convert') lets the typed router validate the
-		// ?q=/?basis= search suffix; the converter only mounts on those two routes.
+		// ?q=/?basis= search suffix. Derive "am I on /convert" from the actual
+		// pathname (not route.id) so a future third mount point degrades to the
+		// nearest sensible base instead of silently syncing to '/'.
 		// When there are no params, skip the '?' branch entirely so an empty
 		// submit doesn't leave a bare trailing '?' in the URL.
-		const onConvert = page.route.id === '/convert';
+		const onConvert = page.url.pathname.endsWith('/convert');
 		const target = params
 			? onConvert
 				? resolve(`/convert?${params}`)
@@ -137,28 +165,41 @@
 
 	function onPickFuel(id: string | undefined): void {
 		pickedFuelId = id;
-		if (id) runConversion(queryText);
+		if (!id) return;
+		// Materialise the pick into the query text so the URL (and any shared
+		// link) carries the fuel — a pick that only lives in component state
+		// would silently vanish from the shareable state.
+		const f = fuels.find((x) => x.id === id);
+		const conv = engine();
+		const parsed = conv.parse(queryText.trim());
+		if (f && parsed.ok && !parsed.query.fuel_id) {
+			queryText = `${queryText.trim()} ${f.names[0]}`;
+			pickedFuelId = undefined; // the text now carries the fuel
+		}
+		runConversion(queryText);
+		pushUrl();
 	}
 
 	// ---- effects --------------------------------------------------------------
-	// Recompute when basis changes (keep results live). Reading `basis` into a
-	// const registers the reactive dependency without a bare-expression statement.
+	// One effect covers both the mount-time seed (URL-shared query) and later
+	// basis / grid changes. The first run converts WITHOUT pushUrl — issuing an
+	// unsolicited replaceState navigation on a deep-linked page load (and
+	// double-running the conversion via a second mount effect) was audit finding
+	// UI#2. Reading basis/grid into consts registers the reactive dependencies.
+	let booted = false;
 	$effect(() => {
 		const _basis = basis; // track basis changes
+		const _grid = grid; // track grid region/year changes
 		void _basis;
+		void _grid;
+		if (!browser) return;
 		untrack(() => {
 			if (queryText.trim()) {
 				runConversion(queryText);
-				pushUrl();
+				if (booted) pushUrl();
 			}
+			booted = true;
 		});
-	});
-
-	// Run once on mount if the URL seeded a query (shareable links).
-	$effect(() => {
-		if (browser && untrack(() => initial.q)) {
-			runConversion(untrack(() => initial.q));
-		}
 	});
 
 	// Does the current result set contain a "pick a fuel" context prompt?
@@ -168,6 +209,34 @@
 			g.results.some((r) => r.exactness === 'context_required' && r.missing?.includes('fuel'))
 		);
 	});
+
+	// ---- export (roadmap 0.2 import/export slice) -----------------------------
+	function downloadFile(content: string, filename: string, mime: string): void {
+		const blob = new Blob([content], { type: mime });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = filename;
+		a.click();
+		URL.revokeObjectURL(url);
+	}
+
+	function downloadJson(): void {
+		if (!resultSet) return;
+		downloadFile(resultSetToJson(resultSet), exportFilename(resultSet, 'json'), 'application/json');
+	}
+
+	function downloadCsv(): void {
+		if (!resultSet) return;
+		downloadFile(resultSetToCsv(resultSet), exportFilename(resultSet, 'csv'), 'text/csv');
+	}
+
+	/** Link to the same conversion on the public JSON API (draft). The base goes
+	 *  through resolve(); the search suffix is appended manually because the
+	 *  typed router models search-string suffixes for pages but not endpoints. */
+	const apiHref = $derived(
+		`${resolve('/api/convert')}${buildQueryString({ q: queryText, basis, ...gridParts(grid) })}`
+	);
 </script>
 
 <div class="space-y-4">
@@ -236,7 +305,7 @@
 			{/if}
 		</div>
 
-		<OptionsBar bind:basis />
+		<OptionsBar bind:basis bind:grid />
 	{/if}
 
 	<!-- Fuel context prompt (rulebook §C.8: "pick a material") -->
@@ -269,12 +338,53 @@
 		</div>
 	{/if}
 
+	<!-- Grid picker rendered inside emissions rows that need (or used) region/year.
+	     Present in compact mode too, where the OptionsBar picker is not shown. -->
+	{#snippet gridControl(result: ConversionResult)}
+		{#if result.category === 'emissions' && ((result.exactness === 'context_required' && result.missing?.includes('region')) || result.exactness === 'region_year_specific')}
+			<GridPicker bind:value={grid} id="uc-grid-inline" />
+		{/if}
+	{/snippet}
+
 	<!-- Results / errors -->
 	<div aria-live="polite" aria-atomic="false">
 		{#if parseError}
 			<ParseErrorNote error={parseError} onpick={onErrorPick} />
 		{:else if resultSet}
-			<ResultSet {resultSet} />
+			<ResultSet {resultSet} contextControl={gridControl} />
+
+			<!-- Export toolbar: take the whole grouped, sourced result set with you. -->
+			<div class="mt-3 flex flex-wrap items-center gap-2 text-xs" style="color:var(--text-faint)">
+				<span class="font-semibold tracking-wide uppercase">Export</span>
+				<CopyButton text={resultSetToJson(resultSet)} label="Copy JSON" compact />
+				<button
+					type="button"
+					class="rounded-md border px-2 py-1 font-medium hover:bg-[var(--surface-2)]"
+					style="border-color:var(--border);color:var(--text-muted)"
+					onclick={downloadJson}
+				>
+					Download JSON
+				</button>
+				<button
+					type="button"
+					class="rounded-md border px-2 py-1 font-medium hover:bg-[var(--surface-2)]"
+					style="border-color:var(--border);color:var(--text-muted)"
+					onclick={downloadCsv}
+				>
+					Download CSV
+				</button>
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- apiHref is resolve('/api/convert') + a query string; the typed router has no endpoint search-suffix form -->
+				<a
+					href={apiHref}
+					target="_blank"
+					rel="noopener"
+					class="rounded-md border px-2 py-1 font-medium hover:bg-[var(--surface-2)]"
+					style="border-color:var(--border);color:var(--text-muted)"
+					title="The same conversion on the public JSON API (draft)"
+				>
+					API ↗
+				</a>
+			</div>
 		{:else if !compact}
 			<div
 				class="rounded-[var(--radius-card)] border border-dashed p-8 text-center"

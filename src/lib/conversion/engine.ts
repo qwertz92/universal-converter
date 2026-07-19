@@ -55,7 +55,7 @@ import {
 	type HeatingValueResolved
 } from '$lib/fuels/heating-values';
 import { isElectricity, isHydrogen } from '$lib/fuels/fuel-types';
-import { applyFactor, factorInputKind } from '$lib/emissions/factors';
+import { applyFactor, factorInputKind, factorUnitLabel } from '$lib/emissions/factors';
 import { POLLUTANT_LABEL, SCOPE_LABEL } from '$lib/emissions/scopes';
 import {
 	biogenicCo2Warning,
@@ -65,6 +65,14 @@ import {
 } from './warnings';
 
 Decimal.set({ precision: 40 });
+
+/** A fuel amount's energy on one basis, with the resolved HV and (when the
+ *  source records genuine spread) the low–high energy range in joules. */
+interface EnergyForBasis {
+	joules: string;
+	joulesRange?: { low: string; high: string };
+	hv: HeatingValueResolved;
+}
 
 /** Energy units to show in the "Fuel Equivalents" group for a pure energy input. */
 const FUEL_EQUIVALENT_UNITS = ['toe', 'boe', 'tce'];
@@ -91,7 +99,9 @@ export function createConverter(data: DataBundle): Converter {
 	}
 
 	function convert(query: ParsedQuery, options: EngineOptions = {}): ConversionResultSet {
-		const basis: HeatingBasis = options.basis ?? 'lhv';
+		// Runtime-normalise the basis: a raw JSON caller can bypass TS and any
+		// unknown string would otherwise silently produce "not available" rows.
+		const basis: HeatingBasis = options.basis === 'hhv' ? 'hhv' : 'lhv';
 		const unit = units.get(query.unit_id);
 		if (!unit) {
 			// Should not happen (parser validated), but fail safe.
@@ -112,30 +122,43 @@ export function createConverter(data: DataBundle): Converter {
 			builder.addAssumption({ kind: 'parser_note', text: note });
 		}
 
-		// Route by the input unit's dimension.
-		switch (unit.dimension) {
-			case 'energy':
-				buildEnergyGroups(builder, query.value, unit, options);
-				if (fuel) buildFuelFromEnergy(builder, query.value, unit, fuel, basis, options);
-				break;
-			case 'power':
-				buildPowerGroups(builder, query.value, unit, options);
-				break;
-			case 'mass':
-				buildMassGroups(builder, query.value, unit);
-				if (fuel) buildFuelFromMass(builder, query.value, unit, fuel, basis, options);
-				else builder.add(contextPickMaterial('energy', unit));
-				break;
-			case 'volume':
-				buildVolumeGroups(builder, query.value, unit);
-				if (fuel) buildFuelFromVolume(builder, query.value, unit, fuel, basis, options);
-				else builder.add(contextPickMaterial('energy', unit));
-				break;
-			default:
-				// Pseudo-dimensions: show the value in its own group; no bridging.
-				builder.add(
-					simpleResult(query.value, unit, unit, groupForDimension(unit.dimension), unit.exactness)
-				);
+		// Route by the input unit's dimension. convert() is public API: a
+		// hand-built ParsedQuery/EngineOptions can carry non-numeric strings that
+		// would throw deep inside decimal.js — fail as a structured result, not
+		// an exception (the parser-validated path never hits this).
+		try {
+			switch (unit.dimension) {
+				case 'energy':
+					buildEnergyGroups(builder, query.value, unit, options);
+					if (fuel) buildFuelFromEnergy(builder, query.value, unit, fuel, basis, options);
+					break;
+				case 'power':
+					buildPowerGroups(builder, query.value, unit, options);
+					break;
+				case 'mass':
+					buildMassGroups(builder, query.value, unit, options);
+					if (fuel) buildFuelFromMass(builder, query.value, unit, fuel, basis, options);
+					else builder.add(contextPickMaterial('energy', unit));
+					break;
+				case 'volume':
+					buildVolumeGroups(builder, query.value, unit, options);
+					if (fuel) buildFuelFromVolume(builder, query.value, unit, fuel, basis, options);
+					else builder.add(contextPickMaterial('energy', unit));
+					break;
+				case 'time':
+					buildTimeGroups(builder, query.value, unit, options);
+					break;
+				default:
+					// Pseudo-dimensions: show the value in its own group; no bridging.
+					builder.add(
+						simpleResult(query.value, unit, unit, groupForDimension(unit.dimension), unit.exactness)
+					);
+			}
+		} catch (e) {
+			return unsupportedSet(
+				query,
+				`Could not compute this conversion: ${e instanceof Error ? e.message : String(e)}`
+			);
 		}
 
 		return builder.build();
@@ -160,14 +183,15 @@ export function createConverter(data: DataBundle): Converter {
 		unit: Unit,
 		options: EngineOptions
 	): void {
+		// The source unit itself IS the first energy row (input echo), then the
+		// display targets.
+		builder.add(convertResult(value, unit, unit, 'energy', options));
 		for (const targetId of ENERGY_DISPLAY_UNITS) {
 			const target = units.get(targetId);
 			if (target && target.id !== unit.id) {
 				builder.add(convertResult(value, unit, target, 'energy', options));
 			}
 		}
-		// Always include the source unit itself as the first energy row.
-		builder.add(convertResult(value, unit, unit, 'energy', options));
 
 		for (const targetId of FUEL_EQUIVALENT_UNITS) {
 			const target = units.get(targetId);
@@ -196,9 +220,13 @@ export function createConverter(data: DataBundle): Converter {
 		}
 
 		// Power → Energy requires a time. NEVER auto kW→kWh (rulebook §D.1).
-		if (options.time) {
-			const energyResult = powerTimesTime(value, unit, options.time, options);
-			if (energyResult) builder.add(energyResult);
+		// A supplied-but-unusable time (unknown unit, wrong dimension) falls back
+		// to the same context prompt instead of silently dropping the group.
+		const energyResult = options.time
+			? powerTimesTime(value, unit, options.time, options)
+			: undefined;
+		if (energyResult) {
+			builder.add(energyResult);
 		} else {
 			builder.add({
 				value: null,
@@ -209,7 +237,8 @@ export function createConverter(data: DataBundle): Converter {
 				exactness: 'context_required',
 				explanation:
 					'Power is not energy. To get energy (kWh, MJ, …) supply a duration: energy = power × time. ' +
-					'This tool never silently assumes an hour.',
+					'This tool never silently assumes an hour.' +
+					(options.time ? ' (The supplied time could not be used — check its unit.)' : ''),
 				missing: ['time'],
 				assumptions: [],
 				warnings: [],
@@ -253,14 +282,24 @@ export function createConverter(data: DataBundle): Converter {
 		};
 	}
 
-	function buildMassGroups(builder: ResultSetBuilder, value: string, unit: Unit): void {
+	function buildMassGroups(
+		builder: ResultSetBuilder,
+		value: string,
+		unit: Unit,
+		options: EngineOptions
+	): void {
 		for (const targetId of ['milligram', 'gram', 'kilogram', 'tonne', 'pound']) {
 			const target = units.get(targetId);
-			if (target) builder.add(convertResult(value, unit, target, 'mass', {}));
+			if (target) builder.add(convertResult(value, unit, target, 'mass', options));
 		}
 	}
 
-	function buildVolumeGroups(builder: ResultSetBuilder, value: string, unit: Unit): void {
+	function buildVolumeGroups(
+		builder: ResultSetBuilder,
+		value: string,
+		unit: Unit,
+		options: EngineOptions
+	): void {
 		for (const targetId of [
 			'milliliter',
 			'liter',
@@ -270,7 +309,19 @@ export function createConverter(data: DataBundle): Converter {
 			'barrel'
 		]) {
 			const target = units.get(targetId);
-			if (target) builder.add(convertResult(value, unit, target, 'volume', {}));
+			if (target) builder.add(convertResult(value, unit, target, 'volume', options));
+		}
+	}
+
+	function buildTimeGroups(
+		builder: ResultSetBuilder,
+		value: string,
+		unit: Unit,
+		options: EngineOptions
+	): void {
+		for (const targetId of ['second', 'minute', 'hour', 'day', 'year']) {
+			const target = units.get(targetId);
+			if (target) builder.add(convertResult(value, unit, target, 'time', options));
 		}
 	}
 
@@ -369,10 +420,10 @@ export function createConverter(data: DataBundle): Converter {
 		applyFuelWarnings(builder, fuel);
 		const energyJ = toBaseValue(value, unit);
 
-		// Electricity: energy is the input; emissions are context_required (§C.6).
+		// Electricity: energy is the input; emissions need region+year (§C.6).
 		// No mass/volume derivation — electricity is not a bulk fuel.
 		if (isElectricity(fuel)) {
-			addEmissions(builder, fuel, _options, {});
+			addEmissions(builder, fuel, _options, { energyJ });
 			return;
 		}
 
@@ -429,7 +480,7 @@ export function createConverter(data: DataBundle): Converter {
 			const energyJ = energyForBasis(fuel, b, amount);
 			if (!energyJ) continue;
 			anyEnergy = true;
-			addEnergyResults(builder, energyJ.joules, b, energyJ.hv, amount.label, options, b === basis);
+			addEnergyResults(builder, energyJ, b, amount.label, options, b === basis);
 		}
 		if (!anyEnergy) builder.add(notAvailable('energy', 'heating_value', fuel));
 
@@ -441,32 +492,69 @@ export function createConverter(data: DataBundle): Converter {
 		fuel: Fuel,
 		basis: HeatingBasis,
 		amount: { volumeM3?: string; massKg?: string }
-	): { joules: string; hv: HeatingValueResolved } | undefined {
+	): EnergyForBasis | undefined {
 		// Prefer per-volume HV when we have a volume, else per-mass with a mass.
 		if (amount.volumeM3 !== undefined) {
 			const hvVol = pickHeatingValue(fuel, basis, 'per_volume');
-			if (hvVol) return { joules: amountToEnergyJ(amount.volumeM3, hvVol.jPerBase), hv: hvVol };
+			if (hvVol)
+				return {
+					joules: amountToEnergyJ(amount.volumeM3, hvVol.jPerBase),
+					joulesRange: energyRangeJ(amount.volumeM3, hvVol),
+					hv: hvVol
+				};
 		}
 		if (amount.massKg !== undefined) {
 			const hvMass = pickHeatingValue(fuel, basis, 'per_mass');
-			if (hvMass) return { joules: amountToEnergyJ(amount.massKg, hvMass.jPerBase), hv: hvMass };
+			if (hvMass)
+				return {
+					joules: amountToEnergyJ(amount.massKg, hvMass.jPerBase),
+					joulesRange: energyRangeJ(amount.massKg, hvMass),
+					hv: hvMass
+				};
 		}
 		return undefined;
 	}
 
+	/** Energy range (J) for an amount whose heating value has a genuine spread. */
+	function energyRangeJ(
+		amountBase: string,
+		hv: HeatingValueResolved
+	): { low: string; high: string } | undefined {
+		if (!hv.jPerBaseRange) return undefined;
+		return {
+			low: amountToEnergyJ(amountBase, hv.jPerBaseRange.low),
+			high: amountToEnergyJ(amountBase, hv.jPerBaseRange.high)
+		};
+	}
+
 	function addEnergyResults(
 		builder: ResultSetBuilder,
-		joules: string,
+		energy: EnergyForBasis,
 		basis: HeatingBasis,
-		hv: HeatingValueResolved,
 		label: string,
 		options: EngineOptions,
 		isPrimary: boolean
 	): void {
-		const exactness = combineExactness('source_based'); // fuel HV floor
+		const { joules, joulesRange, hv } = energy;
+		// Exactness floor: a tabulated single-source value is source_based; a value
+		// whose OWN source records a wide genuine spread (>25% high/low, e.g.
+		// rank-variable coal) is a representative pick within that spread —
+		// `estimated` per rulebook §A / types.ts (three sig figs + `~`).
+		const wideSpread = hv.jPerBaseRange
+			? new Decimal(hv.jPerBaseRange.high).div(new Decimal(hv.jPerBaseRange.low)).gt('1.25')
+			: false;
+		const exactness = combineExactness(wideSpread ? 'estimated' : 'source_based');
 		for (const targetId of ['megajoule', 'kilowatt_hour', 'gigajoule', 'btu']) {
 			const target = units.get(targetId)!;
 			const converted = convertWithinDimension(joules, units.get('joule')!, target);
+			// The displayed range must be CONVERTED into this row's target unit —
+			// never the raw per-kg/per-m³ source numbers reused across rows.
+			const range = joulesRange
+				? {
+						low: convertWithinDimension(joulesRange.low, units.get('joule')!, target),
+						high: convertWithinDimension(joulesRange.high, units.get('joule')!, target)
+					}
+				: undefined;
 			const a: Assumption = hvBasisAssumption(undefined, hv, basis);
 			builder.add({
 				value: formatValue(converted, exactness, { maxExactSigFigs: options.maxSigFigs }),
@@ -496,7 +584,7 @@ export function createConverter(data: DataBundle): Converter {
 							}
 						],
 				source_refs: hv.source_refs,
-				range: hv.range
+				range
 			});
 		}
 	}
@@ -538,11 +626,11 @@ export function createConverter(data: DataBundle): Converter {
 		builder: ResultSetBuilder,
 		fuel: Fuel,
 		options: EngineOptions,
-		amount: { volumeM3?: string; massKg?: string }
+		amount: { volumeM3?: string; massKg?: string; energyJ?: string }
 	): void {
-		// Electricity → CO2e is region_year_specific; default is context_required (§C.6).
+		// Electricity → CO2/CO2e is region_year_specific; default is context_required (§C.6).
 		if (isElectricity(fuel)) {
-			builder.add(electricityContextRequired(fuel, options));
+			builder.add(electricityEmissions(fuel, options, amount.energyJ));
 			return;
 		}
 
@@ -600,12 +688,18 @@ export function createConverter(data: DataBundle): Converter {
 
 			const isCo2e = factor.pollutant === 'CO2e';
 			const biogenic = factor.biogenic === true || factor.pollutant === 'biogenic_CO2';
-			const exactness = factor.region ? 'region_year_specific' : 'source_based';
+			// "global" is a coverage statement, not a geographic specificity —
+			// a worldwide IPCC default is source_based, not region_year_specific.
+			const exactness =
+				factor.region && factor.region !== 'global' ? 'region_year_specific' : 'source_based';
 			const unitId = isCo2e ? 'kilogram_co2e' : 'kilogram_co2';
 			const massDisplay = kgToKgDisplay(applied.massKg);
 
 			const warnings: Warning[] = [representativeValueWarning()];
 			if (biogenic) warnings.push(biogenicCo2Warning());
+			if (factor.uncertainty) {
+				warnings.push({ kind: 'factor_uncertainty', severity: 'info', text: factor.uncertainty });
+			}
 
 			builder.add({
 				value: formatValue(massDisplay, exactness),
@@ -639,30 +733,73 @@ export function createConverter(data: DataBundle): Converter {
 		return e?.joules;
 	}
 
-	function electricityContextRequired(fuel: Fuel, options: EngineOptions): ConversionResult {
-		const haveContext = Boolean(options.region && options.year);
-		if (haveContext) {
-			// A region+year factor would be applied here if present in data (v0.1: none seeded).
+	/**
+	 * Grid-electricity emissions (§C.6). With a matching region+year factor the
+	 * input energy is multiplied through `applyFactor` and the result is
+	 * `region_year_specific`, labeled with the factor's own metric (CO2 vs CO2e
+	 * stay separate — §D.6). Without region+year (or with a combination the
+	 * catalog has no factor for) the result stays `context_required` with the
+	 * illustrative examples; no default grid is ever assumed.
+	 */
+	function electricityEmissions(
+		fuel: Fuel,
+		options: EngineOptions,
+		energyJ?: string
+	): ConversionResult {
+		const haveContext = Boolean(options.region && options.year !== undefined);
+		// Region match is case/whitespace-forgiving ("uk" finds "UK") — a near-miss
+		// silently falling through to context_required would read as missing data.
+		const wantRegion = options.region?.trim().toLowerCase();
+		if (haveContext && energyJ !== undefined) {
 			const factorId = (fuel.emission_factor_ids ?? []).find((id) => {
 				const f = factorsById.get(id);
-				return f && f.region === options.region && f.year === options.year;
+				return (
+					f &&
+					f.region?.toLowerCase() === wantRegion &&
+					f.year === options.year &&
+					factorInputKind(f) === 'energy'
+				);
 			});
 			const factor = factorId ? factorsById.get(factorId) : undefined;
-			if (factor) {
+			const applied = factor ? applyFactor(factor, energyJ) : undefined;
+			if (factor && applied) {
+				const isCo2e = factor.pollutant === 'CO2e';
+				const massDisplay = kgToKgDisplay(applied.massKg);
+				const warnings: Warning[] = [];
+				if (factor.uncertainty) {
+					warnings.push({ kind: 'factor_uncertainty', severity: 'info', text: factor.uncertainty });
+				}
 				return {
-					value: `${factor.value}`,
-					raw: `${factor.value}`,
-					unit_id: 'g_co2e_per_kwh',
-					unit_label: factor.unit,
+					value: formatValue(massDisplay, 'region_year_specific'),
+					raw: applied.massKg,
+					unit_id: isCo2e ? 'kilogram_co2e' : 'kilogram_co2',
+					unit_label: applied.displayUnit,
 					category: 'emissions',
 					exactness: 'region_year_specific',
-					explanation: `Grid CO2e intensity for ${options.region} ${options.year}.`,
-					assumptions: [],
-					warnings: [],
+					explanation: emissionExplanation(factor),
+					formula: step(
+						'electricity amount',
+						'×',
+						`${factor.value} ${factor.unit} [${POLLUTANT_LABEL[factor.pollutant]}, ${SCOPE_LABEL[factor.scope]}, ${factor.region} ${factor.year}]`,
+						`${formatValue(massDisplay, 'region_year_specific')} ${applied.displayUnit}`
+					),
+					assumptions: [
+						{
+							kind: 'grid_intensity',
+							text: `grid intensity ${factor.region} ${factor.year}: ${factor.value} ${factor.unit.replace(/_per_/, '/').replace(/_/g, ' ')} (${POLLUTANT_LABEL[factor.pollutant]}, ${SCOPE_LABEL[factor.scope]})`,
+							value: factor.value,
+							unit: factor.unit,
+							source_refs: [factor.source_id]
+						}
+					],
+					warnings,
 					source_refs: [factor.source_id]
 				};
 			}
 		}
+		const unmatched = haveContext
+			? ` No cited factor for "${options.region} ${options.year}" is in the catalog — pick one of the available region/year combinations below; nothing is estimated.`
+			: '';
 		return {
 			value: null,
 			raw: null,
@@ -671,8 +808,9 @@ export function createConverter(data: DataBundle): Converter {
 			category: 'emissions',
 			exactness: 'context_required',
 			explanation:
-				'Grid electricity CO2e intensity depends on the country/region, the year, and even ' +
-				'the time of day — there is no single correct global factor. Pick a region and year.',
+				'Grid electricity CO2/CO2e intensity depends on the country/region, the year, and even ' +
+				'the time of day — there is no single correct global factor. Pick a region and year.' +
+				unmatched,
 			missing: ['region', 'year'],
 			assumptions: [],
 			warnings: [],
@@ -697,7 +835,8 @@ export function createConverter(data: DataBundle): Converter {
 			examples.push({
 				label: `${factor.region} ${factor.year}`,
 				value: factor.value,
-				unit_label: factor.unit,
+				unit_label: factorUnitLabel(factor.unit),
+				pollutant: POLLUTANT_LABEL[factor.pollutant],
 				region: factor.region,
 				year: factor.year,
 				source_refs: [factor.source_id]
@@ -817,7 +956,11 @@ export function createConverter(data: DataBundle): Converter {
 		};
 	}
 
-	function notAvailable(category: ResultGroupKey, missing: string, fuel: Fuel): ConversionResult {
+	function notAvailable(
+		category: ResultGroupKey,
+		missing: 'density' | 'heating_value' | 'emission_factor',
+		fuel: Fuel
+	): ConversionResult {
 		return {
 			value: null,
 			raw: null,
@@ -826,7 +969,7 @@ export function createConverter(data: DataBundle): Converter {
 			category,
 			exactness: 'context_required',
 			explanation: `Not available: ${fuel.names[0]} has no ${missing.replace('_', ' ')} in the data set. No value is invented.`,
-			missing: missing === 'density' ? ['density'] : undefined,
+			missing: [missing],
 			assumptions: [],
 			warnings: [],
 			source_refs: []
@@ -888,6 +1031,7 @@ function groupForDimension(dim: Unit['dimension']): ResultGroupKey {
 	switch (dim) {
 		case 'emission_mass_co2':
 		case 'emission_mass_co2e':
+		case 'emission_intensity':
 			return 'emissions';
 		case 'energy_density_mass':
 		case 'energy_density_volume':
@@ -936,6 +1080,7 @@ function emissionExplanation(factor: {
 	basis?: HeatingBasis;
 	region?: string;
 	year?: number;
+	source_table_or_page?: string;
 }): string {
 	const parts = [
 		`metric: ${POLLUTANT_LABEL[factor.pollutant]}`,
@@ -944,6 +1089,9 @@ function emissionExplanation(factor: {
 	if (factor.basis) parts.push(`basis: ${basisLabel(factor.basis)}`);
 	if (factor.region) parts.push(`region: ${factor.region}`);
 	if (factor.year) parts.push(`year: ${factor.year}`);
+	// Cell-level provenance (e.g. "'Fuels' sheet, 'Diesel (average biofuel blend)'")
+	// — the traceability this product exists for, surfaced instead of shelved.
+	if (factor.source_table_or_page) parts.push(`source table: ${factor.source_table_or_page}`);
 	return parts.join(' · ');
 }
 

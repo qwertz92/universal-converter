@@ -24,7 +24,7 @@ const config = {
 				// Exclude build assets and every static section via directory
 				// wildcards rather than one rule per prerendered page — this keeps
 				// us well under Cloudflare's 100-rule _routes.json limit (we ship
-				// 100+ prerendered pages: 67 units, 20 fuels, 14 learn topics).
+				// 100+ prerendered pages: 73 units, 21 fuels, 14 learn topics).
 				exclude: [
 					'<build>',
 					'<files>',

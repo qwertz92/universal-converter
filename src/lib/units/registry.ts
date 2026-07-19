@@ -152,12 +152,20 @@ export class UnitRegistry {
 			return { kind: 'match', unit: looseMatch, via };
 		}
 
-		// Unknown — suggest the closest keys by edit distance.
-		return { kind: 'unknown', token: trimmed, suggestions: this.suggest(loose) };
+		// Unknown. Suggestions are NOT computed here: resolve() runs once per
+		// candidate token length while the parser shrinks its window, and a full
+		// Levenshtein sweep over every catalog key on each miss is an easy CPU
+		// amplification. Callers that actually present "did you mean" call
+		// suggest() explicitly, exactly once, on the final failing token.
+		return { kind: 'unknown', token: trimmed, suggestions: [] };
 	}
 
 	/** Up to 3 closest unit ids by edit distance (for "did you mean"). */
-	private suggest(loose: string): string[] {
+	suggest(token: string): string[] {
+		const loose = normalizeLoose(token.trim());
+		// Levenshtein is O(len × key length) per key — don't sweep the whole
+		// catalog for garbage tokens no suggestion could ever be close to.
+		if (loose.length === 0 || loose.length > 40) return [];
 		const scored = this.looseKeys
 			.map((key) => ({ key, d: levenshtein(loose, key) }))
 			.filter(({ key, d }) => d <= Math.max(2, Math.floor(key.length / 3)))

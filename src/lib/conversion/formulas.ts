@@ -16,8 +16,3 @@ export function step(
 	const noted = note ? `${core} [${note}]` : core;
 	return result ? `${noted} = ${result}` : noted;
 }
-
-/** Join a chain of formula fragments with " → " for the calculation path. */
-export function chain(...parts: (string | undefined)[]): string {
-	return parts.filter(Boolean).join('  →  ');
-}

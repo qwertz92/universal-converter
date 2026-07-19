@@ -52,7 +52,7 @@
 	--border-strong: #c6cdd6;
 	--text: #16202b;
 	--text-muted: #5b6672;
-	--text-faint: #8a94a0;
+	--text-faint: #667380;
 	--accent: var(--color-accent-600);
 	--accent-hover: var(--color-accent-700);
 	--accent-contrast: #ffffff;
@@ -101,13 +101,12 @@
 	--bg: #0b1220;
 	--bg-subtle: #0f1826;
 	--surface: #121d2e;
-	--surface-2: #16223500;
 	--surface-2: #172335;
 	--border: #253449;
 	--border-strong: #35485f;
 	--text: #e6edf5;
 	--text-muted: #9fb0c3;
-	--text-faint: #6e8199;
+	--text-faint: #7f90a6;
 	--accent: var(--color-accent-300);
 	--accent-hover: var(--color-accent-200);
 	--accent-contrast: #08202a;
@@ -206,7 +205,17 @@ body {
 	margin-bottom: 0.75rem;
 	letter-spacing: -0.01em;
 }
-.uc-prose :where(h3) {
+/*
+ * Learn article bodies (src/lib/content/learn-bodies.ts) use <h2> as their
+ * top-level in-article heading — the page's own <h1> is the topic title, so
+ * <h2> is the correct next level (previously <h3>, which skipped a level).
+ * Scoped to the <article class="uc-prose"> wrapper specifically — a compound
+ * selector beats the plain `.uc-prose :where(h2)` rule above regardless of
+ * source order — so it keeps the smaller size this content always had, while
+ * other long-form pages that put a real top-level heading in a plain
+ * `.uc-prose` <div> (e.g. About) keep the larger treatment above.
+ */
+article.uc-prose :where(h2) {
 	font-size: 1.1rem;
 	font-weight: 620;
 	margin-top: 1.5rem;

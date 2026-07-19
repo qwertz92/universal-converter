@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import Seo from '$lib/components/layout/Seo.svelte';
+	import Breadcrumbs from '$lib/components/layout/Breadcrumbs.svelte';
 	import LiveExample from '$lib/components/results/LiveExample.svelte';
 	import { LEARN_TOPICS } from '$lib/content/learn';
 	import type { PageData } from './$types';
@@ -17,11 +18,7 @@
 <Seo title={topic.title} description={topic.summary} />
 
 <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
-	<nav class="mb-6 text-sm" style="color:var(--text-faint)">
-		<a href={resolve('/learn')} class="hover:text-[var(--accent)]">Learn</a>
-		<span class="mx-1.5">/</span>
-		<span>{topic.title}</span>
-	</nav>
+	<Breadcrumbs items={[{ href: resolve('/learn'), label: 'Learn' }, { label: topic.title }]} />
 
 	<header class="mb-6">
 		<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">{topic.title}</h1>

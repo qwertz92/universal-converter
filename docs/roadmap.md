@@ -27,13 +27,14 @@
   `context_required` for missing fuel/region/year/density).
 - Zod-validated data files with strict envelopes: `data/units.json` populated
   with **73 units**; `data/fuels.json` with **21 fuels** (incl. electricity);
-  `data/emission-factors.json` with **33 emission factors** (12 CO2, 16 CO2e,
+  `data/emission-factors.json` with **34 emission factors** (13 CO2, 16 CO2e,
   5 biogenic CO2); `data/sources.json` with **10 sources**; `data/examples.json`
   with **20 quick examples**.
 - **325 passing Vitest tests** (16 files) across exact conversions, the
   parser, the fuel pipeline, emissions, formatting, guards, golden
   end-to-end cases against the real catalog, and data validation —
-  comfortably past the spec's 30-test minimum (§13).
+  comfortably past the spec's 30-test minimum (§13). (v0.2.0 grew this to
+  **382 tests / 21 files**.)
 - Domain documentation: `docs/conversion-rules.md` and
   `docs/accuracy-and-limitations.md` (Domain agent).
 - Research and source catalog: `docs/research-notes.md` (Research agent),
@@ -54,7 +55,41 @@ build-status dashboard.
 
 ### 0.2 — Better natural-gas models, region/year electricity factors, import/export, advanced search, more fuels, better uncertainty display, public API draft
 
-Per spec §15, unchanged.
+**Shipped in v0.2.0 (2026-07-20, see `CHANGELOG.md`):**
+
+- **Region/year electricity factors** — engine + data-driven picker; cited
+  factors only (UK 2025 CO2e, EU-27 2023/2022 CO2), metric always labeled,
+  results are the input energy × factor as `region_year_specific` mass.
+- **Public API draft** — `GET /api/convert` (`docs/api.md`), the one
+  non-prerendered route.
+- **Better uncertainty display** — recorded heating-value spreads render as
+  per-unit converted ranges through the exactness-bounded formatter; >25%
+  spreads are labeled `estimated`; factor uncertainty notes surface as
+  warnings.
+- **Export half of import/export** — copy/download JSON, download CSV
+  (provenance kept per row), API deep link. *Import* (parsing a saved
+  set back in) is deliberately not designed yet.
+
+**Still open from the 0.2 list, with reasons:**
+
+- *Better natural-gas models* — needs new sourced data (Zustandszahl /
+  reference-condition tables), not just engine work.
+- *Advanced search* — unit/fuel search exists; "advanced" (cross-entity,
+  fuzzy, synonyms beyond aliases) unscoped.
+- *More fuels* — DESNZ variant rows (100% mineral petrol/diesel, gas oil,
+  burning oil, wood chips, biomethane, …) are recorded verbatim in
+  `docs/research-notes.md`, but shipping them as near-duplicate fuel ids
+  without a variant/compare model risks catalog confusion — blocked on the
+  data-model ADR below.
+- *US grid factor* — the ~370 gCO2/kWh figure in research-notes is flagged
+  provisional/unverified; shipping it would break the no-invented-numbers
+  rule. Needs a bounded re-extraction of EPA Hub Table 6 (XLSX).
+- *Source Diff Viewer* — the catalog currently ships exactly one factor per
+  fuel+metric+scope, so there is nothing to diff yet; follows the variant
+  ADR.
+- **New prerequisite ADR:** fuel variants / multi-source values (density as
+  array vs. separate fuel ids, GWP-set field on factors) — see the data
+  audit's schema findings.
 
 ### 0.3 — Heating-cost calculator, electricity/gas price calculator, boiler efficiency, heat pump COP, well-to-wheel factors, country presets, saved scenarios
 
@@ -71,6 +106,11 @@ Per spec §15, unchanged.
 ---
 
 ## Candidate additions for right after 0.1
+
+> **Status update (v0.2.0):** items 1, 3 and 4 below shipped in 0.2.0
+> (region/year presets, `/api/convert`, uncertainty display). Item 2 (Source
+> Diff Viewer) remains open — see the 0.2 section above for why it is blocked
+> on the fuel-variants ADR. The list is kept for the original reasoning.
 
 The spec's §16 "long-term feature ideas" list is large and mostly
 un-prioritized. Of that list, the following are the ones most worth pulling

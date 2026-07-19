@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import Seo from '$lib/components/layout/Seo.svelte';
+	import Breadcrumbs from '$lib/components/layout/Breadcrumbs.svelte';
 	import ExactnessBadge from '$lib/components/badges/ExactnessBadge.svelte';
 	import { DIMENSION_LABEL } from '$lib/ui/engine';
 	import { EXACTNESS_META } from '$lib/ui/exactness';
@@ -18,11 +19,7 @@
 />
 
 <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
-	<nav class="mb-6 text-sm" style="color:var(--text-faint)">
-		<a href={resolve('/units')} class="hover:text-[var(--accent)]">Units</a>
-		<span class="mx-1.5">/</span>
-		<span>{dimLabel}</span>
-	</nav>
+	<Breadcrumbs items={[{ href: resolve('/units'), label: 'Units' }, { label: dimLabel }]} />
 
 	<header class="mb-8">
 		<div class="flex flex-wrap items-center gap-3">

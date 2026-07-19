@@ -403,7 +403,14 @@ display time**, per this table:
    allows. A chain `source_based × exact` is `source_based` (3–4 sig figs).
 2. **Ranges over point estimates** where a fuel property genuinely spans a range
    (crude energy, wood energy, coal grade): show `~A–B`, and if a single number is
-   needed use a representative mid value marked `~`.
+   needed use a representative mid value marked `~`. A displayed range is
+   **converted into the row's own display unit** (the MJ row shows an MJ range,
+   the kWh row a kWh range) — raw per-kg/per-m³ source bounds are never reused
+   across differently-united rows. *Engine heuristic (0.2):* when a heating
+   value's own recorded range spans more than **25%** (high/low > 1.25 — e.g.
+   rank-variable lignite, anthracite), the point value is a representative pick
+   within genuine spread and the result is labeled `estimated`; narrower
+   recorded ranges keep `source_based` with the range shown as uncertainty.
 3. The `~` prefix is reserved for `estimated` / `region_year_specific`; it must
    **not** appear on `exact`/`standard_definition` results (that would imply false
    doubt), nor be omitted on estimates (that would imply false precision).
@@ -418,8 +425,8 @@ display time**, per this table:
 Result groups appear in a **canonical order** (spec §8.3); only groups that are
 *meaningful* for the input are shown. Order is fixed so users learn the layout.
 
-**Canonical group order:**
-`Energy → Power → Mass → Volume → Fuel Equivalents → Emissions →
+**Canonical group order** (Time added in 0.2):
+`Energy → Power → Mass → Volume → Time → Fuel Equivalents → Emissions →
 Energy Density → Industrial Units → Assumptions → Warnings → Sources →
 Formula / Calculation Path`.
 
@@ -433,10 +440,11 @@ any warning, cited any source, or performed any non-trivial calculation.
 | **Power** (`1 kW`) | Power; then **context_required** prompt for time to reach Energy (spec §9.1); + Formula. Energy group appears only once a time is given. |
 | **Mass** (`1 kg`, `1 tonne`, no fuel) | Mass; + Formula. (Volume/Energy/Emissions require a fuel → offered as context_required "pick a material".) |
 | **Volume** (`1 L`, no fuel) | Volume; + Formula. (Mass/Energy/Emissions require a fuel → context_required.) |
+| **Time** (`2 h`, `90 min`) | Time (s/min/h/day/year, exact); + Formula. |
 | **Fuel + volume** (`1 L diesel`, `1 m³ natural gas`) | Volume; Mass (via density); Energy (via HV, basis-labeled); Fuel Equivalents; Emissions (factor-based or context_required); Energy Density; Assumptions; Warnings; Sources; Formula. |
 | **Fuel + mass** (`1 kg hydrogen`, `1 kg wood pellets`, `1 kg hard coal`) | Mass; Volume (via density, where meaningful); Energy (HV, basis-labeled); Fuel Equivalents; Emissions; Energy Density; Assumptions; Warnings; Sources; Formula. |
 | **Fuel + energy** (`1 kWh diesel-equivalent`, `1 GJ natural gas`) | Energy; Mass & Volume of that fuel (inverse via HV + density); Emissions; Energy Density; Assumptions; Warnings; Sources; Formula. |
-| **Electricity** (`1 kWh electricity`) | Energy; **Emissions — context_required** (region/year picker + illustrative examples, §C.6); Formula. |
+| **Electricity** (`1 kWh electricity`) | Energy; **Emissions — context_required** (region/year picker + illustrative examples, §C.6); Formula. With a picked region/year that matches a cited factor (0.2), Emissions instead shows the input energy × factor as a `region_year_specific` GHG **mass**, labeled with the factor's own metric (CO2 vs CO2e). |
 
 ---
 

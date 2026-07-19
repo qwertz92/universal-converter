@@ -17,8 +17,11 @@ import type { Exactness } from '$lib/conversion/types';
 
 Decimal.set({ precision: 40, rounding: Decimal.ROUND_HALF_EVEN });
 
-/** Max significant figures per exactness level (rulebook §C.7). */
+/** Max significant figures per exactness level (rulebook §C.7). `maxExact` is
+ *  clamped to [1, 15] — decimal.js throws on 0/negative significant digits and
+ *  the option is publicly reachable via EngineOptions.maxSigFigs. */
 export function sigFigsFor(exactness: Exactness, maxExact = 6): number {
+	maxExact = Math.min(15, Math.max(1, Math.floor(maxExact) || 1));
 	switch (exactness) {
 		case 'exact':
 		case 'standard_definition':
@@ -49,7 +52,8 @@ export function usesApproxMarker(exactness: Exactness): boolean {
 export function roundToSigFigs(value: string, sigFigs: number): string {
 	const d = new Decimal(value);
 	if (d.isZero()) return '0';
-	const rounded = d.toSignificantDigits(sigFigs, Decimal.ROUND_HALF_EVEN);
+	const sd = Math.min(15, Math.max(1, Math.floor(sigFigs) || 1));
+	const rounded = d.toSignificantDigits(sd, Decimal.ROUND_HALF_EVEN);
 	// toFixed() avoids exponential notation for the value ranges we handle.
 	return trimTrailingZeros(rounded.toFixed());
 }

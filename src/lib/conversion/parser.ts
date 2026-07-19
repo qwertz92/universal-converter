@@ -17,18 +17,34 @@
  * catalog (a trailing unknown fuel phrase yields `unknown_fuel`).
  */
 
+import Decimal from 'decimal.js';
 import type { ParseError, ParseResult, ParsedQuery } from './types';
 import type { UnitRegistry } from '$lib/units/registry';
 import type { FuelRegistry } from '$lib/fuels/registry';
 
-/** Leading number: optional sign, digits with `.` or `,` decimal, optional exponent. */
-const NUMBER_RE = /^([+-]?(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)(?:[.,]\d+)?(?:[eE][+-]?\d+)?)/;
+/** Leading number: optional sign, digits with `.` or `,` decimal (leading-dot
+ *  decimals like ".5" allowed), optional exponent. */
+const NUMBER_RE =
+	/^([+-]?(?:\d{1,3}(?:[.,\s]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?|[.,]\d+)(?:[eE][+-]?\d+)?)/;
+
+/** Hard input-length guard (a query is a value + a unit + maybe a fuel). */
+const MAX_INPUT_LENGTH = 200;
+/** Magnitude guard: |value| must stay within 10^±30 (decimal exponent bound).
+ *  Anything beyond is physically meaningless here and only inflates the
+ *  decimal strings every downstream conversion has to carry (DoS guard). */
+const MAX_ABS_EXPONENT = 30;
 
 export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistry): ParseResult {
 	const original = text;
 	const trimmed = text.trim();
 	if (trimmed === '') {
 		return err({ kind: 'empty_input', message: 'Enter a value and a unit, e.g. "1 kWh".' });
+	}
+	if (trimmed.length > MAX_INPUT_LENGTH) {
+		return err({
+			kind: 'unsupported_value',
+			message: `Input is too long (${trimmed.length} characters). Keep queries under ${MAX_INPUT_LENGTH} characters.`
+		});
 	}
 
 	// 1. Extract the leading numeric literal.
@@ -42,7 +58,29 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 	}
 	const rawNumber = numMatch[1];
 	const { value, warning: numberWarning } = normalizeNumberWithWarning(rawNumber);
-	const rest = trimmed.slice(numMatch[0].length).trim();
+
+	// Magnitude guard: reject values whose decimal exponent is beyond ±30.
+	try {
+		const d = new Decimal(value);
+		if (!d.isFinite() || (!d.isZero() && (d.e > MAX_ABS_EXPONENT || d.e < -MAX_ABS_EXPONENT))) {
+			return err({
+				kind: 'unsupported_value',
+				message: `The value ${rawNumber} is outside the supported range (10^±${MAX_ABS_EXPONENT}).`,
+				token: rawNumber
+			});
+		}
+	} catch {
+		return err({
+			kind: 'missing_value',
+			message: `Could not read "${rawNumber}" as a number.`,
+			token: rawNumber
+		});
+	}
+
+	let rest = trimmed.slice(numMatch[0].length).trim();
+	// A dangling separator right after the number ("5. kWh") has no other
+	// reading — drop it rather than reporting a bogus unknown unit ". kWh".
+	rest = rest.replace(/^[.,](?=\s|$)/, '').trim();
 
 	if (rest === '') {
 		return err({
@@ -131,10 +169,10 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 		}
 	}
 
-	// 4. Nothing matched the unit slot — unknown unit, with suggestions.
+	// 4. Nothing matched the unit slot — unknown unit, with suggestions
+	//    (computed exactly once, here, on the failing token — see registry).
 	const firstToken = unitWords.join(' ');
-	const unknown = units.resolve(unitWords[0]);
-	const suggestions = unknown.kind === 'unknown' ? unknown.suggestions : [];
+	const suggestions = units.suggest(unitWords[0]);
 	return err({
 		kind: 'unknown_unit',
 		message: `Unknown unit "${firstToken}".${
@@ -178,6 +216,8 @@ export function normalizeNumber(raw: string): string {
  *  nonzero integer part) where we keep the thousands-separator reading. */
 export function normalizeNumberWithWarning(raw: string): { value: string; warning?: string } {
 	let s = raw.replace(/\s+/g, '');
+	// ".5" / ",5" → "0.5" / "0,5" so downstream logic always sees an integer part.
+	s = s.replace(/^([+-]?)([.,])/, '$10$2');
 	const hasComma = s.includes(',');
 	const hasDot = s.includes('.');
 

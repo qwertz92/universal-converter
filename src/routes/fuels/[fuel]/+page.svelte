@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import Seo from '$lib/components/layout/Seo.svelte';
+	import Breadcrumbs from '$lib/components/layout/Breadcrumbs.svelte';
 	import ResultSet from '$lib/components/results/ResultSet.svelte';
 	import SourceRefs from '$lib/components/results/SourceRefs.svelte';
 	import { engine } from '$lib/ui/engine';
@@ -57,11 +58,7 @@
 />
 
 <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
-	<nav class="mb-6 text-sm" style="color:var(--text-faint)">
-		<a href={resolve('/fuels')} class="hover:text-[var(--accent)]">Fuels</a>
-		<span class="mx-1.5">/</span>
-		<span>{fuel.category}</span>
-	</nav>
+	<Breadcrumbs items={[{ href: resolve('/fuels'), label: 'Fuels' }, { label: fuel.category }]} />
 
 	<header class="mb-8">
 		<div class="flex flex-wrap items-center gap-3">

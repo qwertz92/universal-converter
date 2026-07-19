@@ -30,7 +30,12 @@ export interface HeatingValueResolved {
 	/** The original stored value + unit, for the human-readable formula. */
 	displayValue: string;
 	displayUnit: string;
+	/** Low/high in the ORIGINAL stored unit (display only). */
 	range?: { low: string; high: string };
+	/** Low/high normalised to J-per-base, so downstream energy results can carry
+	 *  a correctly CONVERTED range in their own target unit (never the raw
+	 *  per-kg numbers reused across MJ/kWh/GJ/BTU rows). */
+	jPerBaseRange?: { low: string; high: string };
 	source_refs: string[];
 }
 
@@ -67,6 +72,12 @@ export function resolveHeatingValue(hv: HeatingValue): HeatingValueResolved | un
 		displayValue: hv.value,
 		displayUnit: displayHvUnit(hv.unit),
 		range: hv.range,
+		jPerBaseRange: hv.range
+			? {
+					low: c.jPerBase(new Decimal(hv.range.low)).toFixed(),
+					high: c.jPerBase(new Decimal(hv.range.high)).toFixed()
+				}
+			: undefined,
 		source_refs: hv.source_refs
 	};
 }

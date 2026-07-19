@@ -51,7 +51,7 @@
 
 		<!-- Embedded converter -->
 		<div class="mt-8">
-			<Converter />
+			<Converter compact />
 		</div>
 	</div>
 </section>

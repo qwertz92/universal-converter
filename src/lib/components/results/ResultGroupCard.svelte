@@ -13,8 +13,18 @@
 	} = $props();
 
 	const meta = $derived(GROUP_META[group.key] ?? { title: group.title });
-	// A group is "context only" when none of its rows produced a number.
-	const isContextOnly = $derived(group.results.every((r) => r.value === null));
+	// A group needs a header hint when it produced no number for at least one
+	// row. "context required" takes priority (some row is a well-defined
+	// prompt for more input); a group that is value-less for another reason
+	// entirely (e.g. every row is `unsupported`) reads as "not available"
+	// instead — those are not the same state and must not share a label.
+	const hasContextRequired = $derived(
+		group.results.some((r) => r.exactness === 'context_required')
+	);
+	const isAllValueless = $derived(group.results.every((r) => r.value === null));
+	const headerSuffix = $derived(
+		hasContextRequired ? ' — context required' : isAllValueless ? ' — not available' : ''
+	);
 </script>
 
 <section
@@ -24,7 +34,7 @@
 >
 	<header class="mb-3 flex items-baseline justify-between gap-3">
 		<h3 class="text-sm font-semibold tracking-wide uppercase" style="color:var(--text)">
-			{meta.title}{isContextOnly ? ' — context required' : ''}
+			{meta.title}{headerSuffix}
 		</h3>
 		{#if meta.blurb}
 			<p class="hidden text-xs sm:block" style="color:var(--text-faint)">{meta.blurb}</p>

@@ -482,6 +482,20 @@
 			"source_id": "eea-electricity-intensity",
 			"source_table_or_page": "EEA 'GHG emission intensity of electricity generation in Europe' indicator",
 			"notes": "ILLUSTRATIVE region+year example, NOT a default. EEA EU-27 2023 average 242 gCO2/kWh (down from 292 in 2022). Use with an explicit '2023, not yet updated to 2024' caveat. CO2 metric (generation intensity)."
+		},
+		{
+			"id": "electricity-eu27-2022-co2",
+			"pollutant": "CO2",
+			"metric": "intensity_per_energy",
+			"value": "292",
+			"unit": "g_co2_per_kwh",
+			"scope": "scope_2",
+			"region": "EU-27",
+			"year": 2022,
+			"uncertainty": "EEA generation-intensity average for 2022 (prior-year figure; 2023 fell 17% to 242 gCO2/kWh).",
+			"source_id": "eea-electricity-intensity",
+			"source_table_or_page": "EEA 'GHG emission intensity of electricity generation in Europe' indicator",
+			"notes": "ILLUSTRATIVE region+year example, NOT a default. EEA EU-27 2022 average 292 gCO2/kWh, recorded verbatim in docs/research-notes.md §4.13 alongside the 2023 value ('down from 292 gCO2/kWh in 2022, a 17% drop'). Shipping both years makes the year-dependence of grid intensity visible instead of merely asserted. CO2 metric (generation intensity)."
 		}
 	]
 }

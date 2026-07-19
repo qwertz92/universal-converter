@@ -39,7 +39,8 @@
 	} = $props();
 
 	let open = $state(false);
-	let active = $state(0);
+	/** -1 = no option highlighted (initial state, and after the query changes). */
+	let active = $state(-1);
 	let inputEl = $state<HTMLInputElement | null>(null);
 	let listEl = $state<HTMLUListElement | null>(null);
 
@@ -84,7 +85,14 @@
 		}
 		const n = flat.length;
 		if (n === 0) return;
-		active = (active + delta + n) % n;
+		if (active === -1) {
+			// From "nothing highlighted": Down lands on the first option, Up on
+			// the last — not the generic wrap-around step below, which would
+			// otherwise land Up on the second-to-last option.
+			active = delta > 0 ? 0 : n - 1;
+		} else {
+			active = (active + delta + n) % n;
+		}
 		await tick();
 		const el = listEl?.querySelector<HTMLElement>(`[data-idx="${active}"]`);
 		el?.scrollIntoView({ block: 'nearest' });
@@ -129,7 +137,7 @@
 
 	function onInput() {
 		open = true;
-		active = 0;
+		active = -1;
 		// Typing invalidates a previously-committed selection until re-picked.
 		if (value && query !== selectedLabel) {
 			value = undefined;
@@ -183,7 +191,6 @@
 				class="absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 hover:bg-[var(--surface-2)]"
 				style="color:var(--text-faint)"
 				aria-label="Clear {label}"
-				tabindex="-1"
 			>
 				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
 					<path
