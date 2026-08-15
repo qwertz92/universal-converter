@@ -27,6 +27,8 @@
 	import CopyButton from '$lib/components/results/CopyButton.svelte';
 	import OptionsBar from './OptionsBar.svelte';
 	import GridPicker from './GridPicker.svelte';
+	import QueryField from './QueryField.svelte';
+	import DurationPrompt from './DurationPrompt.svelte';
 	import QuickExamples from './QuickExamples.svelte';
 	import StructuredInput from './StructuredInput.svelte';
 	import ResultSet from '$lib/components/results/ResultSet.svelte';
@@ -102,6 +104,22 @@
 	}
 
 	const debouncedRun = debounce((t: string) => runConversion(t), 260);
+
+	/** The engine's own parser, for the input field's live interpretation. */
+	function parseQuery(text: string) {
+		return engine().parse(text);
+	}
+
+	/**
+	 * Append a clause the user chose from a context prompt (a duration, so far)
+	 * to the query text. Writing it into the query — rather than into hidden
+	 * component state — keeps it visible, editable and shareable.
+	 */
+	function appendClause(clause: string): void {
+		queryText = `${queryText.trim()} ${clause}`.trim();
+		runConversion(queryText);
+		pushUrl();
+	}
 
 	function pushUrl(): void {
 		if (!syncUrl || !browser) return;
@@ -240,35 +258,15 @@
 </script>
 
 <div class="space-y-4">
-	<!-- Free-text input -->
-	<form
-		onsubmit={(e) => {
-			e.preventDefault();
-			submit();
-		}}
-	>
-		<div class="relative">
-			<label for="uc-query" class="sr-only">Enter a value and unit to convert</label>
-			<input
-				id="uc-query"
-				type="text"
-				bind:value={queryText}
-				oninput={onInput}
-				placeholder="e.g. 1 liter diesel, 1000 kcal, 1 m³ natural gas"
-				autocomplete="off"
-				spellcheck="false"
-				class="uc-num w-full rounded-xl border py-4 pr-28 pl-4 text-base outline-none sm:text-lg"
-				style="background:var(--surface);border-color:var(--border);color:var(--text)"
-			/>
-			<button
-				type="submit"
-				class="absolute top-1/2 right-2 -translate-y-1/2 rounded-lg px-4 py-2.5 text-sm font-semibold"
-				style="background:var(--accent);color:var(--accent-contrast)"
-			>
-				Convert
-			</button>
-		</div>
-	</form>
+	<!-- Free-text input: completes units, and says what it understood. -->
+	<QueryField
+		bind:value={queryText}
+		{units}
+		{fuels}
+		parse={parseQuery}
+		onsubmit={submit}
+		oninput={onInput}
+	/>
 
 	<QuickExamples onpick={useExample} />
 
@@ -338,11 +336,14 @@
 		</div>
 	{/if}
 
-	<!-- Grid picker rendered inside emissions rows that need (or used) region/year.
-	     Present in compact mode too, where the OptionsBar picker is not shown. -->
+	<!-- Controls rendered inside the rows that ask for context, so the answer to
+	     "what's missing?" sits exactly where the question is asked. Present in
+	     compact mode too, where the OptionsBar picker is not shown. -->
 	{#snippet gridControl(result: ConversionResult)}
 		{#if result.category === 'emissions' && ((result.exactness === 'context_required' && result.missing?.includes('region')) || result.exactness === 'region_year_specific')}
 			<GridPicker bind:value={grid} id="uc-grid-inline" />
+		{:else if result.exactness === 'context_required' && result.missing?.includes('time')}
+			<DurationPrompt {units} onapply={appendClause} />
 		{/if}
 	{/snippet}
 
