@@ -258,12 +258,18 @@
 		</div>
 	</form>
 
-	<!-- Live interpretation. Height is reserved and text is clamped so the page
-	     never moves while typing; the full error also appears in the results. -->
+	<!--
+		Live interpretation. Two fixed rows: a statement of what was understood,
+		and a second row that is EITHER the teaching hint OR the one-click unit
+		chips. Both rows always occupy their space and their text is clamped, so
+		the page cannot move while typing — the owner's hard no-layout-shift rule.
+		The full text of an error also appears in the result area below, so
+		clamping here loses nothing.
+	-->
 	<div
 		id="{id}-interpretation"
 		aria-live="polite"
-		class="mt-2 flex min-h-[2.6rem] flex-col justify-center gap-0.5 rounded-lg px-3 py-1.5 text-sm"
+		class="mt-2 flex min-h-[5.5rem] flex-col justify-center gap-1 rounded-lg px-3 py-2 text-sm"
 		style="background:var(--surface-2)"
 	>
 		<p class="line-clamp-2 leading-snug" style="color:{statusColor}">
@@ -277,25 +283,28 @@
 				<span style="color:var(--text-faint)">· {interpretation.unit.dimension}</span>
 			{/if}
 		</p>
-		{#if interpretation.hint}
-			<p class="line-clamp-1 text-xs" style="color:var(--text-faint)">{interpretation.hint}</p>
-		{/if}
-	</div>
 
-	{#if chips.length > 0}
-		<div class="mt-2 flex flex-wrap items-center gap-1.5">
-			<span class="text-xs font-medium" style="color:var(--text-muted)">Add a unit:</span>
-			{#each chips as unit (unit.id)}
-				<button
-					type="button"
-					class="rounded-full border px-2.5 py-1 text-xs font-medium hover:bg-[var(--surface-2)]"
-					style="border-color:var(--border);color:var(--text)"
-					onclick={() => appendUnit(unit)}
-					title={unit.names[0]}
-				>
-					{unit.symbols[0]}
-				</button>
-			{/each}
+		<!-- One row, never two: wrapping chips would change this box's height on a
+		     narrow screen, which is the shift this whole layout exists to avoid.
+		     Overflow scrolls instead. -->
+		<div class="flex min-h-[1.75rem] flex-nowrap items-center gap-1.5 overflow-x-auto">
+			{#if chips.length > 0}
+				{#each chips as unit (unit.id)}
+					<button
+						type="button"
+						class="shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium hover:bg-[var(--surface-2)]"
+						style="border-color:var(--border);color:var(--text)"
+						onclick={() => appendUnit(unit)}
+						title="Add {unit.names[0]}"
+					>
+						{unit.symbols[0]}
+					</button>
+				{/each}
+			{:else}
+				<p class="line-clamp-1 text-xs" style="color:var(--text-faint)">
+					{interpretation.hint ?? ''}
+				</p>
+			{/if}
 		</div>
-	{/if}
+	</div>
 </div>
