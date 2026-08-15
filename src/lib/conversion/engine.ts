@@ -74,6 +74,9 @@ interface EnergyForBasis {
 	hv: HeatingValueResolved;
 }
 
+/** Dimensions the fuel pipeline can bridge between (via density / heating value). */
+const BRIDGEABLE_VIA_FUEL = new Set<Unit['dimension']>(['mass', 'volume', 'energy']);
+
 /** Energy units to show in the "Fuel Equivalents" group for a pure energy input. */
 const FUEL_EQUIVALENT_UNITS = ['toe', 'boe', 'tce'];
 /** Energy units to show in the "Industrial Units" group. */
@@ -108,6 +111,11 @@ export function createConverter(data: DataBundle): Converter {
 			return unsupportedSet(query, `Unknown unit '${query.unit_id}'.`);
 		}
 		const fuel = query.fuel_id ? fuels.get(query.fuel_id) : undefined;
+		const target = query.target_unit_id ? units.get(query.target_unit_id) : undefined;
+		// A duration written into the query ("5 kW for 3 h") is as explicit as one
+		// supplied via options, and it is the one the user can actually see, so it
+		// wins. Neither is ever assumed (rulebook §D.1).
+		const opts: EngineOptions = { ...options, basis, time: query.time ?? options.time };
 
 		const input: ConversionResultSet['input'] = {
 			value: query.value,
@@ -129,24 +137,24 @@ export function createConverter(data: DataBundle): Converter {
 		try {
 			switch (unit.dimension) {
 				case 'energy':
-					buildEnergyGroups(builder, query.value, unit, options);
-					if (fuel) buildFuelFromEnergy(builder, query.value, unit, fuel, basis, options);
+					buildEnergyGroups(builder, query.value, unit, opts);
+					if (fuel) buildFuelFromEnergy(builder, query.value, unit, fuel, basis, opts);
 					break;
 				case 'power':
-					buildPowerGroups(builder, query.value, unit, options);
+					buildPowerGroups(builder, query.value, unit, opts);
 					break;
 				case 'mass':
-					buildMassGroups(builder, query.value, unit, options);
-					if (fuel) buildFuelFromMass(builder, query.value, unit, fuel, basis, options);
+					buildMassGroups(builder, query.value, unit, opts);
+					if (fuel) buildFuelFromMass(builder, query.value, unit, fuel, basis, opts);
 					else builder.add(contextPickMaterial('energy', unit));
 					break;
 				case 'volume':
-					buildVolumeGroups(builder, query.value, unit, options);
-					if (fuel) buildFuelFromVolume(builder, query.value, unit, fuel, basis, options);
+					buildVolumeGroups(builder, query.value, unit, opts);
+					if (fuel) buildFuelFromVolume(builder, query.value, unit, fuel, basis, opts);
 					else builder.add(contextPickMaterial('energy', unit));
 					break;
 				case 'time':
-					buildTimeGroups(builder, query.value, unit, options);
+					buildTimeGroups(builder, query.value, unit, opts);
 					break;
 				default:
 					// Pseudo-dimensions: show the value in its own group; no bridging.
@@ -154,6 +162,9 @@ export function createConverter(data: DataBundle): Converter {
 						simpleResult(query.value, unit, unit, groupForDimension(unit.dimension), unit.exactness)
 					);
 			}
+			// An explicitly requested target must always be answered — or told,
+			// precisely, why it cannot be (§C.8). It never replaces the other groups.
+			if (target) ensureTarget(builder, query.value, unit, target, fuel, opts);
 		} catch (e) {
 			return unsupportedSet(
 				query,
@@ -161,7 +172,113 @@ export function createConverter(data: DataBundle): Converter {
 			);
 		}
 
-		return builder.build();
+		const set = builder.build();
+		if (target) highlightTarget(set, target);
+		return set;
+	}
+
+	/**
+	 * Make sure the requested target unit is present. Same-dimension targets are
+	 * simply computed (they may sit outside the default display lists — nobody
+	 * would find `1 kWh to cal` otherwise). Cross-dimension targets are produced
+	 * by the fuel pipeline when it can; when it cannot, we say which piece of
+	 * context is missing instead of quietly omitting the answer.
+	 */
+	function ensureTarget(
+		builder: ResultSetBuilder,
+		value: string,
+		from: Unit,
+		target: Unit,
+		fuel: Fuel | undefined,
+		options: EngineOptions
+	): void {
+		if (builder.hasValueFor(target.id)) return;
+
+		if (target.dimension === from.dimension) {
+			builder.add(convertResult(value, from, target, primaryGroupFor(target.dimension), options));
+			return;
+		}
+
+		// Power → energy: answerable exactly once a duration is given, otherwise
+		// the power group's own "supply a duration" prompt already says so.
+		if (from.dimension === 'power' && target.dimension === 'energy') {
+			if (!options.time) return;
+			const row = powerTimesTime(value, from, options.time, options, target);
+			if (row) builder.add(row);
+			return;
+		}
+
+		const bridgeable =
+			BRIDGEABLE_VIA_FUEL.has(from.dimension) && BRIDGEABLE_VIA_FUEL.has(target.dimension);
+		if (bridgeable && !fuel) {
+			builder.add({
+				value: null,
+				raw: null,
+				unit_id: target.id,
+				unit_label: unitLabel(target),
+				category: primaryGroupFor(target.dimension),
+				exactness: 'context_required',
+				explanation: `${unitLabel(from)} → ${unitLabel(target)} depends on the material: a litre of diesel and a litre of water differ. Pick a fuel and this becomes answerable.`,
+				missing: ['fuel'],
+				assumptions: [],
+				warnings: [],
+				source_refs: []
+			});
+			return;
+		}
+		if (bridgeable && fuel) {
+			builder.add({
+				value: null,
+				raw: null,
+				unit_id: target.id,
+				unit_label: unitLabel(target),
+				category: primaryGroupFor(target.dimension),
+				exactness: 'context_required',
+				explanation: `Not available: the catalog has no ${from.dimension === 'mass' || target.dimension === 'mass' ? 'density' : 'heating value'} for ${fuel.names[0]} that would reach ${unitLabel(target)}. No value is invented.`,
+				missing: [
+					target.dimension === 'volume' || from.dimension === 'volume' ? 'density' : 'heating_value'
+				],
+				assumptions: [],
+				warnings: [],
+				source_refs: []
+			});
+			return;
+		}
+
+		builder.add({
+			value: null,
+			raw: null,
+			unit_id: target.id,
+			unit_label: unitLabel(target),
+			category: primaryGroupFor(target.dimension),
+			exactness: 'unsupported',
+			explanation: `There is no conversion path from ${unitLabel(from)} to ${unitLabel(target)}. They measure different things, and this tool will not invent a bridge between them.`,
+			assumptions: [],
+			warnings: [],
+			source_refs: []
+		});
+	}
+
+	/** Flag the requested row, float it to the top of its group, and echo the
+	 *  target on the set so the UI can lead with the answer that was asked for. */
+	function highlightTarget(set: ConversionResultSet, target: Unit): void {
+		let resolved = false;
+		for (const group of set.groups) {
+			const idx = group.results.findIndex((r) => r.unit_id === target.id);
+			if (idx === -1) continue;
+			const row = group.results[idx];
+			row.is_target = true;
+			if (row.value !== null) resolved = true;
+			group.results.splice(idx, 1);
+			group.results.unshift(row);
+			break;
+		}
+		set.target = {
+			unit_id: target.id,
+			unit_label: unitLabel(target),
+			dimension: target.dimension,
+			resolved
+		};
 	}
 
 	function convertText(
@@ -251,29 +368,32 @@ export function createConverter(data: DataBundle): Converter {
 		value: string,
 		powerUnit: Unit,
 		time: Quantity,
-		options: EngineOptions
+		options: EngineOptions,
+		/** Energy unit to express the result in; defaults to kWh. */
+		energyUnit?: Unit
 	): ConversionResult | undefined {
 		const timeUnit = units.get(time.unit_id);
 		if (!timeUnit || timeUnit.dimension !== 'time') return undefined;
+		const outUnit = energyUnit ?? units.get('kilowatt_hour')!;
+		if (outUnit.dimension !== 'energy') return undefined;
 		const watts = new Decimal(toBaseValue(value, powerUnit));
 		const seconds = new Decimal(toBaseValue(time.value, timeUnit));
 		const joules = watts.times(seconds).toFixed();
-		const kwhUnit = units.get('kilowatt_hour')!;
-		const kwh = convertWithinDimension(joules, units.get('joule')!, kwhUnit);
+		const energy = convertWithinDimension(joules, units.get('joule')!, outUnit);
 		// Arithmetic is exact but bounded by the least-exact input (§A.3, §C.7).
-		const exactness = combineExactness(powerUnit.exactness, timeUnit.exactness);
+		const exactness = combineExactness(powerUnit.exactness, timeUnit.exactness, outUnit.exactness);
 		return {
-			value: formatValue(kwh, exactness, { maxExactSigFigs: options.maxSigFigs }),
-			raw: kwh,
-			unit_id: kwhUnit.id,
-			unit_label: unitLabel(kwhUnit),
+			value: formatValue(energy, exactness, { maxExactSigFigs: options.maxSigFigs }),
+			raw: energy,
+			unit_id: outUnit.id,
+			unit_label: unitLabel(outUnit),
 			category: 'energy',
 			exactness,
 			formula: step(
 				`${value} ${unitLabel(powerUnit)}`,
 				'×',
 				`${time.value} ${unitLabel(timeUnit)}`,
-				`${formatValue(kwh, exactness)} kWh`,
+				`${formatValue(energy, exactness)} ${unitLabel(outUnit)}`,
 				'E = P·t'
 			),
 			assumptions: [],
@@ -1026,6 +1146,24 @@ export function createConverter(data: DataBundle): Converter {
 /* ------------------------------------------------------------------ *
  * Module-level helpers
  * ------------------------------------------------------------------ */
+
+/** The group a unit of this dimension primarily belongs to. */
+function primaryGroupFor(dim: Unit['dimension']): ResultGroupKey {
+	switch (dim) {
+		case 'energy':
+			return 'energy';
+		case 'power':
+			return 'power';
+		case 'mass':
+			return 'mass';
+		case 'volume':
+			return 'volume';
+		case 'time':
+			return 'time';
+		default:
+			return groupForDimension(dim);
+	}
+}
 
 function groupForDimension(dim: Unit['dimension']): ResultGroupKey {
 	switch (dim) {

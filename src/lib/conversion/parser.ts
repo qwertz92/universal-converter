@@ -1,16 +1,28 @@
 /**
- * Free-text parser (spec §8.2). Grammar: [number][unit][optional fuel].
+ * Free-text parser (spec §8.2). Grammar:
+ *
+ *   [filler] <number> <unit> [fuel] [(to|in|→) <target unit>] [(for|×) <duration>]
  *
  * Handles:
  *  - `1 kWh`, `1.5 MJ`, `1,5 MJ` (comma decimal), `1000 kcal`, `1 kilowatt hour`;
  *  - `1 liter diesel`, `1 L gasoline`, `1 barrel crude oil`, `1 m3 natural gas`,
  *    `1 kg hydrogen`, `2 kg wood pellets` (trailing fuel phrase);
- *  - number glued to unit: `1.5MJ`, `1000kcal`.
+ *  - number glued to unit: `1.5MJ`, `1000kcal`;
+ *  - an explicit conversion TARGET: `5 kWh to MJ`, `1 kWh in kcal`,
+ *    `1 L diesel -> kg`, `1 kWh = kJ` (§C.8: the target is highlighted, it never
+ *    replaces the other result groups);
+ *  - a DURATION for the power→energy bridge: `5 kW for 3 h`, `2 kW × 30 min`
+ *    (rulebook §B.3 — the tool still never assumes a duration on its own);
+ *  - conversational phrasing: `convert 5 kwh to mj`,
+ *    `how many kWh in 1 liter diesel?`.
  *
- * Returns a `ParsedQuery` (matched unit + optional fuel id + confidence) or a
- * structured `ParseError`:
- *  - unknown unit → suggestions (closest matches);
- *  - missing value → error;
+ * Returns a `ParsedQuery` (matched unit + optional fuel/target/duration +
+ * confidence) or a structured `ParseError`:
+ *  - unknown unit → suggestions (closest matches) and, for common out-of-scope
+ *    quantities (temperature, length, pressure, …), an honest "not supported"
+ *    hint instead of a nonsense edit-distance guess;
+ *  - unknown material → the closest fuels in the catalog;
+ *  - missing value / missing unit → an example of the expected shape;
  *  - ambiguous token (e.g. "ton", "gallon") → the competing interpretations.
  *
  * Fuel matching uses the provided registries; it works with an EMPTY fuel
@@ -18,7 +30,7 @@
  */
 
 import Decimal from 'decimal.js';
-import type { ParseError, ParseResult, ParsedQuery } from './types';
+import type { ParseError, ParseResult, ParsedQuery, Quantity } from './types';
 import type { UnitRegistry } from '$lib/units/registry';
 import type { FuelRegistry } from '$lib/fuels/registry';
 
@@ -34,6 +46,105 @@ const MAX_INPUT_LENGTH = 200;
  *  decimal strings every downstream conversion has to carry (DoS guard). */
 const MAX_ABS_EXPONENT = 30;
 
+/** Keywords introducing a target unit. "Strong" ones are unmistakable, so a
+ *  tail that fails to resolve is reported as an error rather than silently
+ *  re-interpreted as a material. */
+const STRONG_TARGET_WORDS = new Set(['to', 'into', '->', '→', '⇒', '=', '=>']);
+/** "Weak" ones also occur in ordinary phrasing, so an unresolvable tail is
+ *  simply left in place for the fuel/unit matcher. */
+const WEAK_TARGET_WORDS = new Set(['in', 'as']);
+/** Keywords introducing a duration for the power→energy bridge. */
+const DURATION_WORDS = new Set(['for', 'over', 'during', '×', 'x', '*', '·']);
+/** Articles accepted in a duration ("for an hour" → 1 hour). */
+const DURATION_ARTICLES = new Set(['a', 'an', 'one']);
+
+/** Filler that can precede the actual query. */
+const LEADING_FILLER_RE =
+	/^(?:please|convert|calculate|compute|show me|give me|tell me|what(?:'s| is)|whats|how many|how much|is|are)\s+/i;
+/**
+ * "how many X in Y" / "how much X is in Y" — rewritten to "Y to X" so the
+ * ordinary grammar handles it. When X is not a unit at all ("how much CO2 is in
+ * 1 L diesel") the wanted half is simply dropped and the source is converted:
+ * loose phrasing should still get an answer, never a manufactured error.
+ */
+const ASK_RE = /^how\s+(?:many|much)\s+(.+?)\s+(?:is\s+in|are\s+in|in|is|are|for|of|from)\s+(.+)$/i;
+
+/**
+ * Quantities people plausibly try that this tool deliberately does not cover
+ * yet. Consulted ONLY after a token failed to resolve against the catalog, so a
+ * real unit/alias always wins and this table can never shadow one.
+ */
+const OUT_OF_SCOPE: { tokens: string[]; label: string; note: string }[] = [
+	{
+		tokens: [
+			'°c',
+			'°f',
+			'celsius',
+			'fahrenheit',
+			'kelvin',
+			'degree',
+			'degrees',
+			'deg',
+			'°',
+			'grad'
+		],
+		label: 'Temperature',
+		note: 'Temperature is an affine scale (it has an offset, not just a factor), so it needs its own model — planned, not shipped.'
+	},
+	{
+		tokens: [
+			'mile',
+			'miles',
+			'km',
+			'kilometer',
+			'kilometre',
+			'kilometers',
+			'kilometres',
+			'meter',
+			'metre',
+			'meters',
+			'metres',
+			'foot',
+			'feet',
+			'ft',
+			'inch',
+			'inches',
+			'yard',
+			'yards',
+			'cm',
+			'mm',
+			'nautical mile'
+		],
+		label: 'Length and distance',
+		note: 'This tool covers energy, power, mass, volume and time (plus fuels and emissions).'
+	},
+	{
+		tokens: ['bar', 'mbar', 'psi', 'pascal', 'pa', 'hpa', 'atm', 'atmosphere', 'torr'],
+		label: 'Pressure',
+		note: 'Pressure, flow and steam calculations are planned for a later release.'
+	},
+	{
+		tokens: ['mph', 'kmh', 'km/h', 'knot', 'knots', 'm/s'],
+		label: 'Speed',
+		note: 'This tool covers energy, power, mass, volume and time (plus fuels and emissions).'
+	},
+	{
+		tokens: ['gb', 'mb', 'tb', 'kb', 'byte', 'bytes', 'bit', 'bits'],
+		label: 'Digital storage',
+		note: 'This tool is about physical energy quantities, not data sizes.'
+	},
+	{
+		tokens: ['eur', 'usd', 'gbp', 'chf', '€', '$', '£', 'cent', 'euro', 'dollar', 'dollars'],
+		label: 'Currency and prices',
+		note: 'Prices change daily and depend on your tariff, so this tool does not carry them. Energy-price calculators are on the roadmap.'
+	},
+	{
+		tokens: ['ppm', 'ppb', 'percent', '%'],
+		label: 'Concentration',
+		note: 'This tool covers energy, power, mass, volume and time (plus fuels and emissions).'
+	}
+];
+
 export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistry): ParseResult {
 	const original = text;
 	const trimmed = text.trim();
@@ -47,37 +158,35 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 		});
 	}
 
+	// 0. Normalise conversational shapes into the core grammar.
+	const working = prepare(trimmed, units);
+
 	// 1. Extract the leading numeric literal.
-	const numMatch = trimmed.match(NUMBER_RE);
+	const numMatch = working.match(NUMBER_RE);
 	if (!numMatch) {
+		// A bare material ("diesel") is a recognisable intent worth answering well.
+		const asFuel = fuels.resolve(working);
+		if (asFuel) {
+			return err({
+				kind: 'missing_value',
+				message: `"${asFuel.names[0]}" is a material, not a measurement. Add a value and a unit, e.g. "1 L ${asFuel.names[0]}".`,
+				token: working
+			});
+		}
 		return err({
 			kind: 'missing_value',
-			message: 'No number found. Start with a value, e.g. "1 kWh" or "1000 kcal".',
-			token: trimmed.split(/\s+/)[0]
+			message: 'Start with a number, e.g. "1 kWh" or "1000 kcal".',
+			token: working.split(/\s+/)[0]
 		});
 	}
 	const rawNumber = numMatch[1];
 	const { value, warning: numberWarning } = normalizeNumberWithWarning(rawNumber);
 
 	// Magnitude guard: reject values whose decimal exponent is beyond ±30.
-	try {
-		const d = new Decimal(value);
-		if (!d.isFinite() || (!d.isZero() && (d.e > MAX_ABS_EXPONENT || d.e < -MAX_ABS_EXPONENT))) {
-			return err({
-				kind: 'unsupported_value',
-				message: `The value ${rawNumber} is outside the supported range (10^±${MAX_ABS_EXPONENT}).`,
-				token: rawNumber
-			});
-		}
-	} catch {
-		return err({
-			kind: 'missing_value',
-			message: `Could not read "${rawNumber}" as a number.`,
-			token: rawNumber
-		});
-	}
+	const magnitudeError = checkMagnitude(value, rawNumber);
+	if (magnitudeError) return err(magnitudeError);
 
-	let rest = trimmed.slice(numMatch[0].length).trim();
+	let rest = working.slice(numMatch[0].length).trim();
 	// A dangling separator right after the number ("5. kWh") has no other
 	// reading — drop it rather than reporting a bogus unknown unit ". kWh".
 	rest = rest.replace(/^[.,](?=\s|$)/, '').trim();
@@ -85,23 +194,57 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 	if (rest === '') {
 		return err({
 			kind: 'no_unit',
-			message: `Got the value ${value} but no unit. Add a unit, e.g. "${value} kWh".`
+			message: `Got the value ${value}, but no unit. Every conversion needs one — try "${value} kWh", "${value} L diesel" or "${value} kg".`,
+			hint: 'The unit is never guessed: "5" alone could be 5 kWh, 5 litres or 5 kg.'
 		});
 	}
 
-	// 2. Split the remainder into words. The unit is a leading run of word(s);
-	//    a trailing fuel phrase (if any) is peeled off first so multi-word units
-	//    like "kilowatt hour" and multi-word fuels like "wood pellets" coexist.
-	const words = rest.split(/\s+/);
 	const notes: string[] = numberWarning ? [numberWarning] : [];
 
-	// First, try to interpret the WHOLE remainder as a unit (covers "kilowatt hour").
-	const wholeMatch = units.resolve(rest);
+	// 2. Peel the optional trailing clauses (target unit, duration). Each clause
+	//    is only consumed when it actually resolves, so ordinary phrasing that
+	//    happens to contain "in" or "for" is left untouched for the fuel matcher.
+	let words = rest.split(/\s+/);
+	let targetUnitId: string | undefined;
+	let time: Quantity | undefined;
+
+	for (;;) {
+		const duration = peelDuration(words, units);
+		if (duration) {
+			words = duration.rest;
+			time = duration.time;
+			continue;
+		}
+		if (targetUnitId === undefined) {
+			const target = peelTarget(words, units);
+			if (target && 'error' in target) return err(target.error);
+			if (target) {
+				words = target.rest;
+				targetUnitId = target.unitId;
+				continue;
+			}
+		}
+		break;
+	}
+
+	if (words.length === 0) {
+		return err({
+			kind: 'no_unit',
+			message: `Got the value ${value}, but no unit to convert FROM. Try "${value} kWh${targetUnitId ? ' to ' + (units.get(targetUnitId)?.symbols[0] ?? '') : ''}".`
+		});
+	}
+
+	const restWithoutClauses = words.join(' ');
+
+	// 3. Try to interpret the whole remainder as a unit ("kilowatt hour").
+	const wholeMatch = units.resolve(restWithoutClauses);
 	if (wholeMatch.kind === 'match') {
 		return ok({
 			value,
 			unit_id: wholeMatch.unit.id,
 			dimension: wholeMatch.unit.dimension,
+			target_unit_id: targetUnitId,
+			time,
 			confidence: wholeMatch.via === 'symbol' ? 1 : 0.95,
 			notes: aliasNote(wholeMatch, notes),
 			original_input: original
@@ -110,13 +253,13 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 	if (wholeMatch.kind === 'ambiguous') {
 		return err({
 			kind: 'ambiguous_unit',
-			message: `"${wholeMatch.token}" is ambiguous. Which did you mean?`,
+			message: `"${wholeMatch.token}" is ambiguous — pick the one you mean:`,
 			token: wholeMatch.token,
 			interpretations: wholeMatch.interpretations
 		});
 	}
 
-	// 3. Peel a trailing fuel phrase, then match the leading words as the unit.
+	// 4. Peel a trailing fuel phrase, then match the leading words as the unit.
 	const fuelMatch = fuels.matchTrailingFuel(words);
 	let unitWords = words;
 	let fuelId: string | undefined;
@@ -126,10 +269,13 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 	}
 
 	if (unitWords.length === 0) {
-		// e.g. "1 diesel" — a fuel but no unit token.
+		// e.g. "1 diesel" — a material but no unit token.
+		const fuelName = fuelId ? (fuels.get(fuelId)?.names[0] ?? fuelId) : '';
 		return err({
 			kind: 'no_unit',
-			message: `Add a unit before the material, e.g. "${value} L ${fuelId ?? ''}".`.trim()
+			message:
+				`Add a unit before the material, e.g. "${value} L ${fuelName}" or "${value} kg ${fuelName}".`.trim(),
+			hint: 'Materials answer "how much energy / CO₂ is in this amount" — so we need the amount first.'
 		});
 	}
 
@@ -143,10 +289,13 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 			const leftover = unitWords.slice(len);
 			if (leftover.length > 0 && !fuelId) {
 				// Leftover might be an unknown fuel phrase.
+				const phrase = leftover.join(' ');
 				return err({
 					kind: 'unknown_fuel',
-					message: `Unknown material "${leftover.join(' ')}". Known units parsed; pick a material from the list.`,
-					token: leftover.join(' ')
+					message: `The unit ${match.unit.symbols[0] ?? match.unit.names[0]} was understood, but "${phrase}" is not a material in the catalog.`,
+					token: phrase,
+					suggestions: fuels.suggest(phrase),
+					hint: 'Pick a material from the list, or drop it to convert the plain unit.'
 				});
 			}
 			return ok({
@@ -154,6 +303,8 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 				unit_id: match.unit.id,
 				dimension: match.unit.dimension,
 				fuel_id: fuelId,
+				target_unit_id: targetUnitId,
+				time,
 				confidence: match.via === 'symbol' ? 1 : 0.9,
 				notes: aliasNote(match, notes),
 				original_input: original
@@ -162,30 +313,203 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 		if (match.kind === 'ambiguous') {
 			return err({
 				kind: 'ambiguous_unit',
-				message: `"${match.token}" is ambiguous. Which did you mean?`,
+				message: `"${match.token}" is ambiguous — pick the one you mean:`,
 				token: match.token,
 				interpretations: match.interpretations
 			});
 		}
 	}
 
-	// 4. Nothing matched the unit slot — unknown unit, with suggestions
+	// 5. Nothing matched the unit slot — unknown unit, with suggestions
 	//    (computed exactly once, here, on the failing token — see registry).
-	const firstToken = unitWords.join(' ');
-	const suggestions = units.suggest(unitWords[0]);
-	return err({
-		kind: 'unknown_unit',
-		message: `Unknown unit "${firstToken}".${
-			suggestions.length ? ` Did you mean: ${suggestions.join(', ')}?` : ''
-		}`,
-		token: firstToken,
-		suggestions
-	});
+	return err(unknownUnitError(unitWords.join(' '), unitWords[0], units));
 }
 
 /* ------------------------------------------------------------------ *
- * Helpers
+ * Clause peeling
  * ------------------------------------------------------------------ */
+
+/**
+ * Split off a trailing `to <unit>` clause. Returns `undefined` when there is no
+ * usable target, `{ error }` when a strong keyword was used with a tail that is
+ * not a unit (so the user gets a precise message instead of a bogus
+ * "unknown material").
+ */
+function peelTarget(
+	words: string[],
+	units: UnitRegistry
+): { rest: string[]; unitId: string } | { error: ParseError } | undefined {
+	for (let i = words.length - 2; i >= 0; i--) {
+		const w = words[i].toLowerCase();
+		const strong = STRONG_TARGET_WORDS.has(w);
+		const weak = WEAK_TARGET_WORDS.has(w);
+		if (!strong && !weak) continue;
+
+		const tail = words.slice(i + 1).join(' ');
+		const match = units.resolve(tail);
+		if (match.kind === 'match') {
+			return { rest: words.slice(0, i), unitId: match.unit.id };
+		}
+		if (match.kind === 'ambiguous') {
+			return {
+				error: {
+					kind: 'ambiguous_unit',
+					message: `The target "${match.token}" is ambiguous — pick the one you mean:`,
+					token: match.token,
+					interpretations: match.interpretations
+				}
+			};
+		}
+		if (strong) {
+			return { error: unknownUnitError(tail, words[i + 1], units, true) };
+		}
+	}
+	return undefined;
+}
+
+/**
+ * Split off a trailing `for <n> <time unit>` clause (rulebook §B.3). Only a
+ * genuine time unit is accepted, so "for wood pellets" is never read as a
+ * duration.
+ */
+function peelDuration(
+	words: string[],
+	units: UnitRegistry
+): { rest: string[]; time: Quantity } | undefined {
+	for (let i = words.length - 2; i >= 0; i--) {
+		if (!DURATION_WORDS.has(words[i].toLowerCase())) continue;
+		const time = parseDuration(words.slice(i + 1), units);
+		if (time) return { rest: words.slice(0, i), time };
+	}
+	return undefined;
+}
+
+/** `["3","hours"]` / `["an","hour"]` / `["3h"]` → a time Quantity. */
+function parseDuration(tail: string[], units: UnitRegistry): Quantity | undefined {
+	if (tail.length === 0) return undefined;
+	let text = tail.join(' ').trim();
+	let value = '1';
+
+	if (DURATION_ARTICLES.has(tail[0].toLowerCase())) {
+		text = tail.slice(1).join(' ').trim();
+	} else {
+		const numMatch = text.match(NUMBER_RE);
+		if (numMatch) {
+			value = normalizeNumberWithWarning(numMatch[1]).value;
+			text = text.slice(numMatch[0].length).trim();
+		}
+	}
+	if (text === '') return undefined;
+
+	const match = units.resolve(text);
+	if (match.kind !== 'match' || match.unit.dimension !== 'time') return undefined;
+	return { value, unit_id: match.unit.id, dimension: 'time' };
+}
+
+/* ------------------------------------------------------------------ *
+ * Normalisation & errors
+ * ------------------------------------------------------------------ */
+
+/**
+ * Normalise conversational phrasing into the core grammar: drop leading filler
+ * and trailing punctuation, space out arrow/equals operators so they tokenise,
+ * and rewrite "how many X in Y" into "Y to X".
+ */
+function prepare(input: string, units: UnitRegistry): string {
+	let text = input.replace(/\s+/g, ' ').trim();
+	// Strip a trailing question mark and stray "?" tokens ("1 kWh = ? MJ").
+	text = text.replace(/\?+/g, ' ').replace(/\s+/g, ' ').trim();
+
+	const ask = text.match(ASK_RE);
+	if (ask) {
+		const wanted = ask[1].trim();
+		const source = ask[2].trim();
+		// Only rewrite when the source half actually starts with a number —
+		// otherwise we would invent a reading of a sentence we did not parse.
+		if (NUMBER_RE.test(source)) {
+			// Keep the wanted half only when it really names a unit. "how much CO2
+			// is in 1 L diesel" then converts the litre of diesel (whose emissions
+			// are one of the groups) instead of failing on a non-unit target.
+			text = units.resolve(wanted).kind === 'match' ? `${source} to ${wanted}` : source;
+		}
+	}
+
+	let previous: string;
+	do {
+		previous = text;
+		text = text.replace(LEADING_FILLER_RE, '').trim();
+	} while (text !== previous);
+
+	// Space out operators so "5kWh->MJ" and "1 kWh=kJ" tokenise. The `-` of an
+	// arrow is only consumed together with `>`, so "1e-5" is untouched.
+	text = text
+		.replace(/(=>|->|→|⇒|×|·)/g, ' $1 ')
+		.replace(/(?<=[^\s=])=(?=[^\s=])/g, ' = ')
+		.replace(/\s+/g, ' ')
+		.trim();
+
+	return text;
+}
+
+/** Reject values whose magnitude is outside the supported decimal range. */
+function checkMagnitude(value: string, rawNumber: string): ParseError | undefined {
+	try {
+		const d = new Decimal(value);
+		if (!d.isFinite() || (!d.isZero() && (d.e > MAX_ABS_EXPONENT || d.e < -MAX_ABS_EXPONENT))) {
+			return {
+				kind: 'unsupported_value',
+				message: `The value ${rawNumber} is outside the supported range (10^±${MAX_ABS_EXPONENT}).`,
+				token: rawNumber
+			};
+		}
+	} catch {
+		return {
+			kind: 'missing_value',
+			message: `Could not read "${rawNumber}" as a number.`,
+			token: rawNumber
+		};
+	}
+	return undefined;
+}
+
+/** Build the unknown-unit error, preferring an honest out-of-scope note over a
+ *  meaningless edit-distance guess. */
+function unknownUnitError(
+	phrase: string,
+	firstToken: string,
+	units: UnitRegistry,
+	isTarget = false
+): ParseError {
+	const scope = outOfScope(phrase) ?? outOfScope(firstToken);
+	if (scope) {
+		return {
+			kind: 'unknown_unit',
+			message: `${scope.label} is not supported (yet) — "${phrase}" is not in the catalog.`,
+			token: phrase,
+			hint: scope.note,
+			suggestions: []
+		};
+	}
+	const suggestions = units.suggest(firstToken);
+	const what = isTarget ? 'target unit' : 'unit';
+	return {
+		kind: 'unknown_unit',
+		message: suggestions.length
+			? `Unknown ${what} "${phrase}". Did you mean one of these?`
+			: `Unknown ${what} "${phrase}".`,
+		token: phrase,
+		hint: suggestions.length ? undefined : 'Browse the unit index to see everything supported.',
+		suggestions
+	};
+}
+
+function outOfScope(token: string): { label: string; note: string } | undefined {
+	const key = token.toLowerCase().trim();
+	for (const entry of OUT_OF_SCOPE) {
+		if (entry.tokens.includes(key)) return { label: entry.label, note: entry.note };
+	}
+	return undefined;
+}
 
 /**
  * Normalise a numeric literal to a plain decimal string.

@@ -373,7 +373,10 @@
 				>
 					Download CSV
 				</button>
-				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- apiHref is resolve('/api/convert') + a query string; the typed router has no endpoint search-suffix form -->
+				<!-- apiHref is resolve('/api/convert') + a query string; the typed router
+				     models search suffixes for pages but not for endpoints, so the rule
+				     is disabled for this one element rather than for the file. -->
+				<!-- eslint-disable svelte/no-navigation-without-resolve -->
 				<a
 					href={apiHref}
 					target="_blank"
@@ -384,6 +387,7 @@
 				>
 					API ↗
 				</a>
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			</div>
 		{:else if !compact}
 			<div

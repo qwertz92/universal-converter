@@ -63,6 +63,17 @@ export class ResultSetBuilder {
 		return this;
 	}
 
+	/** Whether any collected result already carries a value in this unit. Used to
+	 *  decide whether an explicitly requested target still has to be produced. */
+	hasValueFor(unitId: string): boolean {
+		for (const bucket of this.buckets.values()) {
+			for (const r of bucket) {
+				if (r.unit_id === unitId && r.value !== null) return true;
+			}
+		}
+		return false;
+	}
+
 	private collectMeta(assumptions: Assumption[], warnings: Warning[], refs: SourceRef[]): void {
 		for (const a of assumptions) this.pushAssumption(a);
 		for (const w of warnings) this.pushWarning(w);
@@ -83,16 +94,22 @@ export class ResultSetBuilder {
 
 	/** Materialise the ordered result set, including meta-groups where non-empty. */
 	build(): ConversionResultSet {
-		const groups: ResultGroup[] = [];
+		const answered: ResultGroup[] = [];
+		const prompts: ResultGroup[] = [];
 		for (const key of RESULT_GROUP_ORDER) {
 			if (key === 'assumptions' || key === 'warnings' || key === 'sources' || key === 'formula') {
 				continue; // meta-groups handled below
 			}
 			const results = this.buckets.get(key);
 			if (results && results.length > 0) {
-				groups.push({ key, title: GROUP_TITLES[key], results });
+				const group = { key, title: GROUP_TITLES[key], results };
+				// Groups that actually answered come before groups that only ask
+				// for more context ("1 kg" must lead with Mass, not with the
+				// "pick a material" prompt). Canonical order holds within each.
+				(results.some((r) => r.value !== null) ? answered : prompts).push(group);
 			}
 		}
+		const groups: ResultGroup[] = [...answered, ...prompts];
 
 		// Meta-groups, in canonical order, only when they carry content.
 		if (this.assumptions.length > 0) {

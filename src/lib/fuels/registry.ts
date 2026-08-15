@@ -5,7 +5,7 @@
  */
 
 import type { Fuel } from '$lib/conversion/types';
-import { normalizeLoose } from '$lib/units/aliases';
+import { levenshtein, normalizeLoose } from '$lib/units/aliases';
 
 export class FuelRegistry {
 	private readonly byId = new Map<string, Fuel>();
@@ -51,5 +51,39 @@ export class FuelRegistry {
 			if (fuel) return { fuel, consumed: words.length - start };
 		}
 		return undefined;
+	}
+
+	/**
+	 * Up to 3 canonical fuel NAMES a failed material phrase plausibly meant, so
+	 * "1 barrel oil" or "1 m³ gas" can offer the real catalog entries instead of
+	 * a bare "unknown material". Substring relatives rank first ("oil" → crude
+	 * oil, heating oil); edit-distance candidates must be close relative to the
+	 * shorter string so unrelated words yield nothing rather than noise.
+	 */
+	suggest(phrase: string): string[] {
+		const loose = normalizeLoose(phrase);
+		if (loose.length < 2 || loose.length > 60) return [];
+
+		const contains: { name: string; len: number }[] = [];
+		const near: { name: string; d: number }[] = [];
+		for (const [key, fuel] of this.byLoose) {
+			const name = fuel.names[0];
+			if (key.includes(loose) || loose.includes(key)) {
+				contains.push({ name, len: key.length });
+				continue;
+			}
+			const d = levenshtein(loose, key);
+			const tolerance = Math.max(1, Math.floor(Math.min(loose.length, key.length) / 3));
+			if (d <= tolerance) near.push({ name, d });
+		}
+		contains.sort((a, b) => a.len - b.len);
+		near.sort((a, b) => a.d - b.d);
+
+		const out: string[] = [];
+		for (const { name } of [...contains, ...near]) {
+			if (!out.includes(name)) out.push(name);
+			if (out.length >= 3) break;
+		}
+		return out;
 	}
 }

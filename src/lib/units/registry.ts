@@ -160,19 +160,35 @@ export class UnitRegistry {
 		return { kind: 'unknown', token: trimmed, suggestions: [] };
 	}
 
-	/** Up to 3 closest unit ids by edit distance (for "did you mean"). */
+	/**
+	 * Up to 3 plausible unit ids for a token that did not resolve ("did you
+	 * mean"). Prefix relatives rank first ("kilo" → kilojoule, kilowatt hour);
+	 * edit-distance candidates must be close RELATIVE TO THE SHORTER STRING, so
+	 * a genuinely unrelated word gets no suggestions at all rather than a
+	 * nonsense one ("mile" must not suggest "mtoe").
+	 */
 	suggest(token: string): string[] {
 		const loose = normalizeLoose(token.trim());
 		// Levenshtein is O(len × key length) per key — don't sweep the whole
 		// catalog for garbage tokens no suggestion could ever be close to.
-		if (loose.length === 0 || loose.length > 40) return [];
-		const scored = this.looseKeys
-			.map((key) => ({ key, d: levenshtein(loose, key) }))
-			.filter(({ key, d }) => d <= Math.max(2, Math.floor(key.length / 3)))
-			.sort((a, b) => a.d - b.d)
-			.slice(0, 5);
+		if (loose.length < 2 || loose.length > 40) return [];
+
+		const prefix: string[] = [];
+		const near: { key: string; d: number }[] = [];
+		for (const key of this.looseKeys) {
+			if (key.startsWith(loose) || loose.startsWith(key)) {
+				prefix.push(key);
+				continue;
+			}
+			const d = levenshtein(loose, key);
+			const tolerance = Math.max(1, Math.floor(Math.min(loose.length, key.length) / 3));
+			if (d <= tolerance) near.push({ key, d });
+		}
+		near.sort((a, b) => a.d - b.d || a.key.length - b.key.length);
+		prefix.sort((a, b) => a.length - b.length);
+
 		const ids = new Set<string>();
-		for (const { key } of scored) {
+		for (const key of [...prefix, ...near.map((n) => n.key)]) {
 			const u = this.byLoose.get(key);
 			if (u) ids.add(u.id);
 			if (ids.size >= 3) break;
