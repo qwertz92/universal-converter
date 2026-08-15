@@ -93,7 +93,32 @@ build-status dashboard.
 
 ### 0.3 — Heating-cost calculator, electricity/gas price calculator, boiler efficiency, heat pump COP, well-to-wheel factors, country presets, saved scenarios
 
-Per spec §15, unchanged.
+**What v0.3.0 actually shipped (2026-07-20, see `CHANGELOG.md`):** a usability
+milestone, not the calculator list. The converter became usable without reading
+the documentation first — an explicit conversion target (`5 kWh to MJ`) and
+duration (`5 kW for 3 h`) in the query grammar, unit autocomplete, a live
+statement of what the engine understood, honest out-of-scope messaging, a
+mobile pass that removed up to 451px of horizontal overflow, and browser-local
+recent conversions (the "saved scenarios" half that needs no new data).
+
+**Why the listed calculators did not ship.** Every one of them needs numbers
+this repository does not have a source for:
+
+- *Heating-cost / electricity / gas price calculators* — tariffs are
+  per-contract and change constantly; there is no citable dataset that would
+  make a shipped number true for any given reader.
+- *Boiler efficiency, heat-pump COP* — these are equipment properties with wide
+  real spread. Without a cited efficiency table, any default would be invented.
+- *Well-to-wheel factors* — requires an upstream/lifecycle dataset (e.g. JEC or
+  a national equivalent) that has not been researched or licence-checked.
+- *Country presets* — the same blocker as the US grid factor: a preset per
+  country means a cited factor per country/year, and we ship only the ones we
+  have (UK 2025, EU-27 2023/2022).
+
+Reordering the calculators behind a usability release was a deliberate call:
+the tool was hard to use *before* it was short of calculators, and the
+"no invented numbers" rule makes the calculator work data-first rather than
+code-first. The items stay here, with the blocker named, until a source exists.
 
 ### 0.4 — Historical industrial units, pressure/flow/temperature, steam/energy engineering calculators, user-defined materials/fuels, offline PWA, embeddable widget
 

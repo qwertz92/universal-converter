@@ -159,16 +159,26 @@ Honest scope of what's exact vs. estimated vs. refused:
 
 ## Status
 
-**v0.2.0, shipped** (see [`CHANGELOG.md`](CHANGELOG.md)). On top of the v0.1
-foundation — the conversion engine (units, fuels, emissions, parser, guards),
-the sourced data catalog (73 units, 21 fuels, 34 emission factors, 10
-sources, 20 quick examples) and the full SvelteKit UI — 0.2 adds the grid
-electricity **region/year picker** (cited factors only, CO2 vs CO2e labeled),
-the **`/api/convert` public API draft** ([`docs/api.md`](docs/api.md)),
-result **export** (JSON/CSV/API link), per-unit **converted ranges** with an
-honest `estimated` label for wide-spread fuels, a Time result group, SEO
-(sitemap, OG card, breadcrumb JSON-LD, `/units/kwh`-style short slugs),
-CI, and a broad accessibility pass — all passing **382 Vitest tests**.
+**v0.3.0, shipped** (see [`CHANGELOG.md`](CHANGELOG.md)) — the release that
+made the converter usable without reading the docs first. You can now write
+what you mean (`5 kWh to MJ`, `10 L diesel to kg`, `5 kW for 3 h`,
+`how many kWh in 1 liter diesel?`); the input completes units as you type and
+states what it understood on every keystroke; a requested target is answered as
+a headline without hiding the other groups; and quantities the tool does not
+model are named honestly instead of guessed at. Plus a mobile pass that removed
+up to 451px of horizontal overflow, WCAG-AA badge contrast, and catalog notes
+rewritten for readers rather than maintainers.
+
+The foundation underneath is v0.1's conversion engine (units, fuels, emissions,
+parser, guards) plus v0.2's grid electricity **region/year picker** (cited
+factors only, CO2 vs CO2e labeled), the **`/api/convert` public API draft**
+([`docs/api.md`](docs/api.md)), result **export** (JSON/CSV/API link), per-unit
+**converted ranges** with an honest `estimated` label for wide-spread fuels, a
+Time result group, SEO (sitemap, OG card, breadcrumb JSON-LD, `/units/kwh`-style
+short slugs), CI, and an accessibility pass. The sourced catalog is 73 units,
+21 fuels, 34 emission factors, 10 sources and 23 quick examples, covered by
+**457 Vitest tests**.
+
 Known gaps and honest limitations (e.g. crude-oil density, methane's own
 combustion factor, hydrogen upstream emissions, no US grid factor until the
 EPA table is re-extracted at full fidelity) are documented in
