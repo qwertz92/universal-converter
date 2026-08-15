@@ -131,10 +131,36 @@ describe('EngineOptions hardening', () => {
 });
 
 describe('exactness labeling fixes', () => {
-	it('global-region IPCC factors are source_based, NOT region_year_specific', () => {
-		const co2 = results('1 kg lignite').filter((r) => r.category === 'emissions');
-		const fossil = co2.find((r) => r.unit_id === 'kilogram_co2');
-		expect(fossil?.exactness).toBe('source_based');
+	it('global-region IPCC factors are never labeled region_year_specific', () => {
+		// "global" is a coverage statement, not a geographic specificity.
+		for (const fuelQuery of ['1 kg lignite', '1 kg anthracite', '1 L crude oil']) {
+			const fossil = results(fuelQuery)
+				.filter((r) => r.category === 'emissions')
+				.find((r) => r.unit_id === 'kilogram_co2');
+			expect(fossil?.exactness, fuelQuery).not.toBe('region_year_specific');
+		}
+	});
+
+	it('a per-energy factor inherits the exactness of the energy it was applied to', () => {
+		// Lignite's own source records a 5.5–21.6 MJ/kg spread, so its energy is
+		// `estimated`. The CO2 is that energy × a factor, and cannot be more
+		// precise than its weakest input (rulebook §A, §C.7 rule 1). It used to
+		// print as `source_based` with four significant figures.
+		const co2 = results('1 kg lignite')
+			.filter((r) => r.category === 'emissions')
+			.find((r) => r.unit_id === 'kilogram_co2');
+		expect(co2?.exactness).toBe('estimated');
+		expect(co2?.value?.startsWith('~')).toBe(true);
+	});
+
+	it('a per-volume factor is unaffected by the energy path', () => {
+		// Diesel's CO2 factor is kg per litre, so no heating value is on the path
+		// and the energy spread cannot weaken it. It keeps the exactness its own
+		// provenance earns (DESNZ, UK 2025 → region + year).
+		const co2 = results('1 L diesel')
+			.filter((r) => r.category === 'emissions')
+			.find((r) => r.unit_id === 'kilogram_co2');
+		expect(co2?.exactness).toBe('region_year_specific');
 	});
 
 	it('lignite energy (spread ratio ~3.9) is estimated with ~ and a CONVERTED per-unit range', () => {

@@ -166,6 +166,7 @@ const scopeSchema = z.enum([
 	'well_to_tank',
 	'tank_to_wheel',
 	'well_to_wheel',
+	'outside_of_scopes',
 	'unknown_or_mixed'
 ]);
 

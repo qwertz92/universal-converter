@@ -211,6 +211,10 @@ export type Scope =
 	| 'well_to_tank'
 	| 'tank_to_wheel'
 	| 'well_to_wheel'
+	/** Reported outside the scope hierarchy entirely — biogenic combustion CO2,
+	 *  which leaves the stack when YOU burn the fuel but is accounted for
+	 *  separately by convention (§C.5). It is emphatically not "upstream". */
+	| 'outside_of_scopes'
 	| 'unknown_or_mixed';
 
 /**

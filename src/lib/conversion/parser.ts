@@ -499,11 +499,15 @@ function prepare(input: string, units: UnitRegistry): string {
 		text = text.replace(LEADING_FILLER_RE, '').trim();
 	} while (text !== previous);
 
-	// Space out operators so "5kWh->MJ" and "1 kWh=kJ" tokenise. The `-` of an
-	// arrow is only consumed together with `>`, so "1e-5" is untouched.
+	// Space out operators so "5kWh->MJ", "1 kWh=kJ" and "5 kW*3h" tokenise. The
+	// `-` of an arrow is only consumed together with `>`, so "1e-5" is untouched.
+	//
+	// Deliberately NOT a lookbehind: a lookbehind is a SYNTAX error in Safari
+	// before 16.4, and because this is a regex literal the whole module would
+	// fail to evaluate there — taking the entire site down, not just this input.
 	text = text
-		.replace(/(=>|->|→|⇒|×|·)/g, ' $1 ')
-		.replace(/(?<=[^\s=])=(?=[^\s=])/g, ' = ')
+		.replace(/(=>|->|→|⇒|×|·|\*)/g, ' $1 ')
+		.replace(/([^\s=])=([^\s=])/g, '$1 = $2')
 		.replace(/\s+/g, ' ')
 		.trim();
 

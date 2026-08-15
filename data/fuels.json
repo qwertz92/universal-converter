@@ -12,7 +12,10 @@
 					"basis": "lhv",
 					"value": "42.3",
 					"unit": "mj_per_kg",
-					"range": { "low": "40.1", "high": "44.8" },
+					"range": {
+						"low": "40.1",
+						"high": "44.8"
+					},
 					"source_refs": ["ipcc-2006-v2"],
 					"notes": "IPCC's 2006 guidelines (Vol. 2, Ch. 1, Table 1.2) list a global default net calorific value (NCV, or lower heating value/LHV) for crude oil of 42.3 MJ/kg (42.3 GJ/tonne), with a 95% confidence range of 40.1–44.8 MJ/kg. DESNZ's 2025 dataset has no generic 'crude oil' entry — it only covers refined products — so this IPCC figure is used here."
 				}
@@ -195,7 +198,6 @@
 				"jet a-1",
 				"jet a",
 				"kerosin",
-				"petroleum",
 				"avtur",
 				"heating kerosene"
 			],
@@ -431,17 +433,15 @@
 					"basis": "lhv",
 					"value": "10.191",
 					"unit": "kwh_per_m3",
-					"range": { "low": "9.4", "high": "11.0" },
 					"source_refs": ["uk-desnz-ghg-2025"],
-					"notes": "Volumetric Net CV derived from DESNZ density 0.802 kg/m³ × 12.707 kWh/kg = 10.191 kWh/m³. DERIVED (not a verbatim DESNZ cell) — DESNZ's own per-litre-of-gas figure (0.01 kWh/L) rounds too coarsely to use directly. Range reflects typical pipeline-gas variability. Reference T/P unstated (see warning)."
+					"notes": "Volumetric Net CV derived from DESNZ density 0.802 kg/m³ × 12.707 kWh/kg = 10.191 kWh/m³. DERIVED (not a verbatim DESNZ cell) — DESNZ's own per-litre-of-gas figure (0.01 kWh/L) rounds too coarsely to use directly. Reference T/P unstated (see warning). Real pipeline gas varies in composition, but this source publishes no range for it, so none is shown."
 				},
 				{
 					"basis": "hhv",
 					"value": "11.290",
 					"unit": "kwh_per_m3",
-					"range": { "low": "10.3", "high": "12.0" },
 					"source_refs": ["uk-desnz-ghg-2025"],
-					"notes": "Volumetric Gross CV derived from DESNZ density 0.802 kg/m³ × 14.077 kWh/kg = 11.290 kWh/m³. DERIVED from DESNZ density × gravimetric GCV (both verbatim), not a verbatim cell. ~11 kWh/m³ is the typical UK gas-bill figure. Reference T/P unstated (see warning)."
+					"notes": "Volumetric Gross CV derived from DESNZ density 0.802 kg/m³ × 14.077 kWh/kg = 11.290 kWh/m³. DERIVED from DESNZ density × gravimetric GCV (both verbatim), not a verbatim cell. ~11 kWh/m³ is the typical UK gas-bill figure. Reference T/P unstated (see warning). Real pipeline gas varies in composition, but this source publishes no range for it, so none is shown."
 				}
 			],
 			"emission_factor_ids": ["natural-gas-co2-desnz", "natural-gas-co2e-desnz"],
@@ -563,7 +563,10 @@
 					"basis": "hhv",
 					"value": "141.79",
 					"unit": "mj_per_kg",
-					"range": { "low": "141.79", "high": "142.18" },
+					"range": {
+						"low": "141.79",
+						"high": "142.18"
+					},
 					"source_refs": ["h2tools", "nist-webbook"],
 					"notes": "HHV 141.79 MJ/kg (≈ 39.4 kWh/kg), NIST Chemistry WebBook (SRD 69)-traceable printed value (285.83 kJ/mol). The DOE GREET/ORNL table gives 142.18 MJ/kg (gaseous) — hence the range. Earlier project figure 141.88 was between these; corrected to the NIST-printed 141.79. The LHV/HHV gap is large for hydrogen (~18%) because all combustion product is water."
 				}
@@ -623,7 +626,10 @@
 					"basis": "lhv",
 					"value": "11.9",
 					"unit": "mj_per_kg",
-					"range": { "low": "5.50", "high": "21.6" },
+					"range": {
+						"low": "5.50",
+						"high": "21.6"
+					},
 					"source_refs": ["ipcc-2006-v2"],
 					"notes": "IPCC's 2006 guidelines (Vol. 2, Ch. 1, Table 1.2) list a global default net calorific value (NCV) for lignite of 11.9 MJ/kg (11.9 GJ/tonne), on a net basis, with a 95% confidence range of 5.50–21.6 MJ/kg — a very wide range, reflecting how much lignite's moisture and ash content can vary. DESNZ's 2025 dataset has no 'lignite' entry, so this IPCC figure is used here."
 				}
@@ -646,7 +652,10 @@
 					"basis": "lhv",
 					"value": "26.7",
 					"unit": "mj_per_kg",
-					"range": { "low": "21.6", "high": "32.2" },
+					"range": {
+						"low": "21.6",
+						"high": "32.2"
+					},
 					"source_refs": ["ipcc-2006-v2"],
 					"notes": "IPCC's 2006 guidelines (Vol. 2, Ch. 1, Table 1.2) list a global default net calorific value (NCV) for anthracite of 26.7 MJ/kg (26.7 GJ/tonne), on a net basis, with a 95% confidence range of 21.6–32.2 MJ/kg. DESNZ's 2025 dataset has no 'anthracite' entry, so this IPCC figure is used here."
 				}

@@ -16,6 +16,7 @@ export const SCOPE_LABEL: Record<Scope, string> = {
 	well_to_tank: 'well-to-tank (upstream)',
 	tank_to_wheel: 'tank-to-wheel (combustion)',
 	well_to_wheel: 'well-to-wheel (lifecycle)',
+	outside_of_scopes: 'outside the scopes (biogenic, reported separately)',
 	unknown_or_mixed: 'unknown / mixed boundary'
 };
 

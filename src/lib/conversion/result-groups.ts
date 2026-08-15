@@ -74,6 +74,24 @@ export class ResultSetBuilder {
 		return false;
 	}
 
+	/**
+	 * The first collected result that carries a value in the given dimension, so
+	 * a requested target unit can be derived from work already done rather than
+	 * reported as missing data.
+	 */
+	findValueInDimension(
+		dimension: string,
+		lookupUnit: (unitId: string) => { dimension: string } | undefined
+	): ConversionResult | undefined {
+		for (const bucket of this.buckets.values()) {
+			for (const r of bucket) {
+				if (r.raw === null || r.value === null || !r.unit_id) continue;
+				if (lookupUnit(r.unit_id)?.dimension === dimension) return r;
+			}
+		}
+		return undefined;
+	}
+
 	private collectMeta(assumptions: Assumption[], warnings: Warning[], refs: SourceRef[]): void {
 		for (const a of assumptions) this.pushAssumption(a);
 		for (const w of warnings) this.pushWarning(w);
