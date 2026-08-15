@@ -1104,7 +1104,7 @@ export function createConverter(data: DataBundle): Converter {
 			unit_label: '',
 			category,
 			exactness: 'context_required',
-			explanation: `To convert ${unitLabel(unit)} to energy/mass/emissions, pick a material (e.g. diesel, natural gas, wood pellets).`,
+			explanation: `${unitLabel(unit)} of what? Pick a fuel (e.g. diesel, natural gas, wood pellets) and this becomes energy, mass and emissions.`,
 			missing: ['fuel'],
 			assumptions: [],
 			warnings: [],

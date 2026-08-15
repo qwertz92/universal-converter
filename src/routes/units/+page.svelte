@@ -91,7 +91,14 @@
 											>{u.symbols[0]}</span
 										>
 									</span>
-									<ExactnessBadge exactness={u.exactness} size="xs" showGlyph={false} />
+									<!-- Non-interactive: this badge sits inside the card's own
+									     link, and an anchor inside an anchor is invalid HTML. -->
+									<ExactnessBadge
+										exactness={u.exactness}
+										size="xs"
+										showGlyph={false}
+										interactive={false}
+									/>
 								</a>
 							{/each}
 						</div>

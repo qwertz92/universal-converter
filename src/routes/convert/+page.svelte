@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import Seo from '$lib/components/layout/Seo.svelte';
 	import PageHero from '$lib/components/layout/PageHero.svelte';
 	import Converter from '$lib/components/converter/Converter.svelte';
@@ -12,8 +13,20 @@
 <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
 	<PageHero
 		title="Converter"
-		lede="Type a value and unit — or a fuel question like 1 liter diesel. Results are grouped by kind, each tagged with how exact it is and traceable to its source."
+		lede="Type a value and a unit — the unit is always required, never guessed. Add a material (1 L diesel), a target (1 kWh to MJ) or a duration (5 kW for 3 h). Results are grouped by kind, each tagged with how exact it is."
 	/>
+
+	<!-- People who arrive here from a shared ?q= link never see the homepage's
+	     legend teaser, so the way results are labelled is explained here too. -->
+	<p class="mb-6 text-sm" style="color:var(--text-muted)">
+		Every result carries a label — exact, standard definition, source-based, estimate, or a prompt
+		for the context it still needs.
+		<a
+			href={resolve('/methodology#exactness-levels')}
+			class="font-medium hover:underline"
+			style="color:var(--accent)">See what the labels mean →</a
+		>
+	</p>
 
 	<Converter />
 </div>

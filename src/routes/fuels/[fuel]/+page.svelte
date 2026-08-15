@@ -21,9 +21,19 @@
 		return all.filter((f) => ids.has(f.id) || f.fuel_id === fuel.id);
 	});
 
-	// A representative conversion: 1 m³ for gases, 1 L for liquids, 1 kg for solids.
+	// A representative conversion: 1 m³ for gases, 1 kg for solids, 1 L for
+	// liquids — and 1 kWh for a fuel with no phase and no density at all, which
+	// is grid electricity. Falling through to litres there asked the engine for
+	// "1 L electricity", a category error on the page for that very fuel.
 	const sampleQuery = $derived.by(() => {
-		const unit = fuel.phase === 'gas' ? 'm³' : fuel.phase === 'solid' ? 'kg' : 'L';
+		const unit =
+			fuel.phase === 'gas'
+				? 'm³'
+				: fuel.phase === 'solid'
+					? 'kg'
+					: fuel.density || fuel.phase === 'liquid'
+						? 'L'
+						: 'kWh';
 		return `1 ${unit} ${fuel.names[0]}`;
 	});
 

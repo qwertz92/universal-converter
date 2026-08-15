@@ -89,7 +89,7 @@
 								stroke-linecap="round"
 							/>
 						</svg>
-						<span>Needs more context</span>
+						<span>Context required</span>
 					{:else}
 						<span>Not available</span>
 					{/if}
@@ -156,7 +156,7 @@
 		<div class="mt-2">
 			<button
 				type="button"
-				class="inline-flex items-center gap-1 text-xs font-medium hover:text-[var(--accent)]"
+				class="-mx-1 inline-flex items-center gap-1 rounded px-1 py-1.5 text-xs font-medium hover:text-[var(--accent)]"
 				style="color:var(--text-faint)"
 				onclick={() => (expanded = !expanded)}
 				aria-expanded={expanded}
