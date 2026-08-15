@@ -57,6 +57,8 @@ const WEAK_TARGET_WORDS = new Set(['in', 'as']);
 const DURATION_WORDS = new Set(['for', 'over', 'during', '×', 'x', '*', '·']);
 /** Articles accepted in a duration ("for an hour" → 1 hour). */
 const DURATION_ARTICLES = new Set(['a', 'an', 'one']);
+/** Words that carry no meaning between a unit and a material ("10 litres OF diesel"). */
+const FILLER_WORDS = new Set(['of', 'the', 'a', 'an']);
 
 /** Filler that can precede the actual query. */
 const LEADING_FILLER_RE =
@@ -210,6 +212,7 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 
 	for (;;) {
 		const duration = peelDuration(words, units);
+		if (duration && 'error' in duration) return err(duration.error);
 		if (duration) {
 			words = duration.rest;
 			time = duration.time;
@@ -287,9 +290,38 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 		if (match.kind === 'match') {
 			// Any leftover words after the unit that we couldn't assign?
 			const leftover = unitWords.slice(len);
+			if (leftover.length > 0 && fuelId) {
+				// A material matched, but words in front of it did not. Those words
+				// may well name a DIFFERENT product — "red diesel" (gas oil) has its
+				// own density, calorific value and emission factor. Answering with
+				// plain diesel and saying nothing is exactly the silent guess this
+				// tool exists to avoid, so the omission is stated.
+				const meaningful = leftover.filter((w) => !FILLER_WORDS.has(w.toLowerCase()));
+				if (meaningful.length > 0) {
+					const fuelName = fuels.get(fuelId)?.names[0] ?? fuelId;
+					notes.push(
+						`ignored "${meaningful.join(' ')}" — it is not a unit or a material in the catalog; the answer is for plain ${fuelName}`
+					);
+				}
+			}
 			if (leftover.length > 0 && !fuelId) {
-				// Leftover might be an unknown fuel phrase.
 				const phrase = leftover.join(' ');
+				// A dangling "to" / "for" is an unfinished thought, not a material.
+				const allKeywords = leftover.every((w) => {
+					const k = w.toLowerCase();
+					return STRONG_TARGET_WORDS.has(k) || WEAK_TARGET_WORDS.has(k) || DURATION_WORDS.has(k);
+				});
+				if (allKeywords) {
+					const isDuration = DURATION_WORDS.has(leftover[0].toLowerCase());
+					return err({
+						kind: 'no_unit',
+						message: isDuration
+							? `"${phrase}" needs a duration after it, e.g. "${value} ${match.unit.symbols[0]} for 3 h".`
+							: `"${phrase}" needs a unit after it, e.g. "${value} ${match.unit.symbols[0]} to MJ".`,
+						token: phrase
+					});
+				}
+				// Otherwise the leftover is most likely an unknown fuel phrase.
 				return err({
 					kind: 'unknown_fuel',
 					message: `The unit ${match.unit.symbols[0] ?? match.unit.names[0]} was understood, but "${phrase}" is not a material in the catalog.`,
@@ -375,27 +407,39 @@ function peelTarget(
 function peelDuration(
 	words: string[],
 	units: UnitRegistry
-): { rest: string[]; time: Quantity } | undefined {
+): { rest: string[]; time: Quantity } | { error: ParseError } | undefined {
 	for (let i = words.length - 2; i >= 0; i--) {
 		if (!DURATION_WORDS.has(words[i].toLowerCase())) continue;
-		const time = parseDuration(words.slice(i + 1), units);
-		if (time) return { rest: words.slice(0, i), time };
+		const parsed = parseDuration(words.slice(i + 1), units);
+		if (!parsed) continue;
+		if ('error' in parsed) return parsed;
+		return { rest: words.slice(0, i), time: parsed.time };
 	}
 	return undefined;
 }
 
-/** `["3","hours"]` / `["an","hour"]` / `["3h"]` → a time Quantity. */
-function parseDuration(tail: string[], units: UnitRegistry): Quantity | undefined {
+/**
+ * `["3","hours"]` / `["an","hour"]` / `["3h"]` → a time Quantity.
+ * `undefined` means "this is not a duration at all" (leave the words alone);
+ * an error means "this IS a duration and it is not usable", which must be said
+ * out loud rather than silently ignored.
+ */
+function parseDuration(
+	tail: string[],
+	units: UnitRegistry
+): { time: Quantity } | { error: ParseError } | undefined {
 	if (tail.length === 0) return undefined;
 	let text = tail.join(' ').trim();
 	let value = '1';
+	let rawValue = '1';
 
 	if (DURATION_ARTICLES.has(tail[0].toLowerCase())) {
 		text = tail.slice(1).join(' ').trim();
 	} else {
 		const numMatch = text.match(NUMBER_RE);
 		if (numMatch) {
-			value = normalizeNumberWithWarning(numMatch[1]).value;
+			rawValue = numMatch[1];
+			value = normalizeNumberWithWarning(rawValue).value;
 			text = text.slice(numMatch[0].length).trim();
 		}
 	}
@@ -403,7 +447,22 @@ function parseDuration(tail: string[], units: UnitRegistry): Quantity | undefine
 
 	const match = units.resolve(text);
 	if (match.kind !== 'match' || match.unit.dimension !== 'time') return undefined;
-	return { value, unit_id: match.unit.id, dimension: 'time' };
+
+	// The leading value has a magnitude guard; the duration needs the same one,
+	// or "5 kW for 1e5000 h" produces a 5000-digit answer from a 17-char query.
+	const magnitude = checkMagnitude(value, rawValue);
+	if (magnitude) return { error: magnitude };
+	if (value.startsWith('-')) {
+		return {
+			error: {
+				kind: 'unsupported_value',
+				message: `A duration cannot be negative (got ${rawValue} ${match.unit.symbols[0]}).`,
+				token: rawValue
+			}
+		};
+	}
+
+	return { time: { value, unit_id: match.unit.id, dimension: 'time' } };
 }
 
 /* ------------------------------------------------------------------ *

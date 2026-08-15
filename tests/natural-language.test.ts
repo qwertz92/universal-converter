@@ -170,6 +170,52 @@ describe('durations for the power → energy bridge', () => {
 		// "for cars" must not be read as a duration; it is an unknown material.
 		expect(error('1 L diesel for cars').kind).toBe('unknown_fuel');
 	});
+
+	it('a duration is magnitude-guarded like the leading value', () => {
+		// Without this the 17-character "5 kW for 1e5000 h" produced a
+		// 5001-digit answer that every downstream conversion had to carry.
+		const e = error('5 kW for 1e5000 h');
+		expect(e.kind).toBe('unsupported_value');
+		expect(e.message).toContain('supported range');
+	});
+
+	it('a negative duration is refused rather than producing negative energy', () => {
+		const e = error('5 kW for -3 h');
+		expect(e.kind).toBe('unsupported_value');
+		expect(e.message).toMatch(/cannot be negative/i);
+	});
+
+	it('a zero duration is legitimate and gives zero energy', () => {
+		const energy = set('5 kW for 0 h')
+			.groups.flatMap((g) => g.results)
+			.find((r) => r.category === 'energy' && r.value !== null);
+		expect(energy?.raw).toBe('0');
+	});
+
+	it('a dangling keyword asks for what is missing instead of blaming a material', () => {
+		expect(error('1 kWh to').kind).toBe('no_unit');
+		expect(error('1 kWh to').message).toMatch(/needs a unit after it/i);
+		expect(error('5 kW for').message).toMatch(/needs a duration after it/i);
+	});
+});
+
+describe('words the parser could not place are never dropped silently', () => {
+	it('"1 L red diesel" answers for plain diesel and says that it did', () => {
+		// Red diesel (gas oil) has its own density, calorific value and emission
+		// factor. Answering with road-diesel numbers in silence would be the
+		// exact failure mode this product exists to prevent.
+		const s = set('1 L red diesel');
+		expect(s.input.fuel_id).toBe('diesel');
+		const note = s.assumptions.find((a) => a.kind === 'parser_note');
+		expect(note?.text).toContain('red');
+		expect(note?.text).toContain('plain diesel');
+	});
+
+	it('genuine filler between unit and material stays silent', () => {
+		const s = set('10 litres of diesel');
+		expect(s.input.fuel_id).toBe('diesel');
+		expect(s.assumptions.some((a) => a.kind === 'parser_note')).toBe(false);
+	});
 });
 
 describe('conversational phrasing', () => {

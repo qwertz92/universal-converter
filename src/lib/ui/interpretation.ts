@@ -87,6 +87,10 @@ export function describeQuery(
 	if (query.fuel_id) parts.push(`of ${query.fuel_id.replace(/-/g, ' ')}`);
 	if (query.time && timeUnit) parts.push(`over ${query.time.value} ${timeUnit.symbols[0]}`);
 	if (target) parts.push(`→ ${target.symbols[0]} (${target.names[0]})`);
+	// Parser notes record anything the reading glossed over (an ambiguous
+	// thousands separator, words that were dropped). They belong on the line
+	// that claims to say what was understood.
+	for (const note of query.notes ?? []) parts.push(`· ${note}`);
 
 	return {
 		status: 'ok',
