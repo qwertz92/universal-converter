@@ -3,7 +3,7 @@
 	import Seo from '$lib/components/layout/Seo.svelte';
 	import PageHero from '$lib/components/layout/PageHero.svelte';
 	import ExactnessLegend from '$lib/components/badges/ExactnessLegend.svelte';
-	import pkg from '../../../package.json';
+	import { APP_VERSION } from '$lib/version';
 
 	const layers = [
 		{
@@ -145,7 +145,7 @@
 		style="border-color:var(--border);background:var(--surface-2)"
 	>
 		<p class="text-sm" style="color:var(--text-muted)">
-			For the honest scope of what v{pkg.version} answers exactly, estimates, and refuses — and what you
+			For the honest scope of what v{APP_VERSION} answers exactly, estimates, and refuses — and what you
 			must not use it for — see the limitations summary, and follow every result's
 			<a href={resolve('/sources')} class="font-medium hover:underline" style="color:var(--accent)"
 				>sources</a

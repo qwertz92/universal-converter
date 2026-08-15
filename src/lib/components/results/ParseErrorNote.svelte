@@ -10,11 +10,19 @@
 		onpick
 	}: {
 		error: ParseError;
-		/** Called when the user clicks a suggestion or interpretation. */
-		onpick?: (text: string) => void;
+		/**
+		 * Called when the user clicks a repair. `replaces` is the exact token the
+		 * choice is FOR — without it the caller cannot know which word to swap,
+		 * and replacing the trailing word deleted the material or target the user
+		 * had typed ("10 gallons diesel" → "10 gallons US gallon").
+		 */
+		onpick?: (text: string, replaces?: string) => void;
 	} = $props();
 
 	const examples = ['1 kWh', '1000 kcal', '1 MMBTU', '1 barrel'];
+	const suggestions = $derived(
+		error.kind === 'unknown_unit' || error.kind === 'unknown_fuel' ? (error.suggestions ?? []) : []
+	);
 </script>
 
 <div
@@ -39,6 +47,9 @@
 		</span>
 		<div class="min-w-0 flex-1">
 			<p class="font-medium" style="color:var(--text)">{error.message}</p>
+			{#if error.hint}
+				<p class="mt-1 text-sm leading-snug" style="color:var(--text-muted)">{error.hint}</p>
+			{/if}
 
 			{#if error.kind === 'ambiguous_unit' && error.interpretations?.length}
 				<p class="mt-1 text-sm" style="color:var(--text-muted)">Choose one:</p>
@@ -48,22 +59,22 @@
 							type="button"
 							class="rounded-full border px-3 py-1 text-sm hover:bg-[var(--surface-2)]"
 							style="border-color:var(--border);color:var(--text)"
-							onclick={() => onpick?.(interp.label)}
+							onclick={() => onpick?.(interp.label, error.token)}
 							title={interp.note}
 						>
 							{interp.label}
 						</button>
 					{/each}
 				</div>
-			{:else if error.kind === 'unknown_unit' && error.suggestions?.length}
+			{:else if suggestions.length}
 				<p class="mt-1 text-sm" style="color:var(--text-muted)">Did you mean:</p>
 				<div class="mt-2 flex flex-wrap gap-2">
-					{#each error.suggestions as sug (sug)}
+					{#each suggestions as sug (sug)}
 						<button
 							type="button"
 							class="rounded-full border px-3 py-1 text-sm hover:bg-[var(--surface-2)]"
 							style="border-color:var(--border);color:var(--text)"
-							onclick={() => onpick?.(sug.replace(/_/g, ' '))}
+							onclick={() => onpick?.(sug.replace(/_/g, ' '), error.token)}
 						>
 							{sug.replace(/_/g, ' ')}
 						</button>

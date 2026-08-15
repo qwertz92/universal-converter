@@ -114,6 +114,22 @@ describe('explicit conversion targets', () => {
 		expect(row?.explanation).toMatch(/no conversion path/i);
 	});
 
+	it('a CO2 → CO2e target gets the specific reason, not the generic refusal', () => {
+		const s = set('1 tCO2 to tCO2e');
+		const row = s.groups.flatMap((g) => g.results).find((r) => r.is_target);
+		expect(row?.exactness).toBe('unsupported');
+		expect(row?.explanation).toMatch(/global\s*warming potential/i);
+	});
+
+	it('electricity → a GHG mass asks for region and year instead of denying a path', () => {
+		// It IS answerable — the same query with a region/year returns a number,
+		// so claiming "no conversion path" contradicted the row beside it.
+		const s = set('1 kWh electricity to kg CO2e');
+		const row = s.groups.flatMap((g) => g.results).find((r) => r.is_target);
+		expect(row?.exactness).toBe('context_required');
+		expect(row?.missing).toEqual(expect.arrayContaining(['region', 'year']));
+	});
+
 	it('an unknown target is reported as a target, not as an unknown material', () => {
 		const e = error('5 kWh to blah');
 		expect(e.kind).toBe('unknown_unit');

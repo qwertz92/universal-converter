@@ -2,7 +2,7 @@
 	/** Site footer: honest versioned positioning, section links, OGL attribution
 	 *  (docs/sources.md: DESNZ-derived figures require the standard OGL line). */
 	import { resolve } from '$app/paths';
-	import pkg from '../../../../package.json';
+	import { APP_VERSION } from '$lib/version';
 	const cols = [
 		{
 			title: 'Convert',
@@ -70,7 +70,7 @@
 			style="border-color:var(--border);color:var(--text-faint)"
 		>
 			<span
-				>&copy; {year} Universal Converter · v{pkg.version} — an explanatory reference tool, not a compliance
+				>&copy; {year} Universal Converter · v{APP_VERSION} — an explanatory reference tool, not a compliance
 				calculator.</span
 			>
 			<span>Sources over invented numbers · exact vs. estimate kept distinct.</span>

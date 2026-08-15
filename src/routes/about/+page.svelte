@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	import Seo from '$lib/components/layout/Seo.svelte';
 	import PageHero from '$lib/components/layout/PageHero.svelte';
-	import pkg from '../../../package.json';
+	import { APP_VERSION } from '$lib/version';
 </script>
 
 <Seo
@@ -30,7 +30,7 @@
 			them.
 		</p>
 
-		<h2>Where it is now: v{pkg.version}</h2>
+		<h2>Where it is now: v{APP_VERSION}</h2>
 		<p>
 			This is an early, honest version. It ships a solid exact-units engine, a growing fuel catalog,
 			a basic emissions model, sourced provenance, and a set of explanatory Learn pages. Grid

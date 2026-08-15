@@ -38,7 +38,12 @@ const config = {
 					'/learn',
 					'/methodology',
 					'/sources',
-					'/about'
+					'/about',
+					// Both are prerendered files; without these they invoked the
+					// Pages Function on every request instead of being served
+					// straight off the asset layer.
+					'/sitemap.xml',
+					'/404.html'
 				]
 			}
 		})

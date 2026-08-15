@@ -49,10 +49,11 @@
 	--surface: #ffffff;
 	--surface-2: #f4f7f9;
 	--border: #dfe4ea;
+	--border-input: #7d8791;
 	--border-strong: #c6cdd6;
 	--text: #16202b;
 	--text-muted: #5b6672;
-	--text-faint: #667380;
+	--text-faint: #5f6b78;
 	--accent: var(--color-accent-600);
 	--accent-hover: var(--color-accent-700);
 	--accent-contrast: #ffffff;
@@ -106,6 +107,7 @@
 	--surface: #121d2e;
 	--surface-2: #172335;
 	--border: #253449;
+	--border-input: #5a6b82;
 	--border-strong: #35485f;
 	--text: #e6edf5;
 	--text-muted: #9fb0c3;
@@ -192,6 +194,24 @@ body {
 }
 .uc-border {
 	border-color: var(--border);
+}
+
+/*
+ * WCAG 1.4.11 (non-text contrast) wants 3:1 for the visual boundary of an
+ * active control. `--border` is a decorative card edge at 1.28:1 on white — for
+ * a text input, whose only cue that it IS an input is that border, that is not
+ * enough. `--border-input` is the same family at 3.65:1 (light) / 3.11:1 (dark).
+ */
+:where(input, select, textarea):where([class*='border']) {
+	border-color: var(--border-input);
+}
+
+/* The UA placeholder colour is ~54% of the text colour in Chrome (3.63:1) and
+   a fixed light grey in Safari (2.36:1) — both below AA for the first sentence
+   a new visitor reads. */
+::placeholder {
+	color: var(--text-muted);
+	opacity: 1;
 }
 
 /* Consistent, visible focus ring across interactive elements. */

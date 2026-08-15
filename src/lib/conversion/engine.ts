@@ -44,7 +44,7 @@ import { convertWithinDimension, toBaseValue } from '$lib/units/exact-conversion
 import { parseQuery } from './parser';
 import { combineExactness } from './precision';
 import { ResultSetBuilder } from './result-groups';
-import { formatValue } from '$lib/formatting/numbers';
+import { formatValue, roundToSigFigs, sigFigsFor } from '$lib/formatting/numbers';
 import { unitLabel } from '$lib/formatting/units';
 import { step } from './formulas';
 import { resolveDensity, volumeToMassKg, massToVolumeM3 } from '$lib/fuels/density';
@@ -57,6 +57,7 @@ import {
 	type HeatingValueResolved
 } from '$lib/fuels/heating-values';
 import { isElectricity, isHydrogen } from '$lib/fuels/fuel-types';
+import { CO2_CO2E_EXPLANATION, isCo2Co2eCrossing } from '$lib/emissions/co2-vs-co2e';
 import { applyFactor, factorInputKind, factorUnitLabel } from '$lib/emissions/factors';
 import { POLLUTANT_LABEL, SCOPE_LABEL } from '$lib/emissions/scopes';
 import {
@@ -78,6 +79,11 @@ interface EnergyForBasis {
 
 /** Dimensions the fuel pipeline can bridge between (via density / heating value). */
 const BRIDGEABLE_VIA_FUEL = new Set<Unit['dimension']>(['mass', 'volume', 'energy']);
+
+/** Whether a dimension is a GHG mass (the thing an emissions answer is in). */
+function isEmissionMass(dim: Unit['dimension']): boolean {
+	return dim === 'emission_mass_co2' || dim === 'emission_mass_co2e';
+}
 
 /** Energy units to show in the "Fuel Equivalents" group for a pure energy input. */
 const FUEL_EQUIVALENT_UNITS = ['toe', 'boe', 'tce'];
@@ -273,6 +279,26 @@ export function createConverter(data: DataBundle): Converter {
 			return;
 		}
 
+		// Electricity → a GHG mass IS answerable, just not without a region and a
+		// year. Saying "there is no conversion path" would contradict the
+		// context_required row sitting right beside it (§A.2).
+		if (fuel && isElectricity(fuel) && isEmissionMass(target.dimension)) {
+			builder.add({
+				value: null,
+				raw: null,
+				unit_id: target.id,
+				unit_label: unitLabel(target),
+				category: 'emissions',
+				exactness: 'context_required',
+				explanation: `Grid electricity has no single ${unitLabel(target)} figure — it depends on the country/region and the year. Pick one and this becomes answerable.`,
+				missing: ['region', 'year'],
+				assumptions: [],
+				warnings: [],
+				source_refs: []
+			});
+			return;
+		}
+
 		builder.add({
 			value: null,
 			raw: null,
@@ -280,7 +306,12 @@ export function createConverter(data: DataBundle): Converter {
 			unit_label: unitLabel(target),
 			category: primaryGroupFor(target.dimension),
 			exactness: 'unsupported',
-			explanation: `There is no conversion path from ${unitLabel(from)} to ${unitLabel(target)}. They measure different things, and this tool will not invent a bridge between them.`,
+			// The CO2 ↔ CO2e crossing has a specific, carefully written reason
+			// (GWP sets; there is no uplift factor) that used to live in a module
+			// nothing imported.
+			explanation: isCo2Co2eCrossing(from.dimension, target.dimension)
+				? CO2_CO2E_EXPLANATION
+				: `There is no conversion path from ${unitLabel(from)} to ${unitLabel(target)}. They measure different things, and this tool will not invent a bridge between them.`,
 			assumptions: [],
 			warnings: [],
 			source_refs: []
@@ -661,6 +692,25 @@ export function createConverter(data: DataBundle): Converter {
 	): void {
 		const all = allHeatingValues(fuel);
 		if (all.length === 0) {
+			// Grid electricity has no heating value because it is not a combustible
+			// material — a category difference, not a gap in the catalog. Saying
+			// "not available" would contradict the fuel page, which tells the
+			// reader mass/volume simply do not apply here.
+			if (isElectricity(fuel)) {
+				builder.add({
+					value: null,
+					raw: null,
+					unit_id: '',
+					unit_label: '',
+					category: 'energy',
+					exactness: 'unsupported',
+					explanation: `${fuel.names[0]} is not a combustible material: it has no heating value or density, so mass and volume conversions do not apply. A kWh of electricity is already energy.`,
+					assumptions: [],
+					warnings: [],
+					source_refs: []
+				});
+				return;
+			}
 			builder.add(notAvailable('energy', 'heating_value', fuel));
 			return;
 		}
@@ -753,10 +803,21 @@ export function createConverter(data: DataBundle): Converter {
 			const converted = convertWithinDimension(joules, units.get('joule')!, target);
 			// The displayed range must be CONVERTED into this row's target unit —
 			// never the raw per-kg/per-m³ source numbers reused across rows.
+			// Rounded to the row's own cap: these bounds ship to API and CSV
+			// consumers, where 40 significant digits on a bound whose value shows
+			// three is a false claim about precision.
 			const range = joulesRange
 				? {
-						low: convertWithinDimension(joulesRange.low, units.get('joule')!, target),
-						high: convertWithinDimension(joulesRange.high, units.get('joule')!, target)
+						low: roundToSigFigs(
+							convertWithinDimension(joulesRange.low, units.get('joule')!, target),
+							sigFigsFor(exactness, options.maxSigFigs),
+							Decimal.ROUND_FLOOR
+						),
+						high: roundToSigFigs(
+							convertWithinDimension(joulesRange.high, units.get('joule')!, target),
+							sigFigsFor(exactness, options.maxSigFigs),
+							Decimal.ROUND_CEIL
+						)
 					}
 				: undefined;
 			const a: Assumption = hvBasisAssumption(undefined, hv, basis);
@@ -1279,8 +1340,16 @@ function groupForDimension(dim: Unit['dimension']): ResultGroupKey {
 		case 'energy_density_mass':
 		case 'energy_density_volume':
 			return 'energy_density';
-		default:
-			return 'energy';
+		// A density is a mass per volume, not an energy. "1 kg/L" used to be
+		// filed under Energy by the default branch.
+		case 'mass_density':
+			return 'mass';
+		case 'energy':
+		case 'power':
+		case 'time':
+		case 'volume':
+		case 'mass':
+			return dim;
 	}
 }
 

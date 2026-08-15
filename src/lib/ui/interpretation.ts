@@ -116,15 +116,16 @@ export function describeQuery(
  * The units a newcomer is most likely to want first, offered as one-click chips
  * when a value was typed without a unit. Ids only — each is looked up in the
  * real catalog, so a chip can never reference a unit we do not ship.
+ *
+ * Deliberately short: the row is one fixed line (wrapping would move the page),
+ * so more chips than fit at 320px would simply hide behind a scroller.
  */
 const STARTER_UNIT_IDS = [
 	'kilowatt_hour',
 	'megajoule',
 	'kilocalorie',
-	'btu',
 	'kilogram',
 	'liter',
-	'cubic_meter',
 	'kilowatt'
 ];
 

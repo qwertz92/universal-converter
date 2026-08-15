@@ -7,18 +7,21 @@
 	 * layout shift.
 	 *
 	 * Items without `href` render as the current page (plain text,
-	 * `aria-current="page"`, no link). Callers pass already-resolved hrefs
-	 * (via `resolve()` from `$app/paths`) — this component stays a pure
-	 * presentation layer over strings.
+	 * `aria-current="page"`, no link).
+	 *
+	 * `href` is for DISPLAY and comes from `resolve()`, which under SvelteKit's
+	 * default `paths.relative` renders as a page-relative path ("../units").
+	 * The absolute URL in the structured data must therefore come from `path`
+	 * (the literal route, "/units") — deriving it from the display href emitted
+	 * "https://universal-converter.org../units" on every detail page.
 	 */
-	let { items }: { items: { href?: string; label: string }[] } = $props();
+	let { items }: { items: { href?: string; path?: string; label: string }[] } = $props();
 
 	const ORIGIN = 'https://universal-converter.org';
 
 	// BreadcrumbList JSON-LD (schema.org). The current-page item legitimately
-	// has no `href` (it isn't a link) — per Google/schema.org's own documented
-	// example, the last ListItem may omit `item` (its URL) for that reason, so
-	// we only emit `item` for entries that actually have one.
+	// has no `item` URL — per Google/schema.org's own documented example, the
+	// last ListItem may omit it for that reason.
 	const jsonLd = $derived.by(() => {
 		const itemListElement = items.map((item, i) => {
 			const entry: { '@type': string; position: number; name: string; item?: string } = {
@@ -26,7 +29,7 @@
 				position: i + 1,
 				name: item.label
 			};
-			if (item.href) entry.item = `${ORIGIN}${item.href}`;
+			if (item.path) entry.item = `${ORIGIN}${item.path}`;
 			return entry;
 		});
 		const json = JSON.stringify({

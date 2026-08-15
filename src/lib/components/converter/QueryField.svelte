@@ -119,13 +119,18 @@
 				move(-1);
 				break;
 			case 'Tab':
-				// Tab completes the highlighted (or first) suggestion, and only
-				// then moves on — the standard "accept what you see" behaviour.
+				// Tab accepts ONLY an option the user actually highlighted, and
+				// never on Shift+Tab: `e.key` is "Tab" for both, so not checking
+				// shiftKey turned "move focus backwards" into "rewrite my text".
+				// Accepting items[0] when nothing was highlighted silently changed
+				// "1 barrel" into "1 bbl" for anyone tabbing out of the field.
 				if (showList) {
-					const pick = items[active] ?? items[0];
-					if (pick) {
+					if (!e.shiftKey && active >= 0 && items[active]) {
 						e.preventDefault();
-						accept(pick);
+						accept(items[active]);
+					} else {
+						open = false;
+						active = -1;
 					}
 				}
 				break;
@@ -198,7 +203,7 @@
 				aria-controls={listboxId}
 				aria-autocomplete="list"
 				aria-activedescendant={showList && active >= 0 ? `${id}-opt-${active}` : undefined}
-				aria-describedby="{id}-interpretation"
+				aria-describedby="{id}-interpretation-text"
 				placeholder="1 kWh · 10 L diesel · 5 kW for 3 h · 1 kWh to MJ"
 				autocomplete="off"
 				autocapitalize="off"
@@ -266,13 +271,15 @@
 		The full text of an error also appears in the result area below, so
 		clamping here loses nothing.
 	-->
+	<!-- Not a live region: it is the input's own `aria-describedby` target, so a
+	     live role would announce it twice on focus and again on every edit — and
+	     it now contains buttons, which do not belong in a live region. -->
 	<div
 		id="{id}-interpretation"
-		aria-live="polite"
 		class="mt-2 flex min-h-[5.5rem] flex-col justify-center gap-1 rounded-lg px-3 py-2 text-sm"
 		style="background:var(--surface-2)"
 	>
-		<p class="line-clamp-2 leading-snug" style="color:{statusColor}">
+		<p id="{id}-interpretation-text" class="line-clamp-2 leading-snug" style="color:{statusColor}">
 			{#if interpretation.status === 'ok'}
 				<span aria-hidden="true">✓</span>
 			{:else if interpretation.status === 'unsupported'}
@@ -287,8 +294,13 @@
 		<!-- One row, never two: wrapping chips would change this box's height on a
 		     narrow screen, which is the shift this whole layout exists to avoid.
 		     Overflow scrolls instead. -->
-		<div class="flex min-h-[1.75rem] flex-nowrap items-center gap-1.5 overflow-x-auto">
+		<div
+			class="flex min-h-[1.75rem] flex-nowrap items-center gap-1.5 overflow-x-auto"
+			style="scrollbar-width:none"
+		>
 			{#if chips.length > 0}
+				<span class="shrink-0 text-xs font-medium" style="color:var(--text-muted)">Add a unit:</span
+				>
 				{#each chips as unit (unit.id)}
 					<button
 						type="button"

@@ -59,14 +59,14 @@
 						<span
 							aria-hidden="true"
 							class="mt-0.5 shrink-0 {w.severity === 'critical'
-								? 'text-red-600 dark:text-red-400'
+								? 'text-[#c00009] dark:text-red-400'
 								: 'opacity-70'}"
 						>
 							{w.severity === 'critical' ? '‼' : w.severity === 'caution' ? '△' : 'ℹ'}
 						</span>
 						<span
 							class="leading-snug {w.severity === 'critical'
-								? 'text-red-600 dark:text-red-400'
+								? 'text-[#c00009] dark:text-red-400'
 								: ''}"
 						>
 							<!-- The glyph alone has no legend anywhere, so severity is also

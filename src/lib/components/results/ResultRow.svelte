@@ -111,9 +111,10 @@
 	{/if}
 
 	<!-- Context control (basis toggle, region/year picker, fuel picker) if provided. -->
-	{#if contextControl}
-		<div class="mt-2">{@render contextControl(result)}</div>
-	{/if}
+	<!-- The snippet renders nothing for most rows; wrapping it unconditionally
+	     left an 8px margin on every one of them. The snippet supplies its own
+	     spacing when it has something to show. -->
+	{#if contextControl}{@render contextControl(result)}{/if}
 
 	<!-- Illustrative examples (clearly labeled, never a default — rulebook §C.6). -->
 	{#if result.illustrative_examples && result.illustrative_examples.length > 0}

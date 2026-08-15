@@ -68,7 +68,9 @@
 />
 
 <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
-	<Breadcrumbs items={[{ href: resolve('/fuels'), label: 'Fuels' }, { label: fuel.category }]} />
+	<Breadcrumbs
+		items={[{ href: resolve('/fuels'), path: '/fuels', label: 'Fuels' }, { label: fuel.category }]}
+	/>
 
 	<header class="mb-8">
 		<div class="flex flex-wrap items-center gap-3">

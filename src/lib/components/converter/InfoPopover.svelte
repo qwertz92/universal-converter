@@ -39,8 +39,12 @@
 		i
 	</button>
 	{#if open}
+		<!-- Anchored to the RIGHT edge below `sm`: the trigger sits well past the
+		     point where a 288px panel still fits, and an absolutely positioned box
+		     past the viewport edge widens the document — the page starts scrolling
+		     sideways on a phone. -->
 		<div
-			class="absolute top-6 left-0 z-30 w-[min(18rem,calc(100vw-2rem))] rounded-lg border p-3 text-sm leading-snug shadow-lg"
+			class="absolute top-6 right-0 z-30 w-[min(18rem,calc(100vw-2rem))] rounded-lg border p-3 text-sm leading-snug shadow-lg sm:right-auto sm:left-0"
 			style="background:var(--surface);border-color:var(--border);color:var(--text-muted)"
 			role="tooltip"
 		>
