@@ -2,11 +2,12 @@
 	import { resolve } from '$app/paths';
 	import Seo from '$lib/components/layout/Seo.svelte';
 	import PageHero from '$lib/components/layout/PageHero.svelte';
+	import pkg from '../../../package.json';
 </script>
 
 <Seo
 	title="About"
-	description="What the Universal Converter is, where it is in its life (v0.1), and the honest scope of what it does and does not do."
+	description="What the Universal Converter is, where it is in its life, and the honest scope of what it does and does not do."
 />
 
 <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
@@ -29,13 +30,15 @@
 			them.
 		</p>
 
-		<h2>Where it is now: v0.1</h2>
+		<h2>Where it is now: v{pkg.version}</h2>
 		<p>
 			This is an early, honest version. It ships a solid exact-units engine, a growing fuel catalog,
-			a basic emissions model, sourced provenance, and a set of explanatory Learn pages. It
-			deliberately does <em>not</em> yet ship country-by-year electricity factors, a real gas-billing
-			model, or currency conversions — those are on the roadmap, and the tool asks for context rather
-			than faking them.
+			a basic emissions model, sourced provenance, and a set of explanatory Learn pages. Grid
+			electricity is the clearest example of how it treats missing context: it ships region- and
+			year-specific CO₂ or CO₂e factors for a small, cited set — currently the UK (2025) and the
+			EU-27 (2023 and 2022) — and for any other region or year it refuses to invent a number,
+			returning <em>context required</em> instead. A real gas-billing model and currency conversion are
+			still out of scope; the tool asks for context rather than faking either.
 		</p>
 
 		<h2>What it is not</h2>

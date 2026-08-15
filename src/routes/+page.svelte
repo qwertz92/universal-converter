@@ -3,6 +3,7 @@
 	import Seo from '$lib/components/layout/Seo.svelte';
 	import Converter from '$lib/components/converter/Converter.svelte';
 	import ExactnessBadge from '$lib/components/badges/ExactnessBadge.svelte';
+	import pkg from '../../package.json';
 
 	const features = [
 		{
@@ -39,7 +40,7 @@
 			style="border-color:var(--border);background:var(--surface);color:var(--text-muted)"
 		>
 			<span class="h-2 w-2 rounded-full" style="background:var(--accent)"></span>
-			v0.1 — a sourced reference tool, not a black-box calculator
+			v{pkg.version} — a sourced reference tool, not a black-box calculator
 		</div>
 		<h1 class="max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">
 			A transparent converter for units, energy, fuels and emissions.
@@ -51,7 +52,20 @@
 
 		<!-- Embedded converter -->
 		<div class="mt-8">
+			<p class="mb-3 text-sm" style="color:var(--text-faint)">
+				A value always needs a unit. Add a target to convert directly — e.g.
+				<code>1 kWh to MJ</code>.
+			</p>
 			<Converter compact />
+			<div class="mt-3 text-right">
+				<a
+					href={resolve('/convert')}
+					class="text-sm font-medium hover:underline"
+					style="color:var(--accent)"
+				>
+					Open the full converter →
+				</a>
+			</div>
 		</div>
 	</div>
 </section>
@@ -66,6 +80,9 @@
 		<ExactnessBadge exactness="source_based" />
 		<ExactnessBadge exactness="estimated" />
 		<ExactnessBadge exactness="region_year_specific" />
+		<ExactnessBadge exactness="user_assumption" />
+		<ExactnessBadge exactness="context_required" />
+		<ExactnessBadge exactness="unsupported" />
 		<a
 			href={resolve('/methodology')}
 			class="text-sm font-medium hover:underline"

@@ -140,6 +140,27 @@
 			"label": "1 kWh electricity",
 			"category": "fuel",
 			"notes": "Electricity → energy (exact SI conversions) plus emissions marked context_required (no single global grid CO2e factor; pick a region/year). Illustrative UK 2025 and EU-27 2023 examples are shown, clearly labeled as non-default (rulebook §C.6)."
+		},
+		{
+			"id": "ex-kwh-to-mj",
+			"input": "1 kWh to MJ",
+			"label": "1 kWh to MJ",
+			"category": "energy",
+			"notes": "Ask for one specific unit: the requested answer is highlighted, the other groups still follow."
+		},
+		{
+			"id": "ex-kw-for-3h",
+			"input": "5 kW for 3 h",
+			"label": "5 kW for 3 h",
+			"category": "energy",
+			"notes": "Power becomes energy only with an explicit duration (5 kW x 3 h = 15 kWh)."
+		},
+		{
+			"id": "ex-diesel-to-kg",
+			"input": "10 L diesel to kg",
+			"label": "10 L diesel to kg",
+			"category": "fuel",
+			"notes": "A cross-dimension target answered through the fuel density."
 		}
 	]
 }
