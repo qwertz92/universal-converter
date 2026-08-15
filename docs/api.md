@@ -13,7 +13,7 @@ GET /api/convert?q=<free-text query>
 
 | Parameter | Required | Values | Meaning |
 | --------- | -------- | ------ | ------- |
-| `q`       | yes      | free text, e.g. `1 L diesel`, `1000 kcal`, `1 m3 natural gas` | Same grammar as the website's input: `[number][unit][optional fuel]`. |
+| `q`       | yes      | free text, e.g. `1 L diesel`, `1000 kcal`, `5 kWh to MJ`, `5 kW for 3 h` | Same grammar as the website's input: `[number] [unit] [optional fuel] [to <target unit>] [for <duration>]` (see the rulebook §C.9). |
 | `basis`   | no       | `lhv` (default) \| `hhv` | Heating-value basis for fuel-energy results (always labeled in the result). |
 | `region` + `year` | no (only together) | e.g. `region=UK&year=2025` | Grid region/year for electricity emissions. Only combinations with a cited factor produce a value; anything else stays `context_required` — nothing is estimated. |
 | `sigfigs` | no       | integer 1–12 (default 6) | Max significant figures for `exact`/`standard_definition` display values. Non-exact results keep their exactness-bounded caps. |
@@ -34,7 +34,11 @@ GET /api/convert?q=<free-text query>
 		],
 		"assumptions": [ … ],
 		"warnings": [ … ],
-		"source_refs": [ "uk-desnz-ghg-2025", … ]
+		"source_refs": [ "uk-desnz-ghg-2025", … ],
+		// Present only when `q` asked for a target ("5 kWh to MJ"). `resolved`
+		// is false when the target could not be produced — the corresponding
+		// row then explains what is missing rather than being omitted.
+		"target": { "unit_id": "megajoule", "unit_label": "MJ", "dimension": "energy", "resolved": true }
 	}
 }
 ```
@@ -51,7 +55,12 @@ Each `ConversionResult` carries:
 - `assumptions`, `warnings`, `source_refs` (ids into the
   [source register](sources.md));
 - optional `formula`, `range`, `missing`, `explanation`,
-  `illustrative_examples`.
+  `illustrative_examples`;
+- `is_target: true` on the single row the query explicitly asked for. That row
+  is also floated to the front of its group. A target **highlights** an answer —
+  it never removes the other groups, so a client that wants only one number
+  should read the `is_target` row and ignore the rest rather than expect a
+  filtered response.
 
 The trailing meta-groups (`assumptions` / `warnings` / `sources` / `formula`)
 duplicate the set-level fields in group form (rulebook §C.8); their rows are
@@ -83,6 +92,8 @@ listing what is missing and the available illustrative examples.
 curl 'https://universal-converter.org/api/convert?q=1+kWh'
 curl 'https://universal-converter.org/api/convert?q=1+L+diesel&basis=hhv'
 curl 'https://universal-converter.org/api/convert?q=5+kWh+electricity&region=UK&year=2025'
+curl 'https://universal-converter.org/api/convert?q=5+kWh+to+MJ'
+curl 'https://universal-converter.org/api/convert?q=5+kW+for+3+h'
 ```
 
 ## Guarantees & non-goals
