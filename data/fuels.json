@@ -14,13 +14,13 @@
 					"unit": "mj_per_kg",
 					"range": { "low": "40.1", "high": "44.8" },
 					"source_refs": ["ipcc-2006-v2"],
-					"notes": "IPCC 2006 Vol.2 Ch.1 Table 1.2 'Crude Oil' NCV = 42.3 TJ/Gg = 42.3 GJ/tonne = 42.3 MJ/kg (global default, net/LHV basis). 95% CI 40.1–44.8. DESNZ 2025 has no generic 'crude oil' row (it covers refined products), so IPCC is primary here per research-notes §6."
+					"notes": "IPCC's 2006 guidelines (Vol. 2, Ch. 1, Table 1.2) list a global default net calorific value (NCV, or lower heating value/LHV) for crude oil of 42.3 MJ/kg (42.3 GJ/tonne), with a 95% confidence range of 40.1–44.8 MJ/kg. DESNZ's 2025 dataset has no generic 'crude oil' entry — it only covers refined products — so this IPCC figure is used here."
 				}
 			],
 			"emission_factor_ids": ["crude-oil-co2-ipcc"],
 			"typical_ranges": "Physical crude density varies by grade (~800–950 kg/m³, light vs heavy); a serious primary density was NOT FOUND in this pass, so density is omitted. Energy per physical barrel is an estimate (~5.6–6.3 GJ) and is NOT the same as 'boe' (fixed 5.8 MMBTU convention).",
 			"source_refs": ["ipcc-2006-v2"],
-			"notes": "Generic crude oil, modeled on IPCC 2006 global defaults (rulebook C.3). No DESNZ entry. Density deliberately omitted (not available in a serious primary source in the v0.1 research pass) so volume↔mass shows 'not available' rather than an invented number.",
+			"notes": "This is a generic crude oil figure, based on IPCC 2006 global default values; there is no matching DESNZ entry. Density is deliberately left out, because we could not find it in a reliable primary source, so volume-to-mass conversions show 'not available' instead of a made-up number.",
 			"warnings": [
 				"Crude oil is not a single substance: density and energy content vary by grade (API gravity). Any barrel↔energy or volume↔mass figure for crude is an ESTIMATE, not a measured property of a specific oil.",
 				"A physical barrel of crude is NOT the same as 'boe' (barrel of oil equivalent), which is a fixed 5.8 MMBTU energy-equivalence convention."
@@ -78,7 +78,7 @@
 			],
 			"emission_factor_ids": ["gasoline-co2-desnz", "gasoline-co2e-desnz"],
 			"source_refs": ["uk-desnz-ghg-2025"],
-			"notes": "Defaults to the DESNZ 'Petrol (average biofuel blend)' variant (matches real UK forecourt fuel, per research-notes §6 pitfall 5). DESNZ also lists '100% mineral petrol' (density 741.84 kg/m³, NCV 44.65 GJ/tonne, GCV 47.0 GJ/tonne, 2.33984 kgCO2e/L). IPCC 2006 global default (Motor Gasoline) NCV 44.3 MJ/kg, CO2 69,300 kg/TJ. EIA US cross-check 120,214 Btu/gal, 9.46 kg CO2/gal — never averaged with the above.",
+			"notes": "This entry defaults to DESNZ's 'Petrol (average biofuel blend)' figures, which match real UK forecourt fuel. DESNZ separately lists '100% mineral petrol' (density 741.84 kg/m³, net calorific value (NCV) 44.65 GJ/tonne, gross calorific value (GCV) 47.0 GJ/tonne, 2.33984 kg CO₂e/L). IPCC's 2006 global default for motor gasoline is an NCV of 44.3 MJ/kg and CO₂ of 69,300 kg/TJ. As a US cross-check, the EIA reports 120,214 Btu/gal and 9.46 kg CO₂/gal. These alternative figures are shown for reference only and are never blended into the main value.",
 			"warnings": []
 		},
 		{
@@ -549,7 +549,7 @@
 				"unit": "kg_per_m3",
 				"reference_conditions": "gas at STP (0 °C, 1 atm)",
 				"source_refs": ["h2tools"],
-				"notes": "Gas density 0.08988 kg/m³ at STP (0 °C, 1 atm). Liquid hydrogen at its boiling point (−252.87 °C) is ~70.8 kg/m³ (not stored as the primary density — H2 is normally handled by mass). Source h2tools (cross-source-verified; see sources.json)."
+				"notes": "Gas density is 0.08988 kg/m³ at standard temperature and pressure (STP: 0 °C, 1 atmosphere). Liquid hydrogen at its boiling point (−252.87 °C) is about 70.8 kg/m³, but that is not used as the primary figure here, since hydrogen is normally handled by mass rather than volume. Source: h2tools, cross-checked against other references."
 			},
 			"heating_values": [
 				{
@@ -625,12 +625,12 @@
 					"unit": "mj_per_kg",
 					"range": { "low": "5.50", "high": "21.6" },
 					"source_refs": ["ipcc-2006-v2"],
-					"notes": "IPCC 2006 Vol.2 Ch.1 Table 1.2 'Lignite' NCV = 11.9 TJ/Gg = 11.9 GJ/tonne = 11.9 MJ/kg (global default, net basis). 95% CI 5.50–21.6 — very wide, reflecting lignite's highly variable moisture/ash content. DESNZ 2025 has no 'lignite' row, so IPCC is primary here (research-notes §6)."
+					"notes": "IPCC's 2006 guidelines (Vol. 2, Ch. 1, Table 1.2) list a global default net calorific value (NCV) for lignite of 11.9 MJ/kg (11.9 GJ/tonne), on a net basis, with a 95% confidence range of 5.50–21.6 MJ/kg — a very wide range, reflecting how much lignite's moisture and ash content can vary. DESNZ's 2025 dataset has no 'lignite' entry, so this IPCC figure is used here."
 				}
 			],
 			"emission_factor_ids": ["lignite-co2-ipcc"],
 			"source_refs": ["ipcc-2006-v2"],
-			"notes": "Lignite (brown coal), IPCC 2006 global default (rulebook §4.9, research-notes §6). DESNZ uses functional not rank-based coal categories, so IPCC's rank-based Table 1.2/2.2 is used. No density in the source → volume conversions not available. HHV/GCV not available from IPCC (Table 1.2 gives NCV only) → shows 'not available'.",
+			"notes": "Lignite (brown coal) uses the IPCC's 2006 global default figures. DESNZ groups coal by how it's used rather than by geological rank, so we use the IPCC's rank-based tables (Table 1.2 for calorific value, Table 2.2 for emissions) instead. No density is given in the source, so volume conversions are not available. The IPCC table only provides a net calorific value (NCV), not a higher heating value (HHV, also called gross calorific value or GCV), so that figure is shown as 'not available' too.",
 			"warnings": [
 				"Lignite is extremely variable (moisture/ash): the IPCC net calorific value has a 95% range of 5.5–21.6 MJ/kg. Treat any lignite energy figure as a rough estimate. No density available → volume conversions not available."
 			]
@@ -648,7 +648,7 @@
 					"unit": "mj_per_kg",
 					"range": { "low": "21.6", "high": "32.2" },
 					"source_refs": ["ipcc-2006-v2"],
-					"notes": "IPCC 2006 Vol.2 Ch.1 Table 1.2 'Anthracite' NCV = 26.7 TJ/Gg = 26.7 GJ/tonne = 26.7 MJ/kg (global default, net basis). 95% CI 21.6–32.2. DESNZ 2025 has no 'anthracite' row, so IPCC is primary (research-notes §6)."
+					"notes": "IPCC's 2006 guidelines (Vol. 2, Ch. 1, Table 1.2) list a global default net calorific value (NCV) for anthracite of 26.7 MJ/kg (26.7 GJ/tonne), on a net basis, with a 95% confidence range of 21.6–32.2 MJ/kg. DESNZ's 2025 dataset has no 'anthracite' entry, so this IPCC figure is used here."
 				}
 			],
 			"emission_factor_ids": ["anthracite-co2-ipcc"],
@@ -852,7 +852,7 @@
 				"electricity-eu27-2022-co2"
 			],
 			"source_refs": ["uk-desnz-ghg-2025", "eea-electricity-intensity"],
-			"notes": "Grid electricity is not a combustible material: it has no density and no heating value (mass/volume conversions are not applicable and are correctly omitted, not 'not available'). '1 kWh electricity' converts as pure energy (kWh/MJ/BTU/etc., exact SI conversions); its CO2e is `context_required` by default because grid carbon intensity depends on country/region, year, and even time of day (rulebook §C.6, spec §9.6). The linked emission_factor_ids are ILLUSTRATIVE region+year examples (UK 2025, EU-27 2023, EU-27 2022), not global defaults — see docs/conversion-rules.md §C.6. Shipping two EU years side by side makes the year-dependence of grid intensity directly visible.",
+			"notes": "Grid electricity is not a combustible material: it has no density or heating value, so mass and volume conversions simply do not apply (unlike a genuine data gap, which we mark 'not available'). '1 kWh of electricity' converts as pure energy (into kWh, MJ, BTU, etc., using exact SI conversions). We do not show a CO₂e figure until you choose a region and year, because grid carbon intensity depends on the country, the year, and even the time of day. The region/year figures shown (UK 2025, EU-27 2023, EU-27 2022) are illustrative examples, not global defaults — both EU years are shown together on purpose, to make clear how much grid intensity changes from year to year.",
 			"warnings": [
 				"Grid electricity CO2e has no single correct global factor — it depends on the country/region, the year, and even the time of day. Pick a region and year for a real figure; the values shown without one are illustrative examples only, not defaults.",
 				"Illustrative region+year electricity factors are generation-only / location-based (see each factor's own uncertainty note) and are not updated in real time."

@@ -7,7 +7,7 @@
 			"publisher": "Universal Converter project (internal)",
 			"type": "internal-document",
 			"reliability": "Normative project rulebook; records the definitional conventions (IT calorie/BTU, toe/tce/boe, therm, Julian year) v0.1 adopts. Used as a source_ref only for the project's chosen conventions where an external primary citation is also attached (nist-sp811 / iea-unit-conventions).",
-			"notes": "NOT an external authority. It states the project's chosen convention and points at where the external citation belongs. Kept alongside the real external source on the affected units (rulebook self-reference)."
+			"notes": "This is not an independent external authority — it is our own internal document recording which convention we chose to follow, alongside a pointer to the real external source. We keep it listed together with that external source wherever it applies."
 		},
 		{
 			"id": "nist-sp811",
@@ -31,7 +31,7 @@
 			"license": "CC BY 4.0 (the tool/page itself) — reusable with attribution. Distinct from IEA's paywalled statistical data products.",
 			"type": "international-organization",
 			"reliability": "Medium-high for definitions (toe = 41.868 GJ net; tce = 29.3076 GJ). Tool last updated 30 Dec 2023. Shows no per-factor sourcing itself, so used only for the standard-definition energy-equivalence conventions.",
-			"notes": "toe = 41.868 GJ (10^7 kcal_IT, net basis); tce = 29.3076 GJ (7 Gcal_IT) are the widely-cited IEA/UN conventions. IEA's World Energy Balances (detailed country data) is paywalled and NOT used as a numeric source here (research-notes §5)."
+			"notes": "The widely-cited IEA/UN conventions are: 1 toe = 41.868 GJ (derived from 10⁷ kilocalories, International Table definition, net basis), and 1 tce = 29.3076 GJ (7 gigacalories, IT). The IEA's 'World Energy Balances' dataset, which has detailed country-level data, sits behind a paywall and is not used as a numeric source here."
 		},
 		{
 			"id": "uk-desnz-ghg-2025",
@@ -43,7 +43,7 @@
 			"license": "Open Government Licence v3.0 — explicit permission for commercial AND non-commercial reuse, adaptation and redistribution, with attribution ('Contains public sector information licensed under the Open Government Licence v3.0').",
 			"type": "government",
 			"reliability": "Very high — the single most valuable fuel source for this project: per-fuel density, NCV/GCV, CO2/CH4/N2O split and derived CO2e in one authoritative, actively maintained, licensing-friendly dataset. Data year 2025; next publication June 2026.",
-			"notes": "Full-set xlsx: https://assets.publishing.service.gov.uk/media/6846a4f55e92539572806125/ghg-conversion-factors-2025-full-set.xlsx . Fuel values extracted from the 'Fuels', 'Bioenergy', 'Fuel properties', 'UK electricity' and 'Outside of scopes' sheets. UK-context / general-purpose default per research-notes §6."
+			"notes": "Full data set (Excel): https://assets.publishing.service.gov.uk/media/6846a4f55e92539572806125/ghg-conversion-factors-2025-full-set.xlsx . Fuel values were taken from its 'Fuels', 'Bioenergy', 'Fuel properties', 'UK electricity' and 'Outside of scopes' sheets. This is used as the general-purpose, UK-context default source."
 		},
 		{
 			"id": "ipcc-2006-v2",
@@ -103,7 +103,7 @@
 			"license": "US federal government work — public domain, freely citable",
 			"type": "standards-body",
 			"reliability": "Very high — the authoritative US thermochemical reference. Used for the NIST-traceable hydrogen heating values (LHV 119.96, HHV 141.79 MJ/kg, from the 25 °C heat-of-combustion / formation enthalpies) and hydrogen density (gas 0.08988 kg/m³, liquid 70.85 kg/m³ via NIST 'Thermophysical Properties of Hydrogen').",
-			"notes": "Used as the primary hydrogen-property citation since H2Tools blocked automated fetch. Confirmed 2026-07-04 by the Data agent via NIST-sourced heat-of-combustion / thermophysical-property tables. Cross-checked against DOE GREET/ORNL (see h2tools notes) — differences (~0.2%) noted, not averaged."
+			"notes": "Used as the primary citation for hydrogen properties, since the H2Tools page could not be fetched automatically. This was confirmed on 2026-07-04 against NIST heat-of-combustion and thermophysical-property tables, and cross-checked against the DOE GREET/ORNL data (see the h2tools entry) — small differences of about 0.2% were found and were not averaged together."
 		},
 		{
 			"id": "eea-electricity-intensity",
