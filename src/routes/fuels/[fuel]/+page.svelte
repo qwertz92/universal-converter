@@ -225,11 +225,13 @@
 				</table>
 			</div>
 			<p class="mt-3 text-xs" style="color:var(--text-faint)">
-				CO₂ ≠ CO₂e — separate metrics, never converted into one another.
+				CO₂ ≠ CO₂e — separate metrics, never converted into one another.{#if factors.some((f) => f.pollutant === 'biogenic_CO2' || f.biogenic)}
+					Biogenic CO₂ is listed on its own line: the carbon still leaves the stack, but it is
+					accounted for separately from fossil CO₂ rather than added to it.{/if}
 				<a
 					href={resolve('/learn/co2-vs-co2e')}
 					class="hover:text-[var(--accent)]"
-					style="color:var(--text-muted)">Why? →</a
+					style="color:var(--text-muted)">What these metrics mean →</a
 				>
 			</p>
 		{/if}

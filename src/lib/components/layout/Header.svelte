@@ -10,7 +10,10 @@
 		{ href: '/fuels', label: 'Fuels' },
 		{ href: '/learn', label: 'Learn' },
 		{ href: '/methodology', label: 'Methodology' },
-		{ href: '/sources', label: 'Sources' }
+		{ href: '/sources', label: 'Sources' },
+		// A first-time visitor's "what is this and what can't it do?" page was
+		// reachable only from the footer.
+		{ href: '/about', label: 'About' }
 	] as const;
 
 	let menuOpen = $state(false);

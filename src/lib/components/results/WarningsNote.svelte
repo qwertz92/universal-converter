@@ -67,8 +67,14 @@
 						<span
 							class="leading-snug {w.severity === 'critical'
 								? 'text-red-600 dark:text-red-400'
-								: ''}">{w.text}</span
+								: ''}"
 						>
+							<!-- The glyph alone has no legend anywhere, so severity is also
+							     spelled out for the two levels that change what you should do. -->
+							{#if w.severity === 'critical'}<strong class="font-semibold">Critical:</strong>
+							{:else if w.severity === 'caution'}<strong class="font-semibold">Caution:</strong>
+							{/if}{w.text}
+						</span>
 					</li>
 				{/each}
 			</ul>
