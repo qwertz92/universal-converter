@@ -169,6 +169,11 @@ body {
 	-webkit-font-smoothing: antialiased;
 	text-rendering: optimizeLegibility;
 	min-height: 100dvh;
+	/* This content is full of tokens no browser will break on its own: raw source
+	   URLs, snake_case unit ids, formula strings. One of them widened the sources
+	   page by 450px on a 375px screen. Only takes effect when a word would
+	   otherwise overflow, so ordinary text is untouched. */
+	overflow-wrap: break-word;
 }
 
 /* Result magnitudes line up in columns: tabular numerals. */

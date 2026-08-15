@@ -118,7 +118,7 @@
 	<div class="grid gap-4 sm:grid-cols-2">
 		<!-- Density -->
 		<section
-			class="rounded-[var(--radius-card)] border p-5"
+			class="min-w-0 rounded-[var(--radius-card)] border p-5"
 			style="border-color:var(--border);background:var(--surface)"
 		>
 			<h2
@@ -142,7 +142,7 @@
 
 		<!-- Heating values -->
 		<section
-			class="rounded-[var(--radius-card)] border p-5"
+			class="min-w-0 rounded-[var(--radius-card)] border p-5"
 			style="border-color:var(--border);background:var(--surface)"
 		>
 			<h2

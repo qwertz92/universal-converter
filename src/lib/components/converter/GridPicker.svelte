@@ -26,22 +26,26 @@
 	}
 </script>
 
-<div class="flex items-center gap-2">
+<!-- A <select> is as wide as its widest option by default and will not shrink,
+     which pushed the whole page 100px past a 375px viewport. It wraps to its own
+     line and is allowed to shrink instead. -->
+<div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
 	<label for={id} class="text-sm font-medium whitespace-nowrap" style="color:var(--text)">
 		Grid region &amp; year
 	</label>
 	<select
 		{id}
 		bind:value
-		class="rounded-lg border px-2.5 py-1.5 text-sm font-medium outline-none"
+		class="w-full min-w-0 max-w-full rounded-lg border px-2.5 py-1.5 text-sm font-medium outline-none sm:w-auto"
 		style="border-color:var(--border);background:var(--surface);color:var(--text)"
 	>
 		<option value="">Not set — ask per query</option>
 		{#each options as opt (opt.region + opt.year)}
 			<option value={`${opt.region}|${opt.year}`}>
 				{opt.region}
-				{opt.year} — {opt.pollutant} ({opt.value}
-				{prettyUnit(opt.unit)})
+				{opt.year} · {opt.pollutant}
+				{opt.value}
+				{prettyUnit(opt.unit)}
 			</option>
 		{/each}
 	</select>

@@ -68,14 +68,19 @@
 						{/if}
 					</dl>
 
+					<!-- Source notes quote raw URLs and long publication titles. Without an
+					     explicit break they are single unbreakable tokens that pushed this
+					     page 450px wider than a phone screen. -->
 					{#if s.reliability}
-						<p class="mt-3 text-sm leading-snug" style="color:var(--text-muted)">
+						<p class="mt-3 text-sm leading-snug break-words" style="color:var(--text-muted)">
 							<span class="font-medium" style="color:var(--text)">Reliability:</span>
 							{s.reliability}
 						</p>
 					{/if}
 					{#if s.notes}
-						<p class="mt-1.5 text-sm leading-snug" style="color:var(--text-faint)">{s.notes}</p>
+						<p class="mt-1.5 text-sm leading-snug break-words" style="color:var(--text-faint)">
+							{s.notes}
+						</p>
 					{/if}
 
 					<div class="mt-3 flex items-center gap-4 text-sm">
