@@ -81,7 +81,7 @@
 			],
 			"emission_factor_ids": ["gasoline-co2-desnz", "gasoline-co2e-desnz"],
 			"source_refs": ["uk-desnz-ghg-2025"],
-			"notes": "This entry defaults to DESNZ's 'Petrol (average biofuel blend)' figures, which match real UK forecourt fuel. DESNZ separately lists '100% mineral petrol' (density 741.84 kg/m³, net calorific value (NCV) 44.65 GJ/tonne, gross calorific value (GCV) 47.0 GJ/tonne, 2.33984 kg CO₂e/L). IPCC's 2006 global default for motor gasoline is an NCV of 44.3 MJ/kg and CO₂ of 69,300 kg/TJ. As a US cross-check, the EIA reports 120,214 Btu/gal and 9.46 kg CO₂/gal. These alternative figures are shown for reference only and are never blended into the main value.",
+			"notes": "This entry defaults to DESNZ's 'Petrol (average biofuel blend)' figures, which match real UK forecourt fuel. For petrol with no bioethanol content, '100% mineral petrol' is a separate entry with its own numbers. IPCC's 2006 global default for motor gasoline is an NCV of 44.3 MJ/kg and CO₂ of 69,300 kg/TJ. As a US cross-check, the EIA reports 120,214 Btu/gal and 9.46 kg CO₂/gal. These alternative figures are shown for reference only and are never blended into the main value.",
 			"warnings": [],
 			"related_fuels": ["mineral-petrol"]
 		},
@@ -191,7 +191,7 @@
 			],
 			"emission_factor_ids": ["diesel-co2-desnz", "diesel-co2e-desnz"],
 			"source_refs": ["uk-desnz-ghg-2025"],
-			"notes": "Defaults to DESNZ 'Diesel (average biofuel blend)' (UK forecourt-representative). DESNZ also lists '100% mineral diesel' (density 830.565 kg/m³, NCV 43.027 GJ/tonne, 2.66155 kgCO2e/L) and 'Gas oil' (red/off-road diesel, 853.971 kg/m³, NCV 42.569 GJ/tonne, 2.75541 kgCO2e/L). IPCC 2006 Gas/Diesel Oil NCV 43.0 MJ/kg, CO2 74,100 kg/TJ. EIA US cross-check 10.19 kg CO2/gal — never averaged.",
+			"notes": "Defaults to DESNZ 'Diesel (average biofuel blend)' — UK forecourt diesel, which contains biodiesel. For diesel with no bio content see '100% mineral diesel'; for off-road/red diesel see 'gas oil'. Both are separate entries with their own numbers. IPCC 2006 Gas/Diesel Oil NCV 43.0 MJ/kg, CO2 74,100 kg/TJ. EIA US cross-check 10.19 kg CO2/gal — never averaged.",
 			"warnings": [],
 			"related_fuels": ["mineral-diesel", "gas-oil"]
 		},

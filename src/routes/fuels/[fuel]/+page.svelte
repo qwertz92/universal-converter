@@ -22,6 +22,15 @@
 	});
 
 	/**
+	 * An emission factor's `unit` is a real unit id, so the catalog already holds
+	 * a properly-cased symbol for it ("kgCO2e/L"). Splitting the id on
+	 * underscores instead printed "kg co2e per l", which reads as sloppy on a
+	 * page whose whole job is to look trustworthy about numbers.
+	 */
+	const unitLabel = (id: string) =>
+		loadDataBundle().units.find((u) => u.id === id)?.symbols[0] ?? id.replace(/_/g, ' ');
+
+	/**
 	 * Close relatives (ADR 0005). Variants such as gas oil (red diesel) sit next
 	 * to their parent with genuinely different numbers, so each is shown with the
 	 * two figures that decide which one you actually want — density and headline
@@ -169,7 +178,7 @@
 						{#if r.factor}
 							<span class="uc-num text-xs" style="color:var(--text-muted)">
 								{r.factor.value}
-								{r.factor.unit.replace(/_/g, ' ')}
+								{unitLabel(r.factor.unit)}
 							</span>
 						{/if}
 					</li>
@@ -277,7 +286,7 @@
 						{#each factors as f (f.id)}
 							<tr class="border-t" style="border-color:var(--border)">
 								<td class="py-2 pr-3 font-medium">{POLLUTANT_LABEL[f.pollutant]}</td>
-								<td class="uc-num py-2 pr-3">{f.value} {f.unit.replace(/_/g, ' ')}</td>
+								<td class="uc-num py-2 pr-3">{f.value} {unitLabel(f.unit)}</td>
 								<td class="py-2 pr-3" style="color:var(--text-muted)">{SCOPE_LABEL[f.scope]}</td>
 								<td class="py-2 pr-3" style="color:var(--text-muted)">
 									{f.region ?? 'general'}{f.year ? ` · ${f.year}` : ''}

@@ -3,6 +3,55 @@
 All notable changes to Universal Converter. Versioning follows semver
 (pre-1.0: minor bumps may include behavior changes; they are listed here).
 
+## 0.3.1 — 2026-08-16
+
+Repeat use, and the fuels the catalog had been quietly rounding off.
+
+### Added
+
+- **Pinned units.** Typing the unit on every line is fine once and tedious
+  twenty times. Pin the unit you are working in — and optionally the one you
+  want out — and a bare number becomes a complete query: `5`, `12`, `0.4`. This
+  is not the tool guessing: a pin is you giving the unit once, explicitly. It
+  stays visible above the results, comes off in one click, and travels in the
+  URL, so a shared link reproduces exactly what the sender saw.
+- **History, kept on your device.** Recent conversions are remembered
+  automatically; anything worth returning to can be saved with a star and an
+  optional label. Both lists sit below the results where they are reachable
+  while you have a result on screen, not only on an empty page. Nothing is sent
+  anywhere, and a browser that refuses storage degrades to an in-session list
+  rather than breaking.
+- **Four fuels that were being answered with the wrong numbers** — gas oil
+  (UK red / off-road diesel), 100% mineral diesel, 100% mineral petrol and
+  burning oil (UK heating kerosene). `1 L red diesel` previously answered with
+  road-diesel figures, about 7% low on CO₂e per litre. Each is a first-class
+  catalog entry with its own density, calorific values and emission factors,
+  transcribed verbatim from DESNZ 2025 (see [ADR
+  0005](docs/adr/0005-fuel-variants.md) for why variants are separate fuels
+  rather than a nested concept).
+- **Cross-links between fuels that are easy to confuse.** Each entry now names
+  its close relatives and shows their density and emission factor, so the
+  difference is visible as numbers instead of asserted in prose.
+- **The project is open source** under the MIT licence, with the data files
+  carrying their own upstream terms (OGL v3.0, IPCC, EPA, EIA, EEA, NIST).
+  Wrong numbers are the bug report we most want — see `CONTRIBUTING.md`.
+
+### Fixed
+
+- **Burning oil returned aviation-turbine-fuel numbers.** The kerosene entry
+  claimed "burning oil" and "heating kerosene" as aliases, so a query about a
+  domestic heating boiler came back with jet-fuel factors _and_ the
+  high-altitude radiative-forcing warning attached. Those aliases now belong to
+  the burning-oil entry.
+- **Duplicate fuel aliases could silently resolve to the wrong fuel.** The
+  registry keeps the first registration for a colliding lookup key, so a
+  duplicate resolved by file order. Validation now rejects any name or alias
+  claimed by two fuels — the collision above is what it caught first.
+- **Emission-factor units read as `kg co2e per l`** on fuel pages. They are real
+  catalog units with proper symbols; the pages now use them (`kgCO₂e/L`).
+- Biogenic CO₂ entries were labeled `scope_3_upstream`, which places them inside
+  a scope. They are `outside_of_scopes`, as DESNZ's own sheet has it.
+
 ## 0.3.0 — 2026-07-20
 
 The release that makes the converter usable without reading the documentation
