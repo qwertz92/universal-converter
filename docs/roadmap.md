@@ -127,9 +127,17 @@ numbers this repository does not have a source for:
   Unblocked on the same reasoning as prices; not yet built.
 - *Well-to-wheel factors* — requires an upstream/lifecycle dataset (e.g. JEC or
   a national equivalent) that has not been researched or licence-checked.
+  **Still blocked**, and not by the same argument as prices: a lifecycle factor
+  is a published scientific figure, not a reader's own setting, so there is
+  nobody to take it from but a source we do not yet have.
 - *Country presets* — the same blocker as the US grid factor: a preset per
   country means a cited factor per country/year, and we ship only the ones we
-  have (UK 2025, EU-27 2023/2022).
+  have (UK 2025, EU-27 2023/2022). **Still blocked**, for the same reason.
+
+**Where 0.3 stands after 0.3.2.** Everything on the list has shipped except
+well-to-wheel factors and country presets, and both are blocked on data that has
+to be researched and licence-checked rather than on any decision left to make.
+The next real work is therefore a research pass, not a code pass.
 
 Reordering the calculators behind a usability release was a deliberate call:
 the tool was hard to use *before* it was short of calculators, and the

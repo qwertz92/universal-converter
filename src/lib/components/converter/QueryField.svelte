@@ -224,7 +224,7 @@
 				aria-autocomplete="list"
 				aria-activedescendant={showList && active >= 0 ? `${id}-opt-${active}` : undefined}
 				aria-describedby="{id}-interpretation-text"
-				placeholder="1 kWh · 10 L diesel · 5 kW for 3 h · 1 kWh to MJ"
+				placeholder="1 kWh · 10 L diesel · 5 kW for 3 h · 1000 kWh at 0.32 EUR/kWh"
 				autocomplete="off"
 				autocapitalize="off"
 				spellcheck="false"
