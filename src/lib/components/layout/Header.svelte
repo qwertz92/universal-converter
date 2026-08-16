@@ -19,6 +19,13 @@
 	let menuOpen = $state(false);
 	let menuButtonEl = $state<HTMLButtonElement | null>(null);
 
+	// The panel the toggle claims to expand. Derived per instance rather than
+	// written as a literal so it stays unique even if a page ever mounts a second
+	// header — a repeated id silently rewires the relationship to the wrong menu.
+	// Two lines because `$props.id()` may only initialise a declaration.
+	const uid = $props.id();
+	const menuId = `uc-nav-${uid}`;
+
 	function isActive(href: string): boolean {
 		const p = page.url.pathname;
 		return p === href || p.startsWith(href + '/');
@@ -83,6 +90,7 @@
 				style="border-color:var(--border)"
 				aria-label="Toggle navigation menu"
 				aria-expanded={menuOpen}
+				aria-controls={menuId}
 				onclick={() => (menuOpen = !menuOpen)}
 			>
 				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -108,6 +116,7 @@
 
 	{#if menuOpen}
 		<nav
+			id={menuId}
 			class="absolute top-full right-0 left-0 z-40 border-t px-4 pb-3 shadow-lg md:hidden"
 			style="border-color:var(--border);background:var(--bg)"
 			aria-label="Primary mobile"

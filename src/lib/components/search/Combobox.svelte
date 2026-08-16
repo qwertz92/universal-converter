@@ -1,3 +1,24 @@
+<script module lang="ts">
+	/** No option highlighted: the initial state, and where every dismissal lands. */
+	export const NO_HIGHLIGHT = -1;
+
+	/**
+	 * Where the arrow keys move the highlight. Pure, and exported, because the
+	 * highlight otherwise lives entirely inside the component: the bug where
+	 * Escape closed the list but left `active` on the rejected option — so
+	 * re-focusing the field brought it back and Enter committed it — was
+	 * invisible to every test this project can run without a browser.
+	 */
+	export function nextHighlight(active: number, delta: number, count: number): number {
+		if (count === 0) return NO_HIGHLIGHT;
+		// From "nothing highlighted": Down lands on the first option, Up on the
+		// last — not the generic wrap-around step below, which would otherwise
+		// land Up on the second-to-last option.
+		if (active === NO_HIGHLIGHT) return delta > 0 ? 0 : count - 1;
+		return (active + delta + count) % count;
+	}
+</script>
+
 <script lang="ts">
 	/**
 	 * A generic, accessible, keyboard-navigable combobox. Options are grouped by a
@@ -39,8 +60,8 @@
 	} = $props();
 
 	let open = $state(false);
-	/** -1 = no option highlighted (initial state, and after the query changes). */
-	let active = $state(-1);
+	/** The highlighted option's flat index, or NO_HIGHLIGHT. */
+	let active = $state(NO_HIGHLIGHT);
 	let inputEl = $state<HTMLInputElement | null>(null);
 	let listEl = $state<HTMLUListElement | null>(null);
 
@@ -83,16 +104,8 @@
 			open = true;
 			await tick();
 		}
-		const n = flat.length;
-		if (n === 0) return;
-		if (active === -1) {
-			// From "nothing highlighted": Down lands on the first option, Up on
-			// the last — not the generic wrap-around step below, which would
-			// otherwise land Up on the second-to-last option.
-			active = delta > 0 ? 0 : n - 1;
-		} else {
-			active = (active + delta + n) % n;
-		}
+		if (flat.length === 0) return;
+		active = nextHighlight(active, delta, flat.length);
 		await tick();
 		const el = listEl?.querySelector<HTMLElement>(`[data-idx="${active}"]`);
 		el?.scrollIntoView({ block: 'nearest' });
@@ -130,6 +143,11 @@
 				if (open) {
 					e.preventDefault();
 					open = false;
+					// Escape rejects the highlight, so it must not survive the close:
+					// leaving `active` behind meant simply re-focusing the field
+					// restored a highlighted option the user had just dismissed, and
+					// Enter would then commit it.
+					active = NO_HIGHLIGHT;
 				}
 				break;
 		}
@@ -137,7 +155,7 @@
 
 	function onInput() {
 		open = true;
-		active = -1;
+		active = NO_HIGHLIGHT;
 		// Typing invalidates a previously-committed selection until re-picked.
 		if (value && query !== selectedLabel) {
 			value = undefined;
@@ -155,6 +173,8 @@
 		const next = e.relatedTarget as Node | null;
 		if (next && rootEl?.contains(next)) return;
 		open = false;
+		// Same reason as Escape: tabbing away abandons the highlight.
+		active = NO_HIGHLIGHT;
 	}
 
 	const listboxId = $derived(`${id}-listbox`);
@@ -226,11 +246,18 @@
 					</li>
 					{#each opts as opt (opt.id)}
 						{@const i = idxOf(opt)}
+						<!-- aria-selected tracks the HIGHLIGHT, not the committed value
+						     (ARIA 1.2 combobox, selection-follows-focus — the same rule
+						     QueryField follows). Pointing it at `value` while
+						     aria-activedescendant pointed at `active` made a screen
+						     reader announce every option the user arrowed to as "not
+						     selected". The committed value is conveyed by the input's
+						     own text, which is where the user hears it anyway. -->
 						<li
 							id="{id}-opt-{i}"
 							data-idx={i}
 							role="option"
-							aria-selected={value === opt.id}
+							aria-selected={i === active}
 							class="flex cursor-pointer items-center justify-between gap-3 px-3 py-2 text-sm"
 							style={i === active ? 'background:var(--surface-2)' : ''}
 							onmouseenter={() => (active = i)}

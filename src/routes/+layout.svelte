@@ -21,7 +21,11 @@
 
 <div class="flex min-h-dvh flex-col">
 	<Header />
-	<main id="main" class="flex-1">
+	<!-- tabindex="-1" is what makes the skip link above actually skip: without it
+	     <main> is not focusable, so several browsers scroll to it but leave focus
+	     in the header — the next Tab walks back into the nav the user just asked
+	     to jump over. -->
+	<main id="main" tabindex="-1" class="flex-1">
 		{@render children()}
 	</main>
 	<Footer />

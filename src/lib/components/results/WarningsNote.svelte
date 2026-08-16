@@ -7,6 +7,12 @@
 
 	let { warnings, title = 'Warnings' }: { warnings: Warning[]; title?: string } = $props();
 
+	// Per-instance id: a result set renders one of these at set level and one per
+	// group, so a literal would have several buttons claiming the same list.
+	// Two lines because `$props.id()` may only initialise a declaration.
+	const uid = $props.id();
+	const listId = `uc-warnings-${uid}`;
+
 	let open = $state(false);
 	$effect(() => {
 		// Read `warnings` itself (not a memoized boolean) so the dependency is on
@@ -29,6 +35,7 @@
 			class="flex w-full items-center gap-2 text-left font-medium"
 			onclick={() => (open = !open)}
 			aria-expanded={open}
+			aria-controls={listId}
 		>
 			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
 				<path
@@ -53,7 +60,7 @@
 			</svg>
 		</button>
 		{#if open}
-			<ul class="mt-2 space-y-1.5 pl-1">
+			<ul id={listId} class="mt-2 space-y-1.5 pl-1">
 				{#each warnings as w, i (w.kind + i)}
 					<li class="flex gap-2">
 						<span

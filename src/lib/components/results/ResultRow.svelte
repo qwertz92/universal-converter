@@ -22,6 +22,13 @@
 		contextControl?: import('svelte').Snippet<[ConversionResult]>;
 	} = $props();
 
+	// Per-instance id: every result set renders a stack of these rows, so a
+	// literal id would have every "Show details" button on the page pointing at
+	// the first row's panel. Two lines because `$props.id()` may only
+	// initialise a declaration.
+	const uid = $props.id();
+	const detailId = `uc-detail-${uid}`;
+
 	let expanded = $state(false);
 
 	const hasValue = $derived(result.value !== null);
@@ -161,6 +168,7 @@
 				style="color:var(--text-faint)"
 				onclick={() => (expanded = !expanded)}
 				aria-expanded={expanded}
+				aria-controls={detailId}
 			>
 				<svg
 					width="13"
@@ -178,6 +186,7 @@
 
 			{#if expanded}
 				<div
+					id={detailId}
 					class="mt-2 space-y-3 rounded-lg px-3 py-2.5 text-sm"
 					style="background:var(--surface-2)"
 				>
