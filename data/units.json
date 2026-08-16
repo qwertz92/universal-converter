@@ -225,7 +225,7 @@
 			"is_exact": true,
 			"exactness": "standard_definition",
 			"system": "convention",
-			"notes": "The US therm equals 100,000 BTU (International Table definition), or 1.05505585262 × 10⁸ joules — derived from the IT BTU value published in NIST Special Publication 811. DESNZ's 2025 conversion tables give a matching derived figure: 1 therm = 0.105506 GJ = 29.30711 kWh. The EC (European) therm differs by roughly 0.001% (about one part in 100,000); this converter uses the US therm and labels it as such.",
+			"notes": "The therm here is 100,000 BTU (International Table definition), or exactly 1.05505585262 × 10⁸ joules — derived from the IT BTU value published in NIST Special Publication 811. It is labeled 'therm (US)' after the US definition (EIA: 1 therm = 100,000 Btu). DESNZ's 2025 conversion tables give a matching derived figure: 1 therm = 0.105506 GJ = 29.30711 kWh, and describe the UK/EC therm through the same 100,000-Btu chain. A therm quoted from a source that pins a different flavour of BTU can differ slightly, so the chain used is stated here rather than left to the name.",
 			"source_refs": ["nist-sp811", "uk-desnz-ghg-2025", "spec-conversion-rules"]
 		},
 		{

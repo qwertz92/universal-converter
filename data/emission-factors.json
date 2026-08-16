@@ -397,7 +397,7 @@
 			"year": 2025,
 			"source_id": "uk-desnz-ghg-2025",
 			"source_table_or_page": "'Fuels' sheet, 'CNG' — total kgCO2e/litre",
-			"notes": "DESNZ 2025 CNG total 0.4507 kgCO2e/litre (also 0.18296 kgCO2e/kWh on a Gross CV basis). DESNZ publishes no CO2/CH4/N2O split for this row, so no CO2-only factor is carried — CO2 is never derived from CO2e. GWP set per DESNZ 2025 methodology (IPCC AR5, 100-yr)."
+			"notes": "DESNZ 2025 CNG total 0.4507 kgCO2e/litre (also 0.18296 kgCO2e/kWh on a Gross CV basis). No CO2/CH4/N2O split is recorded for this row in docs/research-notes.md §4.7, so no CO2-only factor is carried — CO2 is never derived from CO2e. GWP set per DESNZ 2025 methodology (IPCC AR5, 100-yr)."
 		},
 		{
 			"id": "lng-co2e-desnz",
@@ -425,7 +425,49 @@
 			"year": 2025,
 			"source_id": "uk-desnz-ghg-2025",
 			"source_table_or_page": "'Fuels' sheet, 'Coal (industrial)' — total kgCO2e/tonne",
-			"notes": "DESNZ 2025 'Coal (industrial)' total 2395.28994 kgCO2e/tonne = 2.37528994 kg CO2e/kg (CO2 2370.72 + CH4 7.6384 + N2O 16.93154 per tonne). Converted tonne→kg by ÷1000 (exact); original per-tonne figure retained here in notes. Per kWh (Net CV) 0.33944 kgCO2e/kWh."
+			"notes": "DESNZ 2025 'Coal (industrial)' total 2395.28994 kgCO2e/tonne = 2.39528994 kg CO2e/kg (CO2 2370.72 + CH4 7.6384 + N2O 16.93154 per tonne). Converted tonne→kg by ÷1000 (exact); original per-tonne figure retained here in notes. Per kWh (Net CV) 0.33944 kgCO2e/kWh."
+		},
+		{
+			"id": "coal-domestic-co2e-desnz",
+			"fuel_id": "coal-domestic",
+			"pollutant": "CO2e",
+			"metric": "mass_per_mass",
+			"value": "2.90495234",
+			"unit": "kg_co2e_per_kg",
+			"scope": "direct_combustion",
+			"region": "UK",
+			"year": 2025,
+			"source_id": "uk-desnz-ghg-2025",
+			"source_table_or_page": "'Fuels' sheet, 'Coal (domestic)' — total kgCO2e/tonne",
+			"notes": "DESNZ 2025 'Coal (domestic)' total 2904.95234 kgCO2e/tonne = 2.90495234 kg CO2e/kg (CO2 2632 + CH4 240.352 + N2O 32.60034 per tonne). The CH4 component is ~31× the industrial grade's, which is what makes domestic coal the higher-emitting grade: stoves and open fires burn less completely. Converted tonne→kg by ÷1000 (exact). Per kWh (Net CV) 0.36549 kgCO2e/kWh."
+		},
+		{
+			"id": "coking-coal-co2e-desnz",
+			"fuel_id": "coking-coal",
+			"pollutant": "CO2e",
+			"metric": "mass_per_mass",
+			"value": "3.16465002",
+			"unit": "kg_co2e_per_kg",
+			"scope": "direct_combustion",
+			"region": "UK",
+			"year": 2025,
+			"source_id": "uk-desnz-ghg-2025",
+			"source_table_or_page": "'Fuels' sheet, 'Coking Coal' — total kgCO2e/tonne",
+			"notes": "DESNZ 2025 'Coking Coal' total 3164.65002 kgCO2e/tonne = 3.16465002 kg CO2e/kg. Converted tonne→kg by ÷1000 (exact). No CO2/CH4/N2O split is recorded for this row in docs/research-notes.md §4.9, so no CO2-only factor is carried — CO2 is never derived from CO2e."
+		},
+		{
+			"id": "coal-electricity-generation-co2e-desnz",
+			"fuel_id": "coal-electricity-generation",
+			"pollutant": "CO2e",
+			"metric": "mass_per_mass",
+			"value": "2.22522448",
+			"unit": "kg_co2e_per_kg",
+			"scope": "direct_combustion",
+			"region": "UK",
+			"year": 2025,
+			"source_id": "uk-desnz-ghg-2025",
+			"source_table_or_page": "'Fuels' sheet, 'Coal (electricity generation)' — total kgCO2e/tonne",
+			"notes": "DESNZ 2025 'Coal (electricity generation)' total 2225.22448 kgCO2e/tonne = 2.22522448 kg CO2e/kg. Converted tonne→kg by ÷1000 (exact). No CO2/CH4/N2O split is recorded for this row in docs/research-notes.md §4.9, so no CO2-only factor is carried — CO2 is never derived from CO2e."
 		},
 		{
 			"id": "wood-logs-co2e-desnz",
@@ -455,7 +497,7 @@
 			"biogenic": true,
 			"source_id": "uk-desnz-ghg-2025",
 			"source_table_or_page": "'Outside of scopes' sheet, 'Wood logs' (col 'kg CO2e of CO2 per unit', net CV basis)",
-			"notes": "DESNZ 2025 'Outside of scopes' biogenic combustion CO2 for Wood Logs = 1436.23 kg per tonne = 1.43623 kg CO2/kg (and 0.35 kg/kWh). This is the true stack CO2 that Scope 1 nets to zero for biogenic carbon; reported on a SEPARATE line, never folded into the total or silently zeroed. scope_3_upstream is used to route it as a memo item outside the main scopes. Converted tonne→kg by ÷1000 (exact)."
+			"notes": "DESNZ 2025 'Outside of scopes' biogenic combustion CO2 for Wood Logs = 1436.23 kg per tonne = 1.43623 kg CO2/kg (and 0.35 kg/kWh). This is the true stack CO2 that Scope 1 nets to zero for biogenic carbon; reported on a SEPARATE line, never folded into the total or silently zeroed. The scope is 'outside_of_scopes' — DESNZ's own placement, and the honest one: this is a memo item beside the Scope 1/2/3 columns, not an upstream emission. Converted tonne→kg by ÷1000 (exact)."
 		},
 		{
 			"id": "wood-pellets-co2e-desnz",
@@ -580,7 +622,7 @@
 		{
 			"id": "electricity-uk-2025-co2e",
 			"pollutant": "CO2e",
-			"metric": "intensity_per_energy",
+			"metric": "mass_per_energy",
 			"value": "177",
 			"unit": "g_co2e_per_kwh",
 			"scope": "scope_2",
@@ -594,7 +636,7 @@
 		{
 			"id": "electricity-eu27-2023-co2",
 			"pollutant": "CO2",
-			"metric": "intensity_per_energy",
+			"metric": "mass_per_energy",
 			"value": "242",
 			"unit": "g_co2_per_kwh",
 			"scope": "scope_2",
@@ -608,7 +650,7 @@
 		{
 			"id": "electricity-eu27-2022-co2",
 			"pollutant": "CO2",
-			"metric": "intensity_per_energy",
+			"metric": "mass_per_energy",
 			"value": "292",
 			"unit": "g_co2_per_kwh",
 			"scope": "scope_2",

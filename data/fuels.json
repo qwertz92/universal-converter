@@ -21,11 +21,12 @@
 				}
 			],
 			"emission_factor_ids": ["crude-oil-co2-ipcc"],
-			"typical_ranges": "Physical crude density varies by grade (~800–950 kg/m³, light vs heavy); a serious primary density was NOT FOUND in this pass, so density is omitted. Energy per physical barrel is an estimate (~5.6–6.3 GJ) and is NOT the same as 'boe' (fixed 5.8 MMBTU convention).",
+			"typical_ranges": "Physical crude density varies by grade (~800–950 kg/m³, light vs heavy); a serious primary density was NOT FOUND in this pass, so density is omitted. The energy in one physical barrel of crude is therefore not available either: it would take a density we do not have. It is in any case NOT the same quantity as 'boe' (fixed 5.8 MMBTU convention).",
 			"source_refs": ["ipcc-2006-v2"],
 			"notes": "This is a generic crude oil figure, based on IPCC 2006 global default values; there is no matching DESNZ entry. Density is deliberately left out, because we could not find it in a reliable primary source, so volume-to-mass conversions show 'not available' instead of a made-up number.",
+			"related_fuels": ["heating-oil"],
 			"warnings": [
-				"Crude oil is not a single substance: density and energy content vary by grade (API gravity). Any barrel↔energy or volume↔mass figure for crude is an ESTIMATE, not a measured property of a specific oil.",
+				"Crude oil is not a single substance: density and energy content vary by grade (API gravity). No sourced density exists for generic crude, so volume↔mass and volume↔energy answer 'not available' rather than estimating; the energy per kilogram is a global default, not a property of a specific oil.",
 				"A physical barrel of crude is NOT the same as 'boe' (barrel of oil equivalent), which is a fixed 5.8 MMBTU energy-equivalence convention."
 			]
 		},
@@ -83,7 +84,7 @@
 			"source_refs": ["uk-desnz-ghg-2025"],
 			"notes": "This entry defaults to DESNZ's 'Petrol (average biofuel blend)' figures, which match real UK forecourt fuel. For petrol with no bioethanol content, '100% mineral petrol' is a separate entry with its own numbers. IPCC's 2006 global default for motor gasoline is an NCV of 44.3 MJ/kg and CO₂ of 69,300 kg/TJ. As a US cross-check, the EIA reports 120,214 Btu/gal and 9.46 kg CO₂/gal. These alternative figures are shown for reference only and are never blended into the main value.",
 			"warnings": [],
-			"related_fuels": ["mineral-petrol"]
+			"related_fuels": ["mineral-petrol", "ethanol"]
 		},
 		{
 			"id": "mineral-petrol",
@@ -291,7 +292,7 @@
 			"emission_factor_ids": ["gas-oil-co2-desnz", "gas-oil-co2e-desnz"],
 			"related_fuels": ["diesel", "mineral-diesel", "heating-oil"],
 			"source_refs": ["uk-desnz-ghg-2025"],
-			"notes": "DESNZ 2025 'Gas oil' — the UK term for off-road diesel, dyed red for duty purposes and used in agriculture, construction and static plant. Chemically close to road diesel but NOT the same numbers: 853.971 kg/m³ and 2.75541 kgCO2e/L against road diesel's 832.361 kg/m³ and 2.57082 kgCO2e/L, about 7% more CO2e per litre. Note DESNZ publishes no kWh-per-litre calorific value for this fuel, so per-litre energy is derived from mass via the density above and labeled accordingly.",
+			"notes": "DESNZ 2025 'Gas oil' — the UK term for off-road diesel, dyed red for duty purposes and used in agriculture, construction and static plant. Chemically close to road diesel but NOT the same numbers: 853.971 kg/m³ and 2.75541 kgCO2e/L against road diesel's 832.361 kg/m³ and 2.57082 kgCO2e/L, about 7% more CO2e per litre. No per-litre calorific value is recorded for this fuel in docs/research-notes.md §4.3 — only the per-tonne Net/Gross CV — so per-litre energy is derived from mass via the density above and labeled accordingly.",
 			"warnings": []
 		},
 		{
@@ -504,6 +505,7 @@
 			"emission_factor_ids": ["lpg-co2-desnz", "lpg-co2e-desnz"],
 			"source_refs": ["uk-desnz-ghg-2025"],
 			"notes": "DESNZ 'LPG' (mixed propane/butane). IPCC 2006 Liquefied Petroleum Gases NCV 47.3 MJ/kg, CO2 63,100 kg/TJ. See separate 'propane' and 'butane' entries for the pure gases.",
+			"related_fuels": ["propane", "butane"],
 			"warnings": [
 				"LPG density and energy per litre depend on the propane/butane mix and on the liquid vs gas phase. Litre figures here are for the pressurised liquid."
 			]
@@ -553,7 +555,8 @@
 			],
 			"emission_factor_ids": ["propane-co2-desnz", "propane-co2e-desnz"],
 			"source_refs": ["uk-desnz-ghg-2025"],
-			"notes": "DESNZ 'Propane'. EIA US cross-check: 5.75 kg CO2/gal, 91,452 Btu/gal, 62.88 kg CO2/MMBtu (2022 vintage) — never averaged with DESNZ.",
+			"notes": "DESNZ 'Propane'. LPG is a propane/butane mixture, so its figures sit between the two pure gases — check which one you mean. EIA US cross-check: 5.75 kg CO2/gal, 91,452 Btu/gal, 62.88 kg CO2/MMBtu (2022 vintage) — never averaged with DESNZ.",
+			"related_fuels": ["lpg", "butane"],
 			"warnings": []
 		},
 		{
@@ -601,7 +604,8 @@
 			],
 			"emission_factor_ids": ["butane-co2-desnz", "butane-co2e-desnz"],
 			"source_refs": ["uk-desnz-ghg-2025"],
-			"notes": "DESNZ 'Butane'.",
+			"notes": "DESNZ 'Butane'. LPG is a propane/butane mixture, so its figures sit between the two pure gases — check which one you mean.",
+			"related_fuels": ["lpg", "propane"],
 			"warnings": []
 		},
 		{
@@ -690,7 +694,8 @@
 			"notes": "Pure methane (CH4) physical properties from the DESNZ 2025 'Fuel properties' sheet. DESNZ lists NO combustion CO2/CO2e factor for pure methane as a distinct row (it is a properties reference). No emission factor is attached here rather than reusing natural gas's (which is a grid mix, not pure CH4) — a combustion CO2 for methane is therefore 'not available' in v0.1 sources. IPCC has no separate methane row either; natural gas is the closest analog.",
 			"warnings": [
 				"Pure methane is treated numerically close to natural gas but is NOT identical to the UK grid mix. No combustion CO2/CO2e factor is available for pure methane in the v0.1 sources, so emissions show 'not available'."
-			]
+			],
+			"related_fuels": ["natural-gas", "cng", "lng", "biogas"]
 		},
 		{
 			"id": "cng",
@@ -717,7 +722,7 @@
 			"emission_factor_ids": ["cng-co2e-desnz"],
 			"related_fuels": ["natural-gas", "lng", "methane"],
 			"source_refs": ["uk-desnz-ghg-2025"],
-			"notes": "DESNZ 2025 'CNG' — natural gas compressed for vehicle fuel and storage. Chemically the same gas as the 'natural gas' entry, but 175 kg/m³ against 0.802 kg/m³, so a volume of CNG holds 218x the energy of the same volume of pipeline gas. DESNZ publishes no CO2-only component for this row, so only the CO2e total is carried — CO2 and CO2e are never derived from one another.",
+			"notes": "DESNZ 2025 'CNG' — natural gas compressed for vehicle fuel and storage. Chemically the same gas as the 'natural gas' entry, but 175 kg/m³ against 0.802 kg/m³, so a volume of CNG holds 218x the energy of the same volume of pipeline gas. No CO2-only component is recorded for this row in docs/research-notes.md §4.7, so only the CO2e total is carried — CO2 and CO2e are never derived from one another.",
 			"warnings": [
 				"DESNZ does not state the pressure or temperature its CNG density of 175 kg/m³ refers to. Compressed-gas density depends strongly on both, so treat a volume-based CNG answer as indicative of the DESNZ basis, not of your own tank."
 			]
@@ -770,7 +775,8 @@
 			"notes": "DESNZ 2025 'LNG' — chemically natural gas, but ~600× denser in energy per volume than gaseous natural gas. Per-litre CO2e in DESNZ = 1.17797 kgCO2e/L. The per-L heating value is derived from DESNZ's liquid density × gravimetric CV.",
 			"warnings": [
 				"1 m³ (or 1 L) of LIQUEFIED natural gas is NOT the same as 1 m³ of GASEOUS natural gas: LNG is ~600× denser in energy per volume. Never convert LNG volume directly to gas volume — go via mass/energy. This entry is the liquid phase."
-			]
+			],
+			"related_fuels": ["natural-gas", "cng", "methane"]
 		},
 		{
 			"id": "hydrogen",
@@ -842,11 +848,109 @@
 				}
 			],
 			"emission_factor_ids": ["hard-coal-co2e-desnz"],
-			"typical_ranges": "IPCC 2006 'Other Bituminous Coal' NCV 25.8 MJ/kg (range 19.9–30.5); DESNZ domestic/coking/generation coal categories differ (28.613 / 30.24 / 23.826 GJ/tonne).",
+			"typical_ranges": "IPCC 2006 'Other Bituminous Coal' NCV 25.8 MJ/kg (range 19.9–30.5); DESNZ's other coal categories differ (domestic 28.613, coking 30.24, electricity generation 23.826 GJ/tonne) and each ships as its own entry.",
 			"source_refs": ["uk-desnz-ghg-2025"],
-			"notes": "Modeled on DESNZ 'Coal (industrial)' (UK-context hard coal). DESNZ has no rank-based terms; its categories are functional (industrial/domestic/electricity-generation/coking). No density is given by DESNZ (coal is sold by mass) → volume↔mass shows 'not available'. IPCC 2006 Other Bituminous Coal NCV 25.8 MJ/kg, CO2 94,600 kg/TJ. For anthracite/lignite specifically, use the dedicated rank-based entries (IPCC-sourced).",
+			"notes": "Modeled on DESNZ 'Coal (industrial)' (UK-context hard coal). DESNZ has no rank-based terms; its categories are functional (industrial/domestic/electricity-generation/coking), and the other three now ship as their own entries because their factors differ by up to 42% per tonne. No density is given by DESNZ (coal is sold by mass) → volume↔mass shows 'not available'. IPCC 2006 Other Bituminous Coal NCV 25.8 MJ/kg, CO2 94,600 kg/TJ. For anthracite/lignite specifically, use the dedicated rank-based entries (IPCC-sourced).",
+			"related_fuels": [
+				"coal-domestic",
+				"coking-coal",
+				"coal-electricity-generation",
+				"lignite",
+				"anthracite"
+			],
 			"warnings": [
-				"Coal energy and emission factors vary widely by rank, region and moisture/ash content. This entry is DESNZ 'Coal (industrial)' (UK context). No density is available (coal is sold by mass), so volume conversions are not available."
+				"Coal energy and emission factors vary widely by rank, region and moisture/ash content. This entry is the INDUSTRIAL grade, DESNZ 'Coal (industrial)' (UK context). Coal burned in a household stove ('coal (domestic)') emits about 21% more CO2e per tonne, and the coking and power-station grades differ again — check you are on the right one.",
+				"No density is available (coal is sold by mass), so volume conversions are not available."
+			]
+		},
+		{
+			"id": "coal-domestic",
+			"names": ["coal (domestic)", "domestic coal"],
+			"aliases": ["house coal", "household coal"],
+			"category": "coal",
+			"phase": "solid",
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "28.613",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Coal (domestic)' Net CV 28.613 GJ/tonne = 28.613 MJ/kg (7.948 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "30.119",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Coal (domestic)' Gross CV 30.119 GJ/tonne = 30.119 MJ/kg (8.366 kWh/kg)."
+				}
+			],
+			"emission_factor_ids": ["coal-domestic-co2e-desnz"],
+			"related_fuels": ["hard-coal", "coking-coal", "coal-electricity-generation"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 2025 'Coal (domestic)' — coal burned in household stoves and open fires. It is NOT the industrial grade that the bare 'coal' / 'hard coal' entry carries: 2904.95234 kgCO2e/tonne against 2395.28994, about 21% more, mostly because domestic combustion is less complete (DESNZ's CH4 component is 240.352 kg/tonne here against 7.6384 for industrial coal). No density is recorded for any coal grade — coal is sold by mass — so volume↔mass shows 'not available'.",
+			"warnings": [
+				"Coal energy and emission factors vary widely by rank, region and moisture/ash content. This entry is DESNZ 'Coal (domestic)' (UK context). No density is available (coal is sold by mass), so volume conversions are not available."
+			]
+		},
+		{
+			"id": "coking-coal",
+			"names": ["coking coal"],
+			"aliases": ["metallurgical coal", "met coal", "kokskohle", "coke coal"],
+			"category": "coal",
+			"phase": "solid",
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "30.24",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Coking Coal' Net CV 30.24 GJ/tonne = 30.24 MJ/kg (8.4 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "31.832",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Coking Coal' Gross CV 31.832 GJ/tonne = 31.832 MJ/kg (8.842 kWh/kg)."
+				}
+			],
+			"emission_factor_ids": ["coking-coal-co2e-desnz"],
+			"related_fuels": ["hard-coal", "coal-domestic", "coal-electricity-generation"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 2025 'Coking Coal' — the metallurgical grade coked for steelmaking, and the highest-emitting of DESNZ's four coal rows at 3164.65002 kgCO2e/tonne (industrial coal is 2395.28994). IPCC 2006 also lists coking coal separately (NCV 28.2 MJ/kg, CO2 94,600 kg/TJ): a different figure from a different source, shown for reference and never averaged with this one. No density is recorded (coal is sold by mass).",
+			"warnings": [
+				"Coal energy and emission factors vary widely by rank, region and moisture/ash content. This entry is DESNZ 'Coking Coal' (UK context). No density is available (coal is sold by mass), so volume conversions are not available."
+			]
+		},
+		{
+			"id": "coal-electricity-generation",
+			"names": ["coal (electricity generation)", "power station coal"],
+			"aliases": ["electricity generation coal", "power generation coal", "generation coal"],
+			"category": "coal",
+			"phase": "solid",
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "23.826",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Coal (electricity generation)' Net CV 23.826 GJ/tonne = 23.826 MJ/kg (6.618 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "25.08",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 'Coal (electricity generation)' Gross CV 25.08 GJ/tonne = 25.08 MJ/kg."
+				}
+			],
+			"emission_factor_ids": ["coal-electricity-generation-co2e-desnz"],
+			"related_fuels": ["hard-coal", "coal-domestic", "coking-coal"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 2025 'Coal (electricity generation)' — the grade burned in UK power stations. It has both the lowest calorific value (23.826 GJ/tonne) and the lowest CO2e per tonne (2225.22448) of DESNZ's four coal rows, so using it for a household or industrial figure understates both. No density is recorded (coal is sold by mass).",
+			"warnings": [
+				"Coal energy and emission factors vary widely by rank, region and moisture/ash content. This entry is DESNZ 'Coal (electricity generation)' (UK context). No density is available (coal is sold by mass), so volume conversions are not available."
 			]
 		},
 		{
@@ -871,6 +975,7 @@
 			"emission_factor_ids": ["lignite-co2-ipcc"],
 			"source_refs": ["ipcc-2006-v2"],
 			"notes": "Lignite (brown coal) uses the IPCC's 2006 global default figures. DESNZ groups coal by how it's used rather than by geological rank, so we use the IPCC's rank-based tables (Table 1.2 for calorific value, Table 2.2 for emissions) instead. No density is given in the source, so volume conversions are not available. The IPCC table only provides a net calorific value (NCV), not a higher heating value (HHV, also called gross calorific value or GCV), so that figure is shown as 'not available' too.",
+			"related_fuels": ["hard-coal", "anthracite"],
 			"warnings": [
 				"Lignite is extremely variable (moisture/ash): the IPCC net calorific value has a 95% range of 5.5–21.6 MJ/kg. Treat any lignite energy figure as a rough estimate. No density available → volume conversions not available."
 			]
@@ -897,6 +1002,7 @@
 			"emission_factor_ids": ["anthracite-co2-ipcc"],
 			"source_refs": ["ipcc-2006-v2"],
 			"notes": "Anthracite, IPCC 2006 global default (rank-based). DESNZ has no rank-based term. No density in the source → volume conversions not available. HHV/GCV not available from IPCC Table 1.2 (NCV only) → shows 'not available'.",
+			"related_fuels": ["hard-coal", "lignite"],
 			"warnings": [
 				"No density available (coal is sold by mass) → volume conversions not available. HHV/GCV not available from the IPCC source used."
 			]
@@ -1009,7 +1115,8 @@
 			"notes": "DESNZ 2025 Bioethanol. Scope-1 CO2e (CH4+N2O; biogenic CO2 netted to zero) is a separate factor from the biogenic combustion CO2 ('outside of scopes'). IPCC 2006 Biogasoline NCV 27.0 MJ/kg (wide range 13.6–54.0, 'ethanol theoretical'), raw CO2 70,800 kg/TJ.",
 			"warnings": [
 				"Biogenic CO2 from ethanol combustion is reported on a SEPARATE line ('outside of scopes'), not silently zeroed."
-			]
+			],
+			"related_fuels": ["gasoline"]
 		},
 		{
 			"id": "biodiesel",
@@ -1082,7 +1189,8 @@
 			"warnings": [
 				"Biogas energy content varies with its methane fraction (typically 50–70% CH4, balance CO2). The figure is representative.",
 				"Biogenic CO2 from biogas combustion is reported on a SEPARATE line ('outside of scopes'), not silently zeroed."
-			]
+			],
+			"related_fuels": ["natural-gas", "methane"]
 		},
 		{
 			"id": "electricity",
