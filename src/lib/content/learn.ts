@@ -62,7 +62,7 @@ export const LEARN_TOPICS: LearnTopic[] = [
 		example: '1 MMBTU',
 		relatedUnits: ['btu', 'kilobtu', 'mmbtu'],
 		sources: ['nist-sp811', 'spec-conversion-rules'],
-		appliesToUnits: ['btu', 'kilobtu', 'mmbtu']
+		appliesToUnits: ['btu', 'kilobtu', 'mmbtu', 'quad']
 	},
 	{
 		slug: 'what-is-a-therm',
@@ -108,7 +108,28 @@ export const LEARN_TOPICS: LearnTopic[] = [
 		title: 'HHV/GCV vs LHV/NCV',
 		summary:
 			'Higher heating value counts the heat of condensing water vapour; lower heating value does not. The gap can be 5–20%.',
-		relatedFuels: ['natural-gas', 'hydrogen', 'wood-pellets'],
+		relatedFuels: [
+			'crude-oil',
+			'gasoline',
+			'diesel',
+			'heating-oil',
+			'kerosene',
+			'lpg',
+			'propane',
+			'butane',
+			'natural-gas',
+			'methane',
+			'lng',
+			'hydrogen',
+			'hard-coal',
+			'lignite',
+			'anthracite',
+			'wood-logs',
+			'wood-pellets',
+			'ethanol',
+			'biodiesel',
+			'biogas'
+		],
 		sources: ['spec-conversion-rules'],
 		appliesToUnits: ['mj_per_kg', 'kwh_per_kg', 'mj_per_m3', 'kwh_per_m3']
 	},
@@ -128,6 +149,18 @@ export const LEARN_TOPICS: LearnTopic[] = [
 		summary:
 			'CO₂ is only carbon dioxide; CO₂e bundles other greenhouse gases by their warming potential. There is no conversion between them.',
 		relatedUnits: ['kilogram_co2', 'kilogram_co2e'],
+		relatedFuels: [
+			'lpg',
+			'propane',
+			'butane',
+			'hydrogen',
+			'wood-logs',
+			'wood-pellets',
+			'ethanol',
+			'biodiesel',
+			'biogas',
+			'electricity'
+		],
 		sources: ['spec-conversion-rules'],
 		appliesToUnits: [
 			'gram_co2',
@@ -135,7 +168,16 @@ export const LEARN_TOPICS: LearnTopic[] = [
 			'tonne_co2',
 			'gram_co2e',
 			'kilogram_co2e',
-			'tonne_co2e'
+			'tonne_co2e',
+			'g_co2_per_kwh',
+			'g_co2e_per_kwh',
+			'kg_co2_per_gj',
+			'kg_co2_per_l',
+			'kg_co2_per_kg',
+			'kg_co2_per_m3',
+			'kg_co2e_per_l',
+			'kg_co2e_per_kg',
+			'kg_co2e_per_m3'
 		]
 	},
 	{
@@ -143,7 +185,20 @@ export const LEARN_TOPICS: LearnTopic[] = [
 		title: 'Why fuel conversions are approximate',
 		summary:
 			'Density, calorific value and emission factors are material properties that vary — so fuel results are sourced estimates, not constants.',
-		relatedFuels: ['diesel', 'natural-gas', 'wood-pellets'],
+		relatedFuels: [
+			'crude-oil',
+			'gasoline',
+			'diesel',
+			'heating-oil',
+			'kerosene',
+			'natural-gas',
+			'lng',
+			'hard-coal',
+			'lignite',
+			'anthracite',
+			'wood-logs',
+			'wood-pellets'
+		],
 		sources: ['spec-conversion-rules']
 	},
 	{
@@ -152,7 +207,9 @@ export const LEARN_TOPICS: LearnTopic[] = [
 		summary:
 			'A kWh of grid electricity has no single carbon factor — it depends on the country, the year and even the time of day.',
 		relatedUnits: ['kilowatt_hour', 'g_co2e_per_kwh'],
-		sources: ['spec-conversion-rules']
+		relatedFuels: ['electricity'],
+		sources: ['spec-conversion-rules'],
+		appliesToUnits: ['kilowatt_hour', 'g_co2e_per_kwh']
 	},
 	{
 		slug: 'food-calories',

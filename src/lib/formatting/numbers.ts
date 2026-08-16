@@ -49,11 +49,16 @@ export function usesApproxMarker(exactness: Exactness): boolean {
  * return a plain (non-exponential) decimal string, trimming redundant trailing
  * zeros beyond the point but keeping integer magnitude.
  */
-export function roundToSigFigs(value: string, sigFigs: number): string {
+export function roundToSigFigs(
+	value: string,
+	sigFigs: number,
+	/** Rounding mode; defaults to half-to-even (§C.7 rule 5, first half). */
+	mode: Decimal.Rounding = Decimal.ROUND_HALF_EVEN
+): string {
 	const d = new Decimal(value);
 	if (d.isZero()) return '0';
 	const sd = Math.min(15, Math.max(1, Math.floor(sigFigs) || 1));
-	const rounded = d.toSignificantDigits(sd, Decimal.ROUND_HALF_EVEN);
+	const rounded = d.toSignificantDigits(sd, mode);
 	// toFixed() avoids exponential notation for the value ranges we handle.
 	return trimTrailingZeros(rounded.toFixed());
 }
@@ -96,8 +101,11 @@ export function formatRange(
 	opts: { maxExactSigFigs?: number } = {}
 ): string {
 	const sig = sigFigsFor(exactness, opts.maxExactSigFigs ?? 6);
-	const lo = withThousandsSeparators(roundToSigFigs(low, sig));
-	const hi = withThousandsSeparators(roundToSigFigs(high, sig));
+	// §C.7 rule 5, second half: bounds round OUTWARD. Rounding them to nearest
+	// pulls them inward, so the stated range understates the real spread —
+	// anthracite's 8.9444 kWh upper bound displayed as 8.94.
+	const lo = withThousandsSeparators(roundToSigFigs(low, sig, Decimal.ROUND_FLOOR));
+	const hi = withThousandsSeparators(roundToSigFigs(high, sig, Decimal.ROUND_CEIL));
 	const prefix = usesApproxMarker(exactness) ? '~' : '';
 	return `${prefix}${lo}–${hi}`;
 }

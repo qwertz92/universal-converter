@@ -10,7 +10,10 @@
 		{ href: '/fuels', label: 'Fuels' },
 		{ href: '/learn', label: 'Learn' },
 		{ href: '/methodology', label: 'Methodology' },
-		{ href: '/sources', label: 'Sources' }
+		{ href: '/sources', label: 'Sources' },
+		// A first-time visitor's "what is this and what can't it do?" page was
+		// reachable only from the footer.
+		{ href: '/about', label: 'About' }
 	] as const;
 
 	let menuOpen = $state(false);
@@ -53,7 +56,7 @@
 					/>
 				</svg>
 			</span>
-			<span class="text-[0.98rem]">Universal Converter</span>
+			<span class="text-[0.98rem] whitespace-nowrap">Universal Converter</span>
 		</a>
 
 		<nav class="ml-auto hidden items-center gap-1 md:flex" aria-label="Primary">
@@ -76,7 +79,7 @@
 			<button
 				type="button"
 				bind:this={menuButtonEl}
-				class="inline-flex h-9 w-9 items-center justify-center rounded-lg border md:hidden"
+				class="inline-flex h-10 w-10 items-center justify-center rounded-lg border md:hidden"
 				style="border-color:var(--border)"
 				aria-label="Toggle navigation menu"
 				aria-expanded={menuOpen}

@@ -32,12 +32,17 @@
 	style="border-color:var(--border);background:var(--surface)"
 	aria-label={meta.title}
 >
-	<header class="mb-3 flex items-baseline justify-between gap-3">
+	<!-- Stacks below `sm` so the gloss keeps its own line instead of fighting the
+	     title for width — it is shown at every size because "CO₂ and CO₂e are
+	     separate" is exactly what a first-time reader on a phone needs most. -->
+	<header
+		class="mb-3 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3"
+	>
 		<h3 class="text-sm font-semibold tracking-wide uppercase" style="color:var(--text)">
 			{meta.title}{headerSuffix}
 		</h3>
 		{#if meta.blurb}
-			<p class="hidden text-xs sm:block" style="color:var(--text-faint)">{meta.blurb}</p>
+			<p class="text-xs sm:text-right" style="color:var(--text-faint)">{meta.blurb}</p>
 		{/if}
 	</header>
 

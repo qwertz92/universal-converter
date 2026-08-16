@@ -2,7 +2,7 @@
 	/** Site footer: honest versioned positioning, section links, OGL attribution
 	 *  (docs/sources.md: DESNZ-derived figures require the standard OGL line). */
 	import { resolve } from '$app/paths';
-	import pkg from '../../../../package.json';
+	import { APP_VERSION } from '$lib/version';
 	const cols = [
 		{
 			title: 'Convert',
@@ -24,7 +24,9 @@
 			title: 'Project',
 			links: [
 				{ href: '/about', label: 'About' },
-				{ href: '/methodology', label: 'Exactness levels' }
+				// Deep-links the legend section rather than repeating the bare
+				// /methodology link that already sits in the column to the left.
+				{ href: '/methodology#exactness-levels', label: 'Exactness levels' }
 			]
 		}
 	] as const;
@@ -68,11 +70,23 @@
 			style="border-color:var(--border);color:var(--text-faint)"
 		>
 			<span
-				>&copy; {year} Universal Converter · v{pkg.version} — an explanatory reference tool, not a compliance
+				>&copy; {year} Universal Converter · v{APP_VERSION} — an explanatory reference tool, not a compliance
 				calculator.</span
 			>
 			<span>Sources over invented numbers · exact vs. estimate kept distinct.</span>
 		</div>
+		<!-- No public issue tracker or contact address is published yet, so this
+		     points at the thing a reader can actually do today: check the figure
+		     against its own named source. -->
+		<p class="mt-3 text-xs" style="color:var(--text-faint)">
+			A number looks wrong? Every figure here is traceable — each result names the source it came
+			from, and the full register with publishers, years and licences is on the
+			<a
+				href={resolve('/sources')}
+				class="underline decoration-dotted underline-offset-2 hover:text-[var(--accent)]"
+				>sources page</a
+			>. If it still looks wrong, the source is the place to start.
+		</p>
 		<p class="mt-3 text-xs leading-relaxed" style="color:var(--text-faint)">
 			Contains public sector information licensed under the
 			<a

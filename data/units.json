@@ -147,7 +147,7 @@
 			"is_exact": true,
 			"exactness": "standard_definition",
 			"system": "convention",
-			"notes": "International Table (IT) calorie = 4.1868 J exactly (rulebook C.4). Differs from thermochemical calorie (4.184 J); v0.1 uses IT consistently with the IT BTU and therm.",
+			"notes": "The International Table (IT) calorie equals exactly 4.1868 joules. This differs from the thermochemical calorie (4.184 J). We use the IT definition consistently here, matching the IT BTU and IT therm.",
 			"source_refs": ["nist-sp811", "spec-conversion-rules"]
 		},
 		{
@@ -173,7 +173,7 @@
 			"is_exact": true,
 			"exactness": "standard_definition",
 			"system": "convention",
-			"notes": "The dietary 'Calorie' (capital C) is an alias for kcal (IT) = 4186.8 J. The parser flags that 'Calorie' was interpreted as kcal (rulebook C.4, D.7).",
+			"notes": "The dietary 'Calorie' (capital C) is another name for a kilocalorie (kcal, International Table definition) — 4186.8 joules. When you enter 'Calorie', this tool tells you it interpreted it as a kilocalorie, since the word is otherwise ambiguous.",
 			"source_refs": ["spec-conversion-rules"]
 		},
 		{
@@ -186,7 +186,7 @@
 			"is_exact": true,
 			"exactness": "standard_definition",
 			"system": "convention",
-			"notes": "International Table BTU = 1055.05585262 J exactly (rulebook C.4). Differs from thermochemical BTU (1054.35 J); v0.1 uses IT consistently.",
+			"notes": "The International Table (IT) British thermal unit (BTU) equals exactly 1055.05585262 joules. This differs from the thermochemical BTU (1054.35 J); we use the IT definition consistently throughout.",
 			"source_refs": ["nist-sp811", "spec-conversion-rules"]
 		},
 		{
@@ -225,7 +225,7 @@
 			"is_exact": true,
 			"exactness": "standard_definition",
 			"system": "convention",
-			"notes": "US therm = 100 000 BTU_IT = 1.05505585262e8 J (rulebook C.4), derived from the NIST SP 811 IT BTU. DESNZ's 2025 Conversions tab gives the consistent derived figure 1 therm = 0.105506 GJ = 29.30711 kWh. The EC therm differs at the ~1e-5 level; v0.1 uses the US therm and labels it.",
+			"notes": "The US therm equals 100,000 BTU (International Table definition), or 1.05505585262 × 10⁸ joules — derived from the IT BTU value published in NIST Special Publication 811. DESNZ's 2025 conversion tables give a matching derived figure: 1 therm = 0.105506 GJ = 29.30711 kWh. The EC (European) therm differs by roughly 0.001% (about one part in 100,000); this converter uses the US therm and labels it as such.",
 			"source_refs": ["nist-sp811", "uk-desnz-ghg-2025", "spec-conversion-rules"]
 		},
 		{
@@ -251,7 +251,7 @@
 			"is_exact": true,
 			"exactness": "standard_definition",
 			"system": "convention",
-			"notes": "1 toe = 41.868 GJ (IEA/OECD convention, net basis; derived from 10^7 kcal_IT). A convention, NOT a property of any real oil (rulebook C.3).",
+			"notes": "1 tonne of oil equivalent (toe) equals 41.868 GJ. This is an IEA/OECD convention on a net-energy basis, derived from 10⁷ kilocalories (International Table definition) — a fixed conversion factor, not a physical property of any real oil.",
 			"source_refs": ["iea-unit-conventions", "spec-conversion-rules"]
 		},
 		{
@@ -290,7 +290,7 @@
 			"is_exact": true,
 			"exactness": "standard_definition",
 			"system": "convention",
-			"notes": "1 boe = 5.8 MMBTU_IT (US/IRS convention) = 6119323945.196 J (~6.12 GJ), derived from the NIST SP 811 IT BTU. This is an ENERGY-EQUIVALENCE unit, NOT a physical 42-gallon barrel (that is the 'barrel' volume unit) and NOT the measured energy of a specific crude (rulebook C.3, D.4, D.5). boe is convention-dependent, NOT a physical constant: other conventions exist (e.g. USGS 6,000 scf gas = 1 boe; IEA ~7.15-7.40 boe/toe). Results must state '5.8 MMBTU convention'.",
+			"notes": "1 barrel of oil equivalent (boe) equals 5.8 million BTU (International Table definition) — a US/IRS convention — which is 6,119,323,945.196 joules (about 6.12 GJ), derived from the BTU value in NIST Special Publication 811. This is an energy-equivalence unit, not a physical 42-gallon barrel (that's the separate 'barrel' volume unit) and not the measured energy content of any specific batch of crude oil. boe is convention-dependent, not a fixed physical constant — other conventions exist, e.g. the USGS uses 6,000 standard cubic feet of gas = 1 boe, and the IEA uses roughly 7.15–7.40 boe per toe. Results always state which convention (here, '5.8 million BTU') is being used.",
 			"source_refs": ["nist-sp811", "spec-conversion-rules"]
 		},
 		{
@@ -303,7 +303,7 @@
 			"is_exact": true,
 			"exactness": "standard_definition",
 			"system": "convention",
-			"notes": "1 tce = 29.3076 GJ (IEA/UN convention = 7 Gcal_IT per tonne; 1 toe = 1.428571... tce). Not a property of any real coal (rulebook C.3). Analogous fixed-constant treatment to toe.",
+			"notes": "1 tonne of coal equivalent (tce) equals 29.3076 GJ. This is an IEA/UN convention, equal to 7 gigacalories (International Table definition) per tonne; 1 toe equals 1.428571... tce. Like toe, this is a fixed conversion factor, not a property of any real coal.",
 			"source_refs": ["iea-unit-conventions", "spec-conversion-rules"]
 		},
 		{
@@ -414,7 +414,7 @@
 			"is_exact": true,
 			"exactness": "exact",
 			"system": "SI",
-			"notes": "Metric tonne = 1000 kg. The bare word 'ton' is AMBIGUOUS (tonne vs short ton vs long ton) and is disambiguated by the parser (rulebook D.9).",
+			"notes": "A metric tonne equals 1000 kg. The bare word 'ton' is ambiguous — it could mean a metric tonne, a US short ton, or a UK long ton — so this tool determines which one is meant.",
 			"source_refs": ["nist-sp811"]
 		},
 		{
@@ -504,7 +504,7 @@
 			"is_exact": true,
 			"exactness": "exact",
 			"system": "SI",
-			"notes": "SI base unit of volume for this engine. For NATURAL GAS a bare m^3 is a normal cubic metre (Nm^3) at a stated reference condition (rulebook C.2, D.3).",
+			"notes": "The SI base unit of volume used throughout this converter. For natural gas specifically, a plain m³ is treated as a 'normal cubic metre' (Nm³) — measured at a stated reference temperature and pressure.",
 			"source_refs": ["nist-sp811"]
 		},
 		{
@@ -530,7 +530,7 @@
 			"is_exact": true,
 			"exactness": "exact",
 			"system": "US",
-			"notes": "US liquid gallon = 231 in^3 = 0.003 785 411 784 m^3 exactly (~20% smaller than the imperial gallon). The bare word 'gallon' is ambiguous; parser defaults to US and labels it (rulebook D.10).",
+			"notes": "A US liquid gallon equals 231 cubic inches, or exactly 0.003 785 411 784 m³ — about 20% smaller than the imperial gallon. The bare word 'gallon' is ambiguous, so this tool defaults to the US gallon and labels it as such.",
 			"source_refs": ["nist-sp811"]
 		},
 		{
@@ -556,7 +556,7 @@
 			"is_exact": true,
 			"exactness": "exact",
 			"system": "US",
-			"notes": "Petroleum barrel = 42 US gallons = 0.158 987 294 928 m^3 exactly. A pure VOLUME unit; it does NOT 'contain' any fixed energy without a fuel + density + heating value. Distinct from 'boe' (rulebook C.3, D.4).",
+			"notes": "A petroleum barrel equals 42 US gallons, or exactly 0.158 987 294 928 m³. It is a pure volume unit: on its own, it does not correspond to any fixed amount of energy — you also need to know the specific fuel's density and heating value for that. It is distinct from 'boe' (barrel of oil equivalent).",
 			"source_refs": ["nist-sp811", "spec-conversion-rules"]
 		},
 		{
@@ -619,7 +619,7 @@
 			"is_exact": false,
 			"exactness": "standard_definition",
 			"system": "convention",
-			"notes": "v0.1 defines 'year' as the Julian year = 365.25 days = 31 557 600 s, and labels it (rulebook B.1, D.13). It is never silently equated to 365 or 360 days.",
+			"notes": "This converter defines 'year' as the Julian year — 365.25 days, or 31,557,600 seconds — and labels it as such. It is never silently treated as exactly 365 or 360 days.",
 			"source_refs": ["spec-conversion-rules"]
 		},
 		{
@@ -632,7 +632,7 @@
 			"is_exact": true,
 			"exactness": "exact",
 			"system": "SI",
-			"notes": "Pseudo-dimension CO2 mass. Base = kg CO2. NO conversion path to CO2e (rulebook B.2, C.5, D.6).",
+			"notes": "A unit for measuring the mass of CO₂ (carbon dioxide) itself — its base unit is kilograms of CO₂. This tool never converts a CO₂ figure into a CO₂e figure: they measure different things and mixing them up would be misleading.",
 			"source_refs": ["spec-conversion-rules"]
 		},
 		{
@@ -645,7 +645,7 @@
 			"is_exact": true,
 			"exactness": "exact",
 			"system": "SI",
-			"notes": "Base unit of the CO2 mass pseudo-dimension.",
+			"notes": "The base unit for measuring CO₂ mass.",
 			"source_refs": ["spec-conversion-rules"]
 		},
 		{
@@ -670,7 +670,7 @@
 			"is_exact": true,
 			"exactness": "exact",
 			"system": "SI",
-			"notes": "Pseudo-dimension CO2e mass — SEPARATE from CO2. CO2e depends on the GWP set. NO conversion path to CO2 (rulebook B.2, C.5, D.6).",
+			"notes": "A unit for measuring CO₂e (carbon dioxide equivalent) mass — kept separate from plain CO₂. A CO₂e figure depends on which global warming potential (GWP) reference set was used to combine different greenhouse gases into one number. This tool never converts a CO₂e figure into a CO₂ figure: they measure different things.",
 			"source_refs": ["spec-conversion-rules"]
 		},
 		{
@@ -683,7 +683,7 @@
 			"is_exact": true,
 			"exactness": "exact",
 			"system": "SI",
-			"notes": "Base unit of the CO2e mass pseudo-dimension.",
+			"notes": "The base unit for measuring CO₂e mass.",
 			"source_refs": ["spec-conversion-rules"]
 		},
 		{
@@ -708,7 +708,7 @@
 			"is_exact": true,
 			"exactness": "exact",
 			"system": "display",
-			"notes": "Display/pseudo-dimension unit for gravimetric energy density. to_base_factor is nominal (no cross-dimension bridging via this factor).",
+			"notes": "Used to display energy-per-mass results (energy density by weight). This unit is for showing results only — it is not used to convert between other kinds of quantities.",
 			"source_refs": ["spec-conversion-rules"]
 		},
 		{
@@ -733,7 +733,7 @@
 			"is_exact": true,
 			"exactness": "exact",
 			"system": "display",
-			"notes": "Display/pseudo-dimension unit for volumetric energy density.",
+			"notes": "Used to display energy-per-volume results (energy density by volume).",
 			"source_refs": ["spec-conversion-rules"]
 		},
 		{
@@ -782,7 +782,7 @@
 			"is_exact": true,
 			"exactness": "exact",
 			"system": "display",
-			"notes": "Display/pseudo-dimension unit for emission intensity. CO2 metric.",
+			"notes": "Used to display emission-intensity results — how much CO₂ is released per kilowatt-hour of energy. This is a CO₂ (not CO₂e) metric.",
 			"source_refs": ["spec-conversion-rules"]
 		},
 		{
@@ -895,7 +895,7 @@
 			"is_exact": true,
 			"exactness": "exact",
 			"system": "display",
-			"notes": "Fuel-density unit (mass per volume). Display/registry only; the fuel pipeline consumes it via resolveDensity, never auto-bridged. to_base_factor (kg/L -> kg/m3) is nominal metadata; density conversion lives in src/lib/fuels/density.ts.",
+			"notes": "A fuel-density unit (mass per volume, e.g. kilograms per litre). It is used for showing density figures only; density conversions for fuels are handled separately and are never automatically mixed into other unit conversions.",
 			"source_refs": ["spec-conversion-rules"]
 		},
 		{
@@ -908,7 +908,7 @@
 			"is_exact": true,
 			"exactness": "exact",
 			"system": "display",
-			"notes": "Fuel-density unit (mass per volume), SI base for density here. Display/registry only.",
+			"notes": "A fuel-density unit (mass per volume) — the base unit this converter uses internally for density.",
 			"source_refs": ["spec-conversion-rules"]
 		},
 		{
@@ -921,7 +921,7 @@
 			"is_exact": true,
 			"exactness": "exact",
 			"system": "display",
-			"notes": "Fuel-density unit (mass per volume). 1 g/cm3 = 1 kg/L = 1000 kg/m3. Display/registry only.",
+			"notes": "A fuel-density unit (mass per volume): 1 g/cm³ = 1 kg/L = 1000 kg/m³.",
 			"source_refs": ["spec-conversion-rules"]
 		}
 	]

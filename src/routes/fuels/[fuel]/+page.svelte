@@ -21,9 +21,19 @@
 		return all.filter((f) => ids.has(f.id) || f.fuel_id === fuel.id);
 	});
 
-	// A representative conversion: 1 m³ for gases, 1 L for liquids, 1 kg for solids.
+	// A representative conversion: 1 m³ for gases, 1 kg for solids, 1 L for
+	// liquids — and 1 kWh for a fuel with no phase and no density at all, which
+	// is grid electricity. Falling through to litres there asked the engine for
+	// "1 L electricity", a category error on the page for that very fuel.
 	const sampleQuery = $derived.by(() => {
-		const unit = fuel.phase === 'gas' ? 'm³' : fuel.phase === 'solid' ? 'kg' : 'L';
+		const unit =
+			fuel.phase === 'gas'
+				? 'm³'
+				: fuel.phase === 'solid'
+					? 'kg'
+					: fuel.density || fuel.phase === 'liquid'
+						? 'L'
+						: 'kWh';
 		return `1 ${unit} ${fuel.names[0]}`;
 	});
 
@@ -58,7 +68,9 @@
 />
 
 <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
-	<Breadcrumbs items={[{ href: resolve('/fuels'), label: 'Fuels' }, { label: fuel.category }]} />
+	<Breadcrumbs
+		items={[{ href: resolve('/fuels'), path: '/fuels', label: 'Fuels' }, { label: fuel.category }]}
+	/>
 
 	<header class="mb-8">
 		<div class="flex flex-wrap items-center gap-3">
@@ -108,7 +120,7 @@
 	<div class="grid gap-4 sm:grid-cols-2">
 		<!-- Density -->
 		<section
-			class="rounded-[var(--radius-card)] border p-5"
+			class="min-w-0 rounded-[var(--radius-card)] border p-5"
 			style="border-color:var(--border);background:var(--surface)"
 		>
 			<h2
@@ -132,7 +144,7 @@
 
 		<!-- Heating values -->
 		<section
-			class="rounded-[var(--radius-card)] border p-5"
+			class="min-w-0 rounded-[var(--radius-card)] border p-5"
 			style="border-color:var(--border);background:var(--surface)"
 		>
 			<h2
@@ -215,11 +227,13 @@
 				</table>
 			</div>
 			<p class="mt-3 text-xs" style="color:var(--text-faint)">
-				CO₂ ≠ CO₂e — separate metrics, never converted into one another.
+				CO₂ ≠ CO₂e — separate metrics, never converted into one another.{#if factors.some((f) => f.pollutant === 'biogenic_CO2' || f.biogenic)}
+					Biogenic CO₂ is listed on its own line: the carbon still leaves the stack, but it is
+					accounted for separately from fossil CO₂ rather than added to it.{/if}
 				<a
 					href={resolve('/learn/co2-vs-co2e')}
 					class="hover:text-[var(--accent)]"
-					style="color:var(--text-muted)">Why? →</a
+					style="color:var(--text-muted)">What these metrics mean →</a
 				>
 			</p>
 		{/if}

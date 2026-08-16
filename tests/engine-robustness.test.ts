@@ -131,10 +131,36 @@ describe('EngineOptions hardening', () => {
 });
 
 describe('exactness labeling fixes', () => {
-	it('global-region IPCC factors are source_based, NOT region_year_specific', () => {
-		const co2 = results('1 kg lignite').filter((r) => r.category === 'emissions');
-		const fossil = co2.find((r) => r.unit_id === 'kilogram_co2');
-		expect(fossil?.exactness).toBe('source_based');
+	it('global-region IPCC factors are never labeled region_year_specific', () => {
+		// "global" is a coverage statement, not a geographic specificity.
+		for (const fuelQuery of ['1 kg lignite', '1 kg anthracite', '1 L crude oil']) {
+			const fossil = results(fuelQuery)
+				.filter((r) => r.category === 'emissions')
+				.find((r) => r.unit_id === 'kilogram_co2');
+			expect(fossil?.exactness, fuelQuery).not.toBe('region_year_specific');
+		}
+	});
+
+	it('a per-energy factor inherits the exactness of the energy it was applied to', () => {
+		// Lignite's own source records a 5.5–21.6 MJ/kg spread, so its energy is
+		// `estimated`. The CO2 is that energy × a factor, and cannot be more
+		// precise than its weakest input (rulebook §A, §C.7 rule 1). It used to
+		// print as `source_based` with four significant figures.
+		const co2 = results('1 kg lignite')
+			.filter((r) => r.category === 'emissions')
+			.find((r) => r.unit_id === 'kilogram_co2');
+		expect(co2?.exactness).toBe('estimated');
+		expect(co2?.value?.startsWith('~')).toBe(true);
+	});
+
+	it('a per-volume factor is unaffected by the energy path', () => {
+		// Diesel's CO2 factor is kg per litre, so no heating value is on the path
+		// and the energy spread cannot weaken it. It keeps the exactness its own
+		// provenance earns (DESNZ, UK 2025 → region + year).
+		const co2 = results('1 L diesel')
+			.filter((r) => r.category === 'emissions')
+			.find((r) => r.unit_id === 'kilogram_co2');
+		expect(co2?.exactness).toBe('region_year_specific');
 	});
 
 	it('lignite energy (spread ratio ~3.9) is estimated with ~ and a CONVERTED per-unit range', () => {
@@ -143,11 +169,14 @@ describe('exactness labeling fixes', () => {
 		const kwh = rows.find((r) => r.unit_id === 'kilowatt_hour');
 		expect(mj?.exactness).toBe('estimated');
 		expect(mj?.value?.startsWith('~')).toBe(true);
-		// Range converted into each row's own unit: MJ row 5.50–21.6, kWh row ≈1.53–6.0.
-		expect(Number(mj?.range?.low)).toBeCloseTo(5.5, 3);
-		expect(Number(mj?.range?.high)).toBeCloseTo(21.6, 3);
-		expect(Number(kwh?.range?.low)).toBeCloseTo(new Decimal('5.5').div('3.6').toNumber(), 3);
-		expect(Number(kwh?.range?.high)).toBeCloseTo(new Decimal('21.6').div('3.6').toNumber(), 3);
+		// Range converted into each row's own unit: MJ row 5.5–21.6, kWh row
+		// 5.5/3.6 = 1.5277… to 6. Bounds are rounded OUTWARD to the row's cap
+		// (§C.7 rule 5), so the low bound floors to 1.52 rather than rounding up
+		// to 1.53 and understating the spread.
+		expect(mj?.range).toEqual({ low: '5.5', high: '21.6' });
+		expect(kwh?.range?.low).toBe('1.52');
+		expect(Number(kwh?.range?.low)).toBeLessThan(new Decimal('5.5').div('3.6').toNumber());
+		expect(Number(kwh?.range?.high)).toBeGreaterThanOrEqual(6);
 	});
 
 	it('diesel (narrow/no spread) stays source_based', () => {

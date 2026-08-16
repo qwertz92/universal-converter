@@ -55,14 +55,27 @@ export function searchFuels(fuels: Fuel[], query: string, limit = 50): Fuel[] {
 		.map((x) => x.f);
 }
 
-/** A trailing-edge debounce returning a cancelable wrapped function. */
-export function debounce<A extends unknown[]>(
-	fn: (...args: A) => void,
-	ms: number
-): (...args: A) => void {
+/**
+ * A trailing-edge debounce. `cancel()` genuinely disarms a pending call — the
+ * doc used to promise that without providing it, so a conversion triggered
+ * directly (a chip, a fuel pick, an applied duration) could be overwritten
+ * milliseconds later by the keystroke that was still queued, leaving the
+ * displayed result disagreeing with the input box and the URL.
+ */
+export interface Debounced<A extends unknown[]> {
+	(...args: A): void;
+	cancel(): void;
+}
+
+export function debounce<A extends unknown[]>(fn: (...args: A) => void, ms: number): Debounced<A> {
 	let t: ReturnType<typeof setTimeout> | undefined;
-	return (...args: A) => {
+	const wrapped = (...args: A) => {
 		if (t) clearTimeout(t);
 		t = setTimeout(() => fn(...args), ms);
 	};
+	wrapped.cancel = () => {
+		if (t) clearTimeout(t);
+		t = undefined;
+	};
+	return wrapped;
 }

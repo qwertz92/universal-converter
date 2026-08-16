@@ -10,19 +10,24 @@ export const SCOPE_LABEL: Record<Scope, string> = {
 	direct_combustion: 'direct combustion',
 	scope_1: 'Scope 1 (direct)',
 	scope_2: 'Scope 2 (purchased energy)',
-	scope_3_upstream: 'Scope 3 upstream',
+	// Every sibling carries a plain-language gloss; this one is the least
+	// self-explanatory of them all, so it gets one too.
+	scope_3_upstream: 'Scope 3 upstream (indirect, before you buy it)',
 	well_to_tank: 'well-to-tank (upstream)',
 	tank_to_wheel: 'tank-to-wheel (combustion)',
 	well_to_wheel: 'well-to-wheel (lifecycle)',
+	outside_of_scopes: 'outside the scopes (biogenic, reported separately)',
 	unknown_or_mixed: 'unknown / mixed boundary'
 };
 
+/** Display labels use typeset subscripts, matching the site's prose (CO₂, not
+ *  CO2). The machine-readable keys stay ASCII — those are data, not copy. */
 export const POLLUTANT_LABEL: Record<Pollutant, string> = {
-	CO2: 'CO2',
-	CH4: 'CH4',
-	N2O: 'N2O',
-	CO2e: 'CO2e',
-	biogenic_CO2: 'biogenic CO2'
+	CO2: 'CO₂',
+	CH4: 'CH₄',
+	N2O: 'N₂O',
+	CO2e: 'CO₂e',
+	biogenic_CO2: 'biogenic CO₂'
 };
 
 /** Whether a pollutant is a CO2e-family metric (kept separate from CO2 family). */

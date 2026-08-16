@@ -211,6 +211,10 @@ export type Scope =
 	| 'well_to_tank'
 	| 'tank_to_wheel'
 	| 'well_to_wheel'
+	/** Reported outside the scope hierarchy entirely — biogenic combustion CO2,
+	 *  which leaves the stack when YOU burn the fuel but is accounted for
+	 *  separately by convention (§C.5). It is emphatically not "upstream". */
+	| 'outside_of_scopes'
 	| 'unknown_or_mixed';
 
 /**
@@ -345,6 +349,9 @@ export interface ConversionResult {
 	missing?: MissingContext[];
 	/** Free-text explanation for context_required / unsupported. */
 	explanation?: string;
+	/** True for the row the user explicitly asked for (`5 kWh to MJ`). The UI
+	 *  highlights it; every other group is still shown (rulebook §C.8). */
+	is_target?: boolean;
 	/** Illustrative (non-default) example rows, e.g. grid factors (rulebook §C.6). */
 	illustrative_examples?: IllustrativeExample[];
 }
@@ -416,6 +423,14 @@ export interface ConversionResultSet {
 		fuel_label?: string;
 		original_input?: string;
 	};
+	/** Echo of an explicitly requested target unit (`5 kWh to MJ`), when given. */
+	target?: {
+		unit_id: string;
+		unit_label: string;
+		dimension: Dimension;
+		/** False when the target could not be produced (the row explains why). */
+		resolved: boolean;
+	};
 	groups: ResultGroup[];
 	/** Aggregated meta collected across all results. */
 	assumptions: Assumption[];
@@ -446,12 +461,14 @@ export interface ParseError {
 		/** Value magnitude/length outside supported bounds (guards, not physics). */
 		| 'unsupported_value';
 	message: string;
-	/** For unknown_unit: closest-match unit ids to suggest. */
+	/** For unknown_unit: closest-match unit ids. For unknown_fuel: fuel names. */
 	suggestions?: string[];
 	/** For ambiguous_unit: the competing interpretations. */
 	interpretations?: Interpretation[];
 	/** The token that failed, for UI highlighting. */
 	token?: string;
+	/** A second, calmer line explaining what to do (or why it is out of scope). */
+	hint?: string;
 }
 
 /** The result of parsing free text (spec §8.2). */
@@ -460,6 +477,15 @@ export interface ParsedQuery {
 	unit_id: string;
 	dimension: Dimension;
 	fuel_id?: string;
+	/**
+	 * An explicitly requested target unit (`5 kWh to MJ`). It HIGHLIGHTS an
+	 * answer and guarantees that unit is present in the results — it never
+	 * suppresses the other groups (rulebook §C.8).
+	 */
+	target_unit_id?: string;
+	/** A duration parsed from the query (`5 kW for 3 h`) for the power→energy
+	 *  bridge. Still explicit: nothing is ever assumed (rulebook §B.3, §D.1). */
+	time?: Quantity;
 	/** 0..1 heuristic confidence in the parse. */
 	confidence: number;
 	/** Alias/interpretation notes to gently confirm in the UI (e.g. "'Calorie' → kcal"). */

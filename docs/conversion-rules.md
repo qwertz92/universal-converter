@@ -446,6 +446,44 @@ any warning, cited any source, or performed any non-trivial calculation.
 | **Fuel + energy** (`1 kWh diesel-equivalent`, `1 GJ natural gas`) | Energy; Mass & Volume of that fuel (inverse via HV + density); Emissions; Energy Density; Assumptions; Warnings; Sources; Formula. |
 | **Electricity** (`1 kWh electricity`) | Energy; **Emissions — context_required** (region/year picker + illustrative examples, §C.6); Formula. With a picked region/year that matches a cited factor (0.2), Emissions instead shows the input energy × factor as a `region_year_specific` GHG **mass**, labeled with the factor's own metric (CO2 vs CO2e). |
 
+Groups that produced a number are listed **before** groups that only ask for
+more context (0.3). `1 kg` leads with Mass, not with the "pick a fuel" prompt.
+
+### C.9 [DECISION] Query grammar: an explicit target highlights, it never filters (0.3)
+
+The accepted input shape is:
+
+```
+[filler] <number> <unit> [fuel] [(to|in|into|as|→|->|=) <target unit>] [(for|over|×|x) <duration>]
+```
+
+**Target.** `5 kWh to MJ` marks the MJ row as the requested answer: it is floated
+to the top of its group, echoed as `ConversionResultSet.target`, flagged
+`is_target`, and rendered as a headline. **Every other group is still shown.**
+This is deliberate — the product's value is the context around the number, and a
+target must not turn the tool into a single-answer box that hides the
+assumptions. A target unit outside the default display list (`1 kWh to cal`) is
+computed on demand so the request is always answerable.
+
+A target the fuel pipeline cannot reach is answered *as a prompt*, never
+omitted: `1 kg to kWh` returns `context_required: ["fuel"]`, and a pair with no
+physical path at all (`1 kWh to t CO2`) returns `unsupported` with the reason.
+Silently dropping a requested target would read as "there is no answer".
+
+**Duration.** `5 kW for 3 h` supplies the time that §D.1 requires; the tool still
+never assumes one. A duration parsed from the query wins over one passed through
+`EngineOptions`, because the query text is the one the user can see. A `for`
+phrase that is not a time quantity ("1 L diesel for cars") is never read as a
+duration.
+
+**Honest failure.** An unknown token is only ever offered a "did you mean" when
+the candidate is close *relative to the shorter string*; unrelated words get no
+suggestion at all rather than a misleading one. Quantities the tool genuinely
+does not model (temperature, length, pressure, speed, storage, currency,
+concentration) are named as out of scope with the reason, instead of being
+guessed at. That table is consulted **only after** the catalog fails to resolve
+a token, so it can never shadow a real unit.
+
 ---
 
 ## D. Pitfall catalog

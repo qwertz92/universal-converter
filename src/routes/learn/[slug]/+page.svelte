@@ -18,7 +18,9 @@
 <Seo title={topic.title} description={topic.summary} />
 
 <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
-	<Breadcrumbs items={[{ href: resolve('/learn'), label: 'Learn' }, { label: topic.title }]} />
+	<Breadcrumbs
+		items={[{ href: resolve('/learn'), path: '/learn', label: 'Learn' }, { label: topic.title }]}
+	/>
 
 	<header class="mb-6">
 		<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">{topic.title}</h1>

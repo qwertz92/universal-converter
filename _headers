@@ -1,0 +1,18 @@
+# Response headers for the Cloudflare Pages deployment.
+#
+# The site is static, has no accounts, no cookies and no user-generated content,
+# so this is defence in depth rather than a fix for a known hole. It matters
+# mostly because the app does render trusted HTML (Learn article bodies) and
+# JSON-LD, and because a reference tool people are asked to trust should not be
+# framable or sniffable.
+#
+# `script-src 'self' 'unsafe-inline'`: the pre-paint theme bootstrap in
+# app.html is an inline script, and SvelteKit emits inline hydration data.
+# 'unsafe-inline' is therefore load-bearing until those are nonce-based.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'

@@ -12,6 +12,8 @@
 	import ResultGroupCard from './ResultGroupCard.svelte';
 	import WarningsNote from './WarningsNote.svelte';
 	import SourceRefs from './SourceRefs.svelte';
+	import ExactnessBadge from '$lib/components/badges/ExactnessBadge.svelte';
+	import CopyButton from './CopyButton.svelte';
 
 	let {
 		resultSet,
@@ -26,22 +28,45 @@
 	const valueGroups = $derived(resultSet.groups.filter((g) => !META_KEYS.has(g.key)));
 
 	const input = $derived(resultSet.input);
+
+	/** The row the user explicitly asked for ("5 kWh to MJ"), when it produced a
+	 *  value — shown as a headline so the requested answer is the first thing
+	 *  read. Every other group still follows underneath. */
+	const answer = $derived.by(() => {
+		if (!resultSet.target?.resolved) return undefined;
+		return resultSet.groups.flatMap((g) => g.results).find((r) => r.is_target && r.value !== null);
+	});
 </script>
 
 <div class="space-y-4">
-	<!-- Input echo -->
+	<!-- Input echo — or, when a target was asked for, the answer itself. -->
 	<div
 		class="rounded-[var(--radius-card)] border px-4 py-3"
 		style="border-color:var(--border);background:var(--surface-2)"
 	>
 		<div class="text-xs font-medium tracking-wide uppercase" style="color:var(--text-faint)">
-			Converting
+			{answer ? 'Answer' : 'Converting'}
 		</div>
-		<div class="mt-0.5 text-lg font-semibold" style="color:var(--text)">
-			<span class="uc-num">{input.value}</span>
-			<span style="color:var(--text-muted)">{input.unit_label}</span>
-			{#if input.fuel_label}<span style="color:var(--accent)"> · {input.fuel_label}</span>{/if}
-		</div>
+		{#if answer}
+			<div class="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+				<div class="text-lg font-semibold sm:text-xl" style="color:var(--text)">
+					<span class="uc-num">{input.value}</span>
+					<span style="color:var(--text-muted)">{input.unit_label}</span>
+					{#if input.fuel_label}<span style="color:var(--accent)"> {input.fuel_label}</span>{/if}
+					<span class="mx-1.5" style="color:var(--text-faint)">=</span>
+					<span class="uc-num">{answer.value}</span>
+					<span style="color:var(--text-muted)">{answer.unit_label}</span>
+				</div>
+				<ExactnessBadge exactness={answer.exactness} />
+				<CopyButton text={answer.raw ?? answer.value ?? ''} label="Copy" compact />
+			</div>
+		{:else}
+			<div class="mt-0.5 text-lg font-semibold" style="color:var(--text)">
+				<span class="uc-num">{input.value}</span>
+				<span style="color:var(--text-muted)">{input.unit_label}</span>
+				{#if input.fuel_label}<span style="color:var(--accent)"> · {input.fuel_label}</span>{/if}
+			</div>
+		{/if}
 	</div>
 
 	<!-- Value groups (already in canonical order) -->

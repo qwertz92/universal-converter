@@ -6,7 +6,7 @@
 <button
 	type="button"
 	onclick={() => theme.toggle()}
-	class="inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-colors hover:bg-[var(--surface-2)]"
+	class="inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-colors hover:bg-[var(--surface-2)]"
 	style="border-color:var(--border)"
 	aria-label={theme.isDark ? 'Switch to light theme' : 'Switch to dark theme'}
 	title={theme.isDark ? 'Switch to light theme' : 'Switch to dark theme'}

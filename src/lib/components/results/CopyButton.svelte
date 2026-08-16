@@ -1,5 +1,10 @@
 <script lang="ts">
-	/** Copy-to-clipboard button with a transient "copied" confirmation. */
+	/**
+	 * Copy-to-clipboard button with a transient "copied" confirmation.
+	 *
+	 * `compact` is the only variant that ships inside result rows, so even it
+	 * stays comfortably tappable on a phone rather than shrinking to text height.
+	 */
 	import { copyText } from '$lib/ui/clipboard';
 
 	let {
@@ -24,12 +29,11 @@
 <button
 	type="button"
 	onclick={doCopy}
-	class="inline-flex items-center gap-1.5 rounded-md border font-medium transition-colors hover:bg-[var(--surface-2)]"
-	class:px-2={!compact}
-	class:py-1={!compact}
-	class:text-xs={true}
-	class:px-1.5={compact}
-	class:py-0.5={compact}
+	class="inline-flex items-center gap-1.5 rounded-md border text-xs font-medium transition-colors hover:bg-[var(--surface-2)]"
+	class:px-2.5={!compact}
+	class:py-1.5={!compact}
+	class:px-2={compact}
+	class:py-1={compact}
 	style="border-color:var(--border);color:var(--text-muted)"
 	aria-live="polite"
 	title="{label} to clipboard"

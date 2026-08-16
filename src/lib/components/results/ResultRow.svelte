@@ -89,7 +89,7 @@
 								stroke-linecap="round"
 							/>
 						</svg>
-						<span>Needs more context</span>
+						<span>Context required</span>
 					{:else}
 						<span>Not available</span>
 					{/if}
@@ -111,9 +111,10 @@
 	{/if}
 
 	<!-- Context control (basis toggle, region/year picker, fuel picker) if provided. -->
-	{#if contextControl}
-		<div class="mt-2">{@render contextControl(result)}</div>
-	{/if}
+	<!-- The snippet renders nothing for most rows; wrapping it unconditionally
+	     left an 8px margin on every one of them. The snippet supplies its own
+	     spacing when it has something to show. -->
+	{#if contextControl}{@render contextControl(result)}{/if}
 
 	<!-- Illustrative examples (clearly labeled, never a default — rulebook §C.6). -->
 	{#if result.illustrative_examples && result.illustrative_examples.length > 0}
@@ -156,7 +157,7 @@
 		<div class="mt-2">
 			<button
 				type="button"
-				class="inline-flex items-center gap-1 text-xs font-medium hover:text-[var(--accent)]"
+				class="-mx-1 inline-flex items-center gap-1 rounded px-1 py-1.5 text-xs font-medium hover:text-[var(--accent)]"
 				style="color:var(--text-faint)"
 				onclick={() => (expanded = !expanded)}
 				aria-expanded={expanded}

@@ -3,6 +3,7 @@
 	import Seo from '$lib/components/layout/Seo.svelte';
 	import PageHero from '$lib/components/layout/PageHero.svelte';
 	import ExactnessLegend from '$lib/components/badges/ExactnessLegend.svelte';
+	import { APP_VERSION } from '$lib/version';
 
 	const layers = [
 		{
@@ -60,7 +61,7 @@
 	</section>
 
 	<!-- Exactness taxonomy -->
-	<section class="mb-10">
+	<section id="exactness-levels" class="mb-10 scroll-mt-20">
 		<h2 class="mb-2 text-lg font-semibold tracking-tight">Exactness levels</h2>
 		<p class="mb-5 text-sm leading-relaxed" style="color:var(--text-muted)">
 			Every result carries one of these labels. A result takes the <em>least exact</em> level of any input
@@ -144,8 +145,8 @@
 		style="border-color:var(--border);background:var(--surface-2)"
 	>
 		<p class="text-sm" style="color:var(--text-muted)">
-			For the honest scope of what v0.1 answers exactly, estimates, and refuses — and what you must
-			not use it for — see the limitations summary, and follow every result's
+			For the honest scope of what v{APP_VERSION} answers exactly, estimates, and refuses — and what you
+			must not use it for — see the limitations summary, and follow every result's
 			<a href={resolve('/sources')} class="font-medium hover:underline" style="color:var(--accent)"
 				>sources</a
 			> back to the primary document.

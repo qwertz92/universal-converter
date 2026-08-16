@@ -125,6 +125,31 @@ describe('§13.5 emission factors carry pollutant + scope + source (spec §13.5)
 		}
 	});
 
+	it('biogenic combustion CO2 is never filed under an upstream scope', () => {
+		// It is CO2 leaving the stack when YOU burn the fuel. Labelling it
+		// "Scope 3 upstream (indirect, before you buy it)" told the reader the
+		// opposite of what the number is (rulebook §C.5).
+		for (const ef of emissionFactors) {
+			if (ef.pollutant !== 'biogenic_CO2' && !ef.biogenic) continue;
+			expect(ef.scope, `factor ${ef.id}`).toBe('outside_of_scopes');
+		}
+	});
+
+	it('a factor value matches any component breakdown stated in its own notes', () => {
+		// A digit transposition shipped hard coal's CO2e as 2.375… when its own
+		// note (and the research ledger) records components summing to 2.395…
+		const perTonne = /\(CO2\s+([\d.]+)\s*\+\s*CH4\s+([\d.]+)\s*\+\s*N2O\s+([\d.]+)\s+per tonne\)/;
+		let checked = 0;
+		for (const ef of emissionFactors) {
+			const m = ef.notes?.match(perTonne);
+			if (!m) continue;
+			checked++;
+			const sumPerKg = (Number(m[1]) + Number(m[2]) + Number(m[3])) / 1000;
+			expect(Number(ef.value), `factor ${ef.id} vs its own components`).toBeCloseTo(sumPerKg, 8);
+		}
+		expect(checked).toBeGreaterThan(0);
+	});
+
 	it('every emission factor has a recognised scope', () => {
 		const allowed = new Set([
 			'direct_combustion',
@@ -134,6 +159,7 @@ describe('§13.5 emission factors carry pollutant + scope + source (spec §13.5)
 			'well_to_tank',
 			'tank_to_wheel',
 			'well_to_wheel',
+			'outside_of_scopes',
 			'unknown_or_mixed'
 		]);
 		for (const ef of emissionFactors) {

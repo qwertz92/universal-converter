@@ -20,13 +20,16 @@
 		HeatingBasis,
 		Fuel
 	} from '$lib/conversion/types';
-	import { engine, allUnits, allFuels } from '$lib/ui/engine';
+	import { engine, allUnits, allFuels, gridIntensityOptions } from '$lib/ui/engine';
 	import { debounce, searchFuels } from '$lib/ui/search';
 	import { buildQueryString, readUrlState } from '$lib/ui/query-state';
 	import { exportFilename, resultSetToCsv, resultSetToJson } from '$lib/ui/export';
+	import { clearRecent, pushRecent, readRecent } from '$lib/ui/recent';
 	import CopyButton from '$lib/components/results/CopyButton.svelte';
 	import OptionsBar from './OptionsBar.svelte';
 	import GridPicker from './GridPicker.svelte';
+	import QueryField from './QueryField.svelte';
+	import DurationPrompt from './DurationPrompt.svelte';
 	import QuickExamples from './QuickExamples.svelte';
 	import StructuredInput from './StructuredInput.svelte';
 	import ResultSet from '$lib/components/results/ResultSet.svelte';
@@ -42,7 +45,9 @@
 	// One-time seed from the URL. Only read searchParams in the browser: during
 	// prerender the page has no request URL and accessing it throws (SSG).
 	const initial = untrack(() =>
-		syncUrl && browser ? readUrlState(page.url) : { q: '', basis: 'lhv' as HeatingBasis }
+		syncUrl && browser
+			? readUrlState(page.url, gridIntensityOptions())
+			: { q: '', basis: 'lhv' as HeatingBasis }
 	);
 	let queryText = $state(initial.q);
 	let basis = $state<HeatingBasis>(initial.basis);
@@ -74,6 +79,9 @@
 
 	// ---- conversion -----------------------------------------------------------
 	function runConversion(text: string): void {
+		// Any conversion supersedes a keystroke still waiting in the debounce —
+		// otherwise the queued older text would overwrite this result.
+		debouncedRun.cancel();
 		const trimmed = text.trim();
 		if (trimmed === '') {
 			resultSet = null;
@@ -103,6 +111,22 @@
 
 	const debouncedRun = debounce((t: string) => runConversion(t), 260);
 
+	/** The engine's own parser, for the input field's live interpretation. */
+	function parseQuery(text: string) {
+		return engine().parse(text);
+	}
+
+	/**
+	 * Append a clause the user chose from a context prompt (a duration, so far)
+	 * to the query text. Writing it into the query — rather than into hidden
+	 * component state — keeps it visible, editable and shareable.
+	 */
+	function appendClause(clause: string): void {
+		queryText = `${queryText.trim()} ${clause}`.trim();
+		runConversion(queryText);
+		pushUrl();
+	}
+
 	function pushUrl(): void {
 		if (!syncUrl || !browser) return;
 		// `params` is the query string WITHOUT a leading '?', or '' when empty.
@@ -130,9 +154,21 @@
 		});
 	}
 
+	// Recently run conversions (browser-local only). Recorded on an explicit
+	// submit, never on every debounced keystroke — otherwise the list would fill
+	// up with half-typed fragments.
+	let recent = $state<string[]>([]);
+	const store = $derived(browser ? window.localStorage : undefined);
+
+	function remember(text: string): void {
+		const parsed = engine().parse(text);
+		if (parsed.ok) recent = pushRecent(store, text);
+	}
+
 	function submit(): void {
 		runConversion(queryText);
 		pushUrl();
+		remember(queryText);
 	}
 
 	function onInput(): void {
@@ -146,11 +182,28 @@
 		pickedFuelId = undefined;
 		runConversion(input);
 		pushUrl();
+		remember(input);
 	}
 
-	function onErrorPick(text: string): void {
-		// For ambiguity/unknown suggestions: append or replace the failing token.
-		queryText = queryText.replace(/\S+\s*$/, '') + text;
+	/**
+	 * Apply a repair chosen from a parse error.
+	 *
+	 * `replaces` is the token the choice is for. Swapping the LAST word instead
+	 * deleted whatever followed it: "10 gallons diesel" + "US gallon" became
+	 * "10 gallons US gallon" — the material gone, the ambiguity intact, the same
+	 * prompt back again with no way out. With no token (the example chips) the
+	 * whole query is replaced, which is what those chips mean.
+	 */
+	function onErrorPick(text: string, replaces?: string): void {
+		if (!replaces) {
+			queryText = text;
+		} else {
+			const escaped = replaces.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+			const pattern = new RegExp(`(^|\\s)${escaped}(?=\\s|$)`, 'i');
+			queryText = pattern.test(queryText)
+				? queryText.replace(pattern, `$1${text}`)
+				: `${queryText.replace(/\S+\s*$/, '')}${text}`;
+		}
 		submit();
 	}
 
@@ -186,6 +239,12 @@
 	// unsolicited replaceState navigation on a deep-linked page load (and
 	// double-running the conversion via a second mount effect) was audit finding
 	// UI#2. Reading basis/grid into consts registers the reactive dependencies.
+	// Reactive twin of `booted`: a shared "?q=" link is prerendered WITHOUT the
+	// query, so the served HTML would show the empty-state panel and then swap
+	// it for a full result set on hydration — a large shift on the primary entry
+	// path for every shared link. The panel waits until the first conversion has
+	// had its chance.
+	let settled = $state(false);
 	let booted = false;
 	$effect(() => {
 		const _basis = basis; // track basis changes
@@ -194,12 +253,28 @@
 		void _grid;
 		if (!browser) return;
 		untrack(() => {
+			if (!booted) recent = readRecent(store);
 			if (queryText.trim()) {
 				runConversion(queryText);
 				if (booted) pushUrl();
 			}
 			booted = true;
+			settled = true;
 		});
+	});
+
+	/** One short sentence for the screen-reader status line. */
+	const resultSummary = $derived.by(() => {
+		if (parseError) return parseError.message;
+		if (!resultSet) return '';
+		const rows = resultSet.groups.flatMap((g) => g.results);
+		const answered = rows.filter((r) => r.value !== null).length;
+		const answer = rows.find((r) => r.is_target && r.value !== null);
+		const head = answer
+			? `${resultSet.input.value} ${resultSet.input.unit_label} = ${answer.value} ${answer.unit_label}. `
+			: '';
+		const warned = resultSet.warnings.length;
+		return `${head}${answered} values in ${resultSet.groups.length} groups${warned ? `, ${warned} warnings` : ''}.`;
 	});
 
 	// Does the current result set contain a "pick a fuel" context prompt?
@@ -240,35 +315,15 @@
 </script>
 
 <div class="space-y-4">
-	<!-- Free-text input -->
-	<form
-		onsubmit={(e) => {
-			e.preventDefault();
-			submit();
-		}}
-	>
-		<div class="relative">
-			<label for="uc-query" class="sr-only">Enter a value and unit to convert</label>
-			<input
-				id="uc-query"
-				type="text"
-				bind:value={queryText}
-				oninput={onInput}
-				placeholder="e.g. 1 liter diesel, 1000 kcal, 1 m³ natural gas"
-				autocomplete="off"
-				spellcheck="false"
-				class="uc-num w-full rounded-xl border py-4 pr-28 pl-4 text-base outline-none sm:text-lg"
-				style="background:var(--surface);border-color:var(--border);color:var(--text)"
-			/>
-			<button
-				type="submit"
-				class="absolute top-1/2 right-2 -translate-y-1/2 rounded-lg px-4 py-2.5 text-sm font-semibold"
-				style="background:var(--accent);color:var(--accent-contrast)"
-			>
-				Convert
-			</button>
-		</div>
-	</form>
+	<!-- Free-text input: completes units, and says what it understood. -->
+	<QueryField
+		bind:value={queryText}
+		{units}
+		{fuels}
+		parse={parseQuery}
+		onsubmit={submit}
+		oninput={onInput}
+	/>
 
 	<QuickExamples onpick={useExample} />
 
@@ -338,16 +393,32 @@
 		</div>
 	{/if}
 
-	<!-- Grid picker rendered inside emissions rows that need (or used) region/year.
-	     Present in compact mode too, where the OptionsBar picker is not shown. -->
+	<!-- Controls rendered inside the rows that ask for context, so the answer to
+	     "what's missing?" sits exactly where the question is asked. Present in
+	     compact mode too, where the OptionsBar picker is not shown. -->
 	{#snippet gridControl(result: ConversionResult)}
-		{#if result.category === 'emissions' && ((result.exactness === 'context_required' && result.missing?.includes('region')) || result.exactness === 'region_year_specific')}
-			<GridPicker bind:value={grid} id="uc-grid-inline" />
+		{#if result.category === 'emissions' && result.exactness === 'context_required' && result.missing?.includes('region')}
+			<!-- Only where a region/year is actually being ASKED for. Rendering it
+			     for every region_year_specific row put two identical, inert
+			     "Grid region & year" selects (with the same DOM id) under a diesel
+			     conversion, where picking one changed nothing but still wrote
+			     ?region=&year= into the shared URL. -->
+			<div class="mt-2"><GridPicker bind:value={grid} id="uc-grid-inline" /></div>
+		{:else if result.exactness === 'context_required' && result.missing?.includes('time')}
+			<div class="mt-2"><DurationPrompt {units} onapply={appendClause} /></div>
 		{/if}
 	{/snippet}
 
+	<!--
+		A one-line spoken summary. The results themselves are NOT a live region:
+		announcing them re-read ~165 words on every debounced keystroke, which
+		made the tool unusable with a screen reader. The detail is still fully
+		reachable — it is ordinary content below this status line.
+	-->
+	<p class="sr-only" role="status" aria-live="polite">{resultSummary}</p>
+
 	<!-- Results / errors -->
-	<div aria-live="polite" aria-atomic="false">
+	<div>
 		{#if parseError}
 			<ParseErrorNote error={parseError} onpick={onErrorPick} />
 		{:else if resultSet}
@@ -373,7 +444,10 @@
 				>
 					Download CSV
 				</button>
-				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- apiHref is resolve('/api/convert') + a query string; the typed router has no endpoint search-suffix form -->
+				<!-- apiHref is resolve('/api/convert') + a query string; the typed router
+				     models search suffixes for pages but not for endpoints, so the rule
+				     is disabled for this one element rather than for the file. -->
+				<!-- eslint-disable svelte/no-navigation-without-resolve -->
 				<a
 					href={apiHref}
 					target="_blank"
@@ -384,8 +458,9 @@
 				>
 					API ↗
 				</a>
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			</div>
-		{:else if !compact}
+		{:else if !compact && settled}
 			<div
 				class="rounded-[var(--radius-card)] border border-dashed p-8 text-center"
 				style="border-color:var(--border)"
@@ -393,6 +468,30 @@
 				<p class="text-sm" style="color:var(--text-faint)">
 					Enter a value and a unit above — try one of the examples to see grouped, sourced results.
 				</p>
+				{#if recent.length > 0}
+					<!-- Browser-local history: nothing leaves the device. -->
+					<div class="mt-4 flex flex-wrap items-center justify-center gap-1.5">
+						<span class="text-xs font-medium" style="color:var(--text-muted)">Recent:</span>
+						{#each recent as q (q)}
+							<button
+								type="button"
+								class="uc-num rounded-full border px-2.5 py-1 text-xs font-medium hover:bg-[var(--surface-2)]"
+								style="border-color:var(--border);color:var(--text)"
+								onclick={() => useExample(q)}
+							>
+								{q}
+							</button>
+						{/each}
+						<button
+							type="button"
+							class="rounded-full px-2 py-1 text-xs font-medium hover:underline"
+							style="color:var(--text-faint)"
+							onclick={() => (recent = clearRecent(store))}
+						>
+							Clear
+						</button>
+					</div>
+				{/if}
 			</div>
 		{/if}
 	</div>
