@@ -30,7 +30,14 @@
 		parse,
 		onsubmit,
 		oninput,
-		id = 'uc-query'
+		id = 'uc-query',
+		/** The query the engine will actually run (the pin may have completed it). */
+		effective = undefined,
+		/** Set when a pinned unit supplied something the text did not. */
+		pinApplied = false,
+		/** The currently pinned units, for the toggle's label. */
+		pinnedFrom = undefined,
+		onpin = undefined
 	}: {
 		value: string;
 		units: Unit[];
@@ -40,6 +47,11 @@
 		/** Called after every edit so the caller can debounce a conversion. */
 		oninput?: () => void;
 		id?: string;
+		effective?: string;
+		pinApplied?: boolean;
+		pinnedFrom?: string;
+		/** Pin (or unpin, with undefined) the unit of the current query. */
+		onpin?: (unitId: string | undefined) => void;
 	} = $props();
 
 	let inputEl = $state<HTMLInputElement | null>(null);
@@ -49,7 +61,15 @@
 	/** -1 = nothing highlighted; Enter then submits instead of completing. */
 	let active = $state(-1);
 
-	const interpretation = $derived(describeQuery(value, parse, units));
+	// Describe what the engine will RUN, not only what was typed — with a pinned
+	// unit those differ, and the line has to show the difference rather than
+	// hide it.
+	const interpretation = $derived(describeQuery(effective ?? value, parse, units));
+	const pinnedUnit = $derived(units.find((u) => u.id === pinnedFrom));
+	/** The unit the current query could be pinned to. */
+	const pinnable = $derived(
+		interpretation.status === 'ok' && interpretation.unit ? interpretation.unit : undefined
+	);
 	const completions = $derived(open ? suggestCompletions(value, units, fuels) : null);
 	const items = $derived<Completion[]>(completions?.items ?? []);
 	const showList = $derived(open && items.length > 0);
@@ -279,17 +299,44 @@
 		class="mt-2 flex min-h-[5.5rem] flex-col justify-center gap-1 rounded-lg px-3 py-2 text-sm"
 		style="background:var(--surface-2)"
 	>
-		<p id="{id}-interpretation-text" class="line-clamp-2 leading-snug" style="color:{statusColor}">
-			{#if interpretation.status === 'ok'}
-				<span aria-hidden="true">✓</span>
-			{:else if interpretation.status === 'unsupported'}
-				<span aria-hidden="true">✗</span>
+		<div class="flex items-start justify-between gap-2">
+			<p
+				id="{id}-interpretation-text"
+				class="line-clamp-2 min-w-0 flex-1 leading-snug"
+				style="color:{statusColor}"
+			>
+				{#if interpretation.status === 'ok'}
+					<span aria-hidden="true">✓</span>
+				{:else if interpretation.status === 'unsupported'}
+					<span aria-hidden="true">✗</span>
+				{/if}
+				<span class="uc-num">{interpretation.message}</span>
+				{#if interpretation.unit}
+					<span style="color:var(--text-faint)">· {interpretation.unit.dimension}</span>
+				{/if}
+				{#if pinApplied}
+					<!-- Never let a pinned unit look like something the tool assumed
+					     on its own: say where it came from, in the same breath. -->
+					<span style="color:var(--accent)">· from your pinned unit</span>
+				{/if}
+			</p>
+
+			{#if onpin && (pinnedUnit || pinnable)}
+				<button
+					type="button"
+					class="shrink-0 rounded-full border px-2 py-1 text-xs font-medium whitespace-nowrap hover:bg-[var(--surface)]"
+					style="border-color:var(--border);color:{pinnedUnit
+						? 'var(--accent)'
+						: 'var(--text-muted)'}"
+					onclick={() => onpin(pinnedUnit ? undefined : pinnable?.id)}
+					title={pinnedUnit
+						? `Typing a bare number uses ${pinnedUnit.symbols[0]}. Click to unpin.`
+						: `Pin ${pinnable?.symbol} so a bare number is enough`}
+				>
+					{pinnedUnit ? `📌 ${pinnedUnit.symbols[0]}` : `Pin ${pinnable?.symbol}`}
+				</button>
 			{/if}
-			<span class="uc-num">{interpretation.message}</span>
-			{#if interpretation.unit}
-				<span style="color:var(--text-faint)">· {interpretation.unit.dimension}</span>
-			{/if}
-		</p>
+		</div>
 
 		<!-- One row, never two: wrapping chips would change this box's height on a
 		     narrow screen, which is the shift this whole layout exists to avoid.

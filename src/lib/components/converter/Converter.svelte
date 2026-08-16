@@ -24,7 +24,18 @@
 	import { debounce, searchFuels } from '$lib/ui/search';
 	import { buildQueryString, readUrlState } from '$lib/ui/query-state';
 	import { exportFilename, resultSetToCsv, resultSetToJson } from '$lib/ui/export';
-	import { clearRecent, pushRecent, readRecent } from '$lib/ui/recent';
+	import {
+		clearRecent,
+		clearSaved,
+		pushRecent,
+		readRecent,
+		readSaved,
+		save as saveQuery,
+		unsave as unsaveQuery,
+		type SavedEntry
+	} from '$lib/ui/history';
+	import { applyPin, decodePin, encodePin, type Pin } from '$lib/ui/pin';
+	import HistoryPanel from './HistoryPanel.svelte';
 	import CopyButton from '$lib/components/results/CopyButton.svelte';
 	import OptionsBar from './OptionsBar.svelte';
 	import GridPicker from './GridPicker.svelte';
@@ -58,6 +69,9 @@
 			: ''
 	);
 	let showStructured = $state(false);
+	const initialPin = untrack(() =>
+		syncUrl && browser ? decodePin(page.url.searchParams.get('pin'), units) : {}
+	);
 
 	/** Decode the `grid` selection into engine options ({} when unset/invalid). */
 	function gridParts(g: string): { region?: string; year?: number } {
@@ -77,6 +91,27 @@
 	let pickedFuelId = $state<string | undefined>(undefined);
 	let fuelPickQuery = $state('');
 
+	// Pinned units: "iterate mode". A pin lets a bare number be a whole query,
+	// which is the difference between one lookup and twenty. It is the user
+	// supplying the unit once — visibly, reversibly and carried in the URL —
+	// not the tool assuming one.
+	let pin = $state<Pin>(initialPin);
+
+	/** The query the engine actually runs, with any pinned unit filled in. */
+	function effectiveQuery(text: string) {
+		return applyPin(text, pin, (t) => engine().parse(t), units);
+	}
+
+	const pinned = $derived(effectiveQuery(queryText));
+
+	function setPin(unitId: string | undefined): void {
+		pin = unitId ? { ...pin, from: unitId } : { ...pin, from: undefined };
+		if (queryText.trim()) {
+			runConversion(queryText);
+			pushUrl();
+		}
+	}
+
 	// ---- conversion -----------------------------------------------------------
 	function runConversion(text: string): void {
 		// Any conversion supersedes a keystroke still waiting in the debounce —
@@ -89,14 +124,16 @@
 			return;
 		}
 		const conv = engine();
+		// Fill in a pinned unit/target first, so "5" becomes the query it stands
+		// for before anything else looks at it.
+		let effective = effectiveQuery(trimmed).text;
 		// If the user picked a fuel to satisfy a context prompt, append it — but only
 		// when the base query doesn't already carry a fuel (avoid double material).
-		let effective = trimmed;
 		if (pickedFuelId) {
-			const parsed = conv.parse(trimmed);
+			const parsed = conv.parse(effective);
 			if (parsed.ok && !parsed.query.fuel_id) {
 				const f = fuels.find((x) => x.id === pickedFuelId);
-				if (f) effective = `${trimmed} ${f.names[0]}`;
+				if (f) effective = `${effective} ${f.names[0]}`;
 			}
 		}
 		const out = conv.convertText(effective, { basis, ...gridParts(grid) });
@@ -130,7 +167,15 @@
 	function pushUrl(): void {
 		if (!syncUrl || !browser) return;
 		// `params` is the query string WITHOUT a leading '?', or '' when empty.
-		const params = buildQueryString({ q: queryText, basis, ...gridParts(grid) }).replace(/^\?/, '');
+		// The pin rides along so a shared link reproduces exactly what the sender
+		// saw — "?q=5" alone would be meaningless without it.
+		const pinParam = encodePin(pin, units);
+		const params = [
+			buildQueryString({ q: queryText, basis, ...gridParts(grid) }).replace(/^\?/, ''),
+			pinParam ? `pin=${encodeURIComponent(pinParam)}` : ''
+		]
+			.filter(Boolean)
+			.join('&');
 		// resolve() keeps the URL base-path safe and, as the direct goto() argument,
 		// satisfies svelte/no-navigation-without-resolve (it returns a ResolvedPathname).
 		// A literal route prefix ('/' or '/convert') lets the typed router validate the
@@ -158,11 +203,20 @@
 	// submit, never on every debounced keystroke — otherwise the list would fill
 	// up with half-typed fragments.
 	let recent = $state<string[]>([]);
+	let saved = $state<SavedEntry[]>([]);
 	const store = $derived(browser ? window.localStorage : undefined);
 
 	function remember(text: string): void {
-		const parsed = engine().parse(text);
+		const parsed = engine().parse(effectiveQuery(text).text);
 		if (parsed.ok) recent = pushRecent(store, text);
+	}
+
+	function runSaved(query: string): void {
+		queryText = query;
+		pickedFuelId = undefined;
+		runConversion(query);
+		pushUrl();
+		remember(query);
 	}
 
 	function submit(): void {
@@ -249,11 +303,16 @@
 	$effect(() => {
 		const _basis = basis; // track basis changes
 		const _grid = grid; // track grid region/year changes
+		const _pin = `${pin.from ?? ''}>${pin.to ?? ''}`; // track pin changes
 		void _basis;
 		void _grid;
+		void _pin;
 		if (!browser) return;
 		untrack(() => {
-			if (!booted) recent = readRecent(store);
+			if (!booted) {
+				recent = readRecent(store);
+				saved = readSaved(store);
+			}
 			if (queryText.trim()) {
 				runConversion(queryText);
 				if (booted) pushUrl();
@@ -323,6 +382,10 @@
 		parse={parseQuery}
 		onsubmit={submit}
 		oninput={onInput}
+		effective={pinned.text}
+		pinApplied={pinned.usedFrom || pinned.usedTo}
+		pinnedFrom={pin.from}
+		onpin={setPin}
 	/>
 
 	<QuickExamples onpick={useExample} />
@@ -468,31 +531,22 @@
 				<p class="text-sm" style="color:var(--text-faint)">
 					Enter a value and a unit above — try one of the examples to see grouped, sourced results.
 				</p>
-				{#if recent.length > 0}
-					<!-- Browser-local history: nothing leaves the device. -->
-					<div class="mt-4 flex flex-wrap items-center justify-center gap-1.5">
-						<span class="text-xs font-medium" style="color:var(--text-muted)">Recent:</span>
-						{#each recent as q (q)}
-							<button
-								type="button"
-								class="uc-num rounded-full border px-2.5 py-1 text-xs font-medium hover:bg-[var(--surface-2)]"
-								style="border-color:var(--border);color:var(--text)"
-								onclick={() => useExample(q)}
-							>
-								{q}
-							</button>
-						{/each}
-						<button
-							type="button"
-							class="rounded-full px-2 py-1 text-xs font-medium hover:underline"
-							style="color:var(--text-faint)"
-							onclick={() => (recent = clearRecent(store))}
-						>
-							Clear
-						</button>
-					</div>
-				{/if}
 			</div>
 		{/if}
 	</div>
+
+	<!-- History lives below the results, not inside the empty state: the moment
+	     you have a result is exactly when you want to jump back to the last one. -->
+	{#if !compact}
+		<HistoryPanel
+			{recent}
+			{saved}
+			current={queryText}
+			onrun={runSaved}
+			onsave={(q) => (saved = saveQuery(store, q))}
+			onunsave={(q) => (saved = unsaveQuery(store, q))}
+			onclearRecent={() => (recent = clearRecent(store))}
+			onclearSaved={() => (saved = clearSaved(store))}
+		/>
+	{/if}
 </div>
