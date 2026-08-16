@@ -3,6 +3,18 @@
 All notable changes to Universal Converter. Versioning follows semver
 (pre-1.0: minor bumps may include behavior changes; they are listed here).
 
+## 0.3.8 — 2026-08-16
+
+### Fixed
+
+- **The emissions calculation path could not be checked at all.** It read
+  "coking coal amount × 3.16465002 kg_co2e_per_kg = ~3,160 kg CO2e" — a
+  placeholder times a raw unit id. The energy path got this treatment in 0.3.5
+  and 0.3.6; the emissions path, which carries this tool's central claim, was
+  left behind. It now shows the amount in the factor's own unit and the unit as
+  a human writes it: "1,000 kg × 3.16465002 kgCO2e/kg = ~3,160 kg CO2e". Every
+  emissions line in the suite is now multiplied out and compared.
+
 ## 0.3.7 — 2026-08-16
 
 ### Fixed

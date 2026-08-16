@@ -1275,6 +1275,30 @@ export function createConverter(data: DataBundle): Converter {
 	}
 
 	/** Apply every cited emission factor of a fuel. Returns true if any produced a value. */
+	/**
+	 * The amount an emission factor is multiplied by, in the factor's own unit.
+	 *
+	 * `amountBase` is SI base — kg, m³ or joules — while factors are published
+	 * per litre, per kilogram or per GJ. Printing the base figure against a
+	 * per-litre factor would be the same dimensional nonsense the energy path
+	 * used to have, so it is converted into the factor's denominator first.
+	 */
+	function factorAmountLabel(
+		factor: EmissionFactor,
+		amountBase: string,
+		kind: 'volume' | 'mass' | 'energy'
+	): string {
+		const denominator = factorUnitLabel(factor.unit).split('/')[1]?.trim();
+		const baseUnitId = kind === 'volume' ? 'cubic_meter' : kind === 'mass' ? 'kilogram' : 'joule';
+		const base = units.get(baseUnitId);
+		const target = denominator ? units.resolve(denominator) : undefined;
+		if (!base || !target || target.kind !== 'match') {
+			return `${formatValue(amountBase, 'source_based')} ${denominator ?? ''}`.trim();
+		}
+		const inFactorUnit = convertWithinDimension(amountBase, base, target.unit);
+		return `${formatValue(inFactorUnit, 'source_based')} ${unitLabel(target.unit)}`;
+	}
+
 	function addFactorEmissions(
 		builder: ResultSetBuilder,
 		fuel: Fuel,
@@ -1335,9 +1359,13 @@ export function createConverter(data: DataBundle): Converter {
 				exactness,
 				explanation: emissionExplanation(factor),
 				formula: step(
-					`${fuel.names[0]} amount`,
+					// The amount in the factor's OWN unit, so the line multiplies out.
+					// It used to read "coking coal amount × 3.16465002 kg_co2e_per_kg"
+					// — a placeholder times a raw unit id, which is not an audit trail
+					// at all: there is nothing in it a reader could check.
+					factorAmountLabel(factor, amountBase, kind),
 					'×',
-					`${factor.value} ${factor.unit} [${POLLUTANT_LABEL[factor.pollutant]}, ${SCOPE_LABEL[factor.scope]}${factor.region ? `, ${factor.region} ${factor.year ?? ''}` : ''}]`,
+					`${factor.value} ${factorUnitLabel(factor.unit)} [${POLLUTANT_LABEL[factor.pollutant]}, ${SCOPE_LABEL[factor.scope]}${factor.region ? `, ${factor.region} ${factor.year ?? ''}` : ''}]`,
 					`${formatValue(massDisplay, exactness)} ${applied.displayUnit}`
 				),
 				assumptions: [],

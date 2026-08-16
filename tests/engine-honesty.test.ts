@@ -223,3 +223,39 @@ describe('an exact value that had to be rounded says so', () => {
 		expect(mj?.value).toBe('3.6');
 	});
 });
+
+describe('the emissions path is checkable too', () => {
+	// It read "coking coal amount × 3.16465002 kg_co2e_per_kg = ~3,160 kg CO2e"
+	// — a placeholder times a raw unit id. Nothing in that line can be checked,
+	// which for this product's central claim is the same as having no line.
+	const parse = (s: string) => Number(s.replace(/,/g, ''));
+
+	it.each([
+		'1 t coking coal',
+		'1 L diesel',
+		'1 bbl diesel',
+		'1 m3 natural gas',
+		'1 kg lignite',
+		'1 L CNG',
+		'2 kg wood pellets',
+		'1 gal gasoline'
+	])('%s: every emissions line multiplies out', (query) => {
+		const emissionRows = rows(query).filter((r) => r.category === 'emissions' && r.formula);
+		expect(emissionRows.length, query).toBeGreaterThan(0);
+		for (const row of emissionRows) {
+			const m = row.formula!.match(
+				/^([\d,]+(?:\.\d+)?)\s\S+\s×\s([\d,]+(?:\.\d+)?)\s\S+\s\[[^\]]+\]\s=\s~?([\d,]+(?:\.\d+)?)/
+			);
+			expect(m, `unparseable: ${row.formula}`).not.toBeNull();
+			const [, amount, factor, product] = m!;
+			const expected = parse(amount) * parse(factor);
+			expect(Math.abs(parse(product) - expected) / expected, row.formula!).toBeLessThan(0.02);
+		}
+	});
+
+	it('names the factor unit the way a human writes it', () => {
+		const row = rows('1 L diesel').find((r) => r.category === 'emissions' && r.formula);
+		expect(row?.formula).toContain('kgCO2/L');
+		expect(row?.formula).not.toContain('kg_co2_per_l');
+	});
+});
