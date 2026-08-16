@@ -92,10 +92,11 @@ describe('a variant answers with its own numbers', () => {
 	});
 });
 
-describe('gas oil has no published per-litre calorific value', () => {
-	// DESNZ publishes gas oil's CV per tonne only. The energy answer must still
-	// work — through the published density — and must not borrow diesel's
-	// kWh/L figure.
+describe('gas oil has no per-litre calorific value in the ledger', () => {
+	// research-notes §4.3 records gas oil's CV per tonne only — which is a fact
+	// about our transcription, not about what DESNZ publishes, and the two must
+	// not be confused. The energy answer must still work, through the recorded
+	// density, and must not borrow diesel's kWh/L figure.
 	it('still converts a volume to energy, and not with diesel’s number', () => {
 		// The LHV/NCV row comes first; the HHV/GCV row follows it.
 		const kwh = allResults('1 L gas oil').find(

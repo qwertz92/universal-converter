@@ -821,14 +821,8 @@
 		},
 		{
 			"id": "hard-coal",
-			"names": ["hard coal", "coal"],
-			"aliases": [
-				"steinkohle",
-				"bituminous coal",
-				"black coal",
-				"coal (industrial)",
-				"industrial coal"
-			],
+			"names": ["hard coal", "coal (industrial)"],
+			"aliases": ["steinkohle", "bituminous coal", "black coal", "industrial coal"],
 			"category": "coal",
 			"phase": "solid",
 			"heating_values": [

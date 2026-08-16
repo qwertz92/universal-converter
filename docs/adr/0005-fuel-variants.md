@@ -80,7 +80,9 @@ together under their shared category.
   the comparison it wants to show is between *products*, which is a genuine
   comparison, rather than between sources for one product, which the rulebook
   forbids averaging anyway.
-- Fuels whose variant data is incomplete stay out. Biopropane and landfill gas,
-  for instance, have a recorded CO₂e factor but no recorded density or calorific
-  value, so shipping them would produce a fuel that cannot answer the questions
-  the tool is for.
+- Fuels whose variant data is incomplete stay out. Biopropane, for instance, has
+  a recorded CO₂e factor but no recorded density and no recorded calorific value,
+  so shipping it would produce a fuel that cannot answer the questions the tool
+  is for. (An earlier draft of this ADR gave landfill gas as a second example.
+  That was wrong: §4.11 records its density, NCV, GCV *and* a CO₂e factor, so it
+  meets this criterion and is simply not transcribed yet.)

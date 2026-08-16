@@ -42,7 +42,12 @@ describe('every disambiguation chip resolves its own query', () => {
 			for (const interp of error.interpretations ?? []) {
 				const repaired = repair(query, interp.label, error.token);
 				const out = converter.convertText(repaired);
-				expect('error' in out, `"${query}" + "${interp.label}" → "${repaired}"`).toBe(false);
+				// The chip must resolve the ambiguity it is FOR. It cannot promise
+				// the query has no other question left in it — "2 tons coal" has
+				// two: which ton, and which coal grade. Answering the first must
+				// not be judged a failure because the second is still open.
+				const stillAmbiguousUnit = 'error' in out && out.error.kind === 'ambiguous_unit';
+				expect(stillAmbiguousUnit, `"${query}" + "${interp.label}" → "${repaired}"`).toBe(false);
 			}
 		}
 	);

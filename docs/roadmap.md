@@ -26,7 +26,8 @@
   labeling), and all guards (no silent kW→kWh, no CO2↔CO2e path,
   `context_required` for missing fuel/region/year/density).
 - Zod-validated data files with strict envelopes: `data/units.json` populated
-  with **73 units**; `data/fuels.json` with **21 fuels** (incl. electricity);
+  with **73 units**; `data/fuels.json` with **21 fuels** (incl. electricity)
+  — v0.1 figures; the catalog has grown since, see README for current counts;
   `data/emission-factors.json` with **34 emission factors** (13 CO2, 16 CO2e,
   5 biogenic CO2); `data/sources.json` with **10 sources**; `data/examples.json`
   with **20 quick examples**.

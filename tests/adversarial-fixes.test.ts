@@ -193,3 +193,43 @@ describe('a phrase that names several grades is a question, not a query', () => 
 		expect(Number(rowFor('1 L burning oil', 'mass', 'kilogram')?.raw)).toBeCloseTo(0.802568, 5);
 	});
 });
+
+describe('bare "coal" names four grades spanning 42%', () => {
+	// DESNZ publishes industrial (2395.29), domestic (2904.95), coking (3164.65)
+	// and electricity-generation (2225.22) kg CO2e/tonne. "coal" was a NAME of
+	// the industrial grade, so someone burning coal in a domestic stove was
+	// answered 21% low with no sign a choice had been made for them.
+	it('offers the grades instead of picking one', () => {
+		const out = converter.convertText('1 kg coal');
+		expect('error' in out).toBe(true);
+		if ('error' in out) {
+			expect(out.error.kind).toBe('unknown_fuel');
+			expect(out.error.suggestions?.length).toBeGreaterThan(3);
+		}
+	});
+
+	it.each([
+		['1 kg hard coal', 'hard-coal'],
+		['1 kg domestic coal', 'coal-domestic'],
+		['1 kg coking coal', 'coking-coal'],
+		['1 kg house coal', 'coal-domestic'],
+		['1 kg power station coal', 'coal-electricity-generation'],
+		['1 kg metallurgical coal', 'coking-coal']
+	])('"%s" still names exactly one grade', (query, expected) => {
+		const parsed = converter.parse(query);
+		expect(parsed.ok).toBe(true);
+		if (parsed.ok) expect(parsed.query.fuel_id).toBe(expected);
+	});
+
+	it('the grades really do differ that much', () => {
+		const co2e = (id: string) =>
+			Number(
+				loadDataBundle().emissionFactors.find((f) => f.fuel_id === id && f.pollutant === 'CO2e')!
+					.value
+			);
+		const values = ['hard-coal', 'coal-domestic', 'coking-coal', 'coal-electricity-generation'].map(
+			co2e
+		);
+		expect(Math.max(...values) / Math.min(...values)).toBeGreaterThan(1.4);
+	});
+});

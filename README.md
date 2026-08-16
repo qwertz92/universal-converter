@@ -176,8 +176,8 @@ factors only, CO2 vs CO2e labeled), the **`/api/convert` public API draft**
 **converted ranges** with an honest `estimated` label for wide-spread fuels, a
 Time result group, SEO (sitemap, OG card, breadcrumb JSON-LD, `/units/kwh`-style
 short slugs), CI, and an accessibility pass. The sourced catalog is 73 units,
-21 fuels, 34 emission factors, 10 sources and 23 quick examples, covered by
-**487 Vitest tests**.
+29 fuels, 46 emission factors, 10 sources and 27 quick examples, covered by
+**657 Vitest tests**.
 
 Known gaps and honest limitations (e.g. crude-oil density, methane's own
 combustion factor, hydrogen upstream emissions, no US grid factor until the

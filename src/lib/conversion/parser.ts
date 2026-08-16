@@ -192,6 +192,14 @@ const SPLIT_MATERIALS: Record<string, { reason: string; candidates: string[] }> 
 		paraffin: {
 			reason: 'means heating kerosene in the UK and aviation kerosene elsewhere.',
 			candidates: ['burning-oil', 'kerosene']
+		},
+		coal: {
+			// DESNZ publishes four grades spanning 2225–3165 kg CO2e/tonne. Bare
+			// "coal" used to be a NAME of the industrial grade, so someone burning
+			// coal in a domestic stove was answered 21% low without being told a
+			// choice had been made for them.
+			reason: 'is not one grade — the published figures differ by up to 42% per tonne.',
+			candidates: ['hard-coal', 'coal-domestic', 'coking-coal', 'coal-electricity-generation']
 		}
 	}
 );
@@ -363,10 +371,17 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 	// greedy from the left and would read "light fuel oil" as "fuel oil" with
 	// "light" noted as ignored — answering with the residual grade for a phrase
 	// that says, in the word it dropped, that it is not the residual grade.
-	for (let start = 0; start < words.length; start++) {
+	for (let start = 1; start < words.length; start++) {
 		const phrase = words.slice(start).join(' ');
 		const split = SPLIT_MATERIALS[normalizeLoose(phrase)];
-		if (split) return err(splitMaterialError(phrase, split, fuels));
+		// The words BEFORE it must resolve as a unit on their own — that is what
+		// makes this suffix the whole material phrase rather than the tail of a
+		// longer one. Without the check, "1 kg coking coal" ends with "coal" and
+		// was answered with the ambiguity prompt for bare coal, even though
+		// "coking coal" names exactly one grade.
+		if (split && units.resolve(words.slice(0, start).join(' ')).kind === 'match') {
+			return err(splitMaterialError(phrase, split, fuels));
+		}
 	}
 
 	const fuelMatch = fuels.matchTrailingFuel(words);

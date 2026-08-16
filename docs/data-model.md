@@ -340,7 +340,7 @@ all of them as `illustrative_examples` rather than guessing a grid mix (spec
 §13.4/§9.6). With a matching region+year (0.2 picker), the engine multiplies
 the input energy through the chosen factor.
 
-**Factor totals:** 34 emission factors — **13 CO2**, **16 CO2e**, **5 biogenic
+**Factor totals:** 46 emission factors — **17 CO2**, **24 CO2e**, **5 biogenic
 CO2** (wood-logs, wood-pellets, ethanol, biodiesel, biogas) — including 3
 illustrative electricity-intensity factors (UK 2025 0.177 kgCO2e/kWh; EU-27
 2023 242 gCO2/kWh; EU-27 2022 292 gCO2/kWh), each explicitly region + year
