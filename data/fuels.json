@@ -600,15 +600,7 @@
 		{
 			"id": "natural-gas",
 			"names": ["natural gas"],
-			"aliases": [
-				"erdgas",
-				"pipeline gas",
-				"methane gas (grid)",
-				"grid gas",
-				"cng",
-				"compressed natural gas",
-				"natural gas (grid)"
-			],
+			"aliases": ["erdgas", "pipeline gas", "methane gas (grid)", "grid gas", "natural gas (grid)"],
 			"category": "gas",
 			"phase": "gas",
 			"density": {
@@ -650,11 +642,12 @@
 			],
 			"emission_factor_ids": ["natural-gas-co2-desnz", "natural-gas-co2e-desnz"],
 			"source_refs": ["uk-desnz-ghg-2025"],
-			"notes": "DESNZ 2025 'Natural gas' (UK grid mix). The per-m³ heating values are DERIVED from DESNZ's verbatim density and gravimetric CV (marked in each entry's notes), because DESNZ's volumetric cell is rounded to 0.01 kWh/L. IPCC 2006 Natural Gas NCV 48.0 MJ/kg, CO2 56,100 kg/TJ. EIA US: 1,036 Btu/scf, 54.81 kg CO2/Mcf. LNG, CNG and pure methane are separate entries.",
+			"notes": "DESNZ 2025 'Natural gas' (UK grid mix). The per-m³ heating values are DERIVED from DESNZ's verbatim density and gravimetric CV (marked in each entry's notes), because DESNZ's volumetric cell is rounded to 0.01 kWh/L. IPCC 2006 Natural Gas NCV 48.0 MJ/kg, CO2 56,100 kg/TJ. EIA US: 1,036 Btu/scf, 54.81 kg CO2/Mcf. LNG, CNG and pure methane are separate entries with their own densities.",
 			"warnings": [
 				"Natural gas m³→energy is NOT an exact identity. The reference temperature and pressure (normal m³ at 0 °C vs standard m³ at 15/25 °C) are NOT stated by the source, and real energy content varies by field, network and time.",
 				"This is NOT how a gas bill is calculated: billing uses your supplier's local calorific value (Brennwert) and a state-correction number (Zustandszahl) that maps your meter's operating-condition m³ to reference energy. Do not use this result for billing disputes."
-			]
+			],
+			"related_fuels": ["cng", "lng", "methane", "biogas"]
 		},
 		{
 			"id": "methane",
@@ -690,6 +683,36 @@
 			"notes": "Pure methane (CH4) physical properties from the DESNZ 2025 'Fuel properties' sheet. DESNZ lists NO combustion CO2/CO2e factor for pure methane as a distinct row (it is a properties reference). No emission factor is attached here rather than reusing natural gas's (which is a grid mix, not pure CH4) — a combustion CO2 for methane is therefore 'not available' in v0.1 sources. IPCC has no separate methane row either; natural gas is the closest analog.",
 			"warnings": [
 				"Pure methane is treated numerically close to natural gas but is NOT identical to the UK grid mix. No combustion CO2/CO2e factor is available for pure methane in the v0.1 sources, so emissions show 'not available'."
+			]
+		},
+		{
+			"id": "cng",
+			"names": ["CNG", "compressed natural gas"],
+			"aliases": ["compressed gas", "cng fuel", "natural gas (compressed)"],
+			"category": "gas",
+			"phase": "gas",
+			"density": {
+				"value": "175",
+				"unit": "kg_per_m3",
+				"reference_conditions": "compressed (storage pressure per DESNZ fuel-properties sheet; the pressure itself is NOT stated by the source)",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'CNG' density 175 kg/m³ (compressed). This is 218x the density of natural gas at atmospheric pressure (0.802 kg/m³) — the whole point of compressing it."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "45.745",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Net CV 45.745 GJ/tonne = 45.745 MJ/kg. Same molecular basis as natural gas — compression changes the density, not the energy per kilogram."
+				}
+			],
+			"emission_factor_ids": ["cng-co2e-desnz"],
+			"related_fuels": ["natural-gas", "lng", "methane"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 2025 'CNG' — natural gas compressed for vehicle fuel and storage. Chemically the same gas as the 'natural gas' entry, but 175 kg/m³ against 0.802 kg/m³, so a volume of CNG holds 218x the energy of the same volume of pipeline gas. DESNZ publishes no CO2-only component for this row, so only the CO2e total is carried — CO2 and CO2e are never derived from one another.",
+			"warnings": [
+				"DESNZ does not state the pressure or temperature its CNG density of 175 kg/m³ refers to. Compressed-gas density depends strongly on both, so treat a volume-based CNG answer as indicative of the DESNZ basis, not of your own tank."
 			]
 		},
 		{
@@ -1020,7 +1043,7 @@
 		{
 			"id": "biogas",
 			"names": ["biogas"],
-			"aliases": ["bio-gas", "biomethane", "digester gas", "sewage gas"],
+			"aliases": ["bio-gas", "digester gas", "sewage gas"],
 			"category": "biofuel",
 			"phase": "gas",
 			"density": {

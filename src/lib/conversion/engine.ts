@@ -822,22 +822,38 @@ export function createConverter(data: DataBundle): Converter {
 		const hvVol = pickHeatingValue(fuel, basis, 'per_volume');
 		if (hvMass) {
 			const massKg = energyToAmountBase(energyJ, hvMass.jPerBase);
+			// The heating value's own floor carries into the mass it produced.
+			const massExactness = heatingValueExactness(hvMass);
 			builder.add(
-				massResult(massKg, fuel, hvBasisAssumption(fuel, hvMass), hvMass.source_refs, [
-					step(
-						`${value} ${unitLabel(unit)}`,
-						'÷',
-						`${hvMass.displayValue} ${hvMass.displayUnit}`,
-						`${formatValue(kgToKgDisplay(massKg), 'source_based')} kg`,
-						`${basisLabel(basis)} heating value`
-					)
-				])
+				massResult(
+					massKg,
+					fuel,
+					hvBasisAssumption(fuel, hvMass),
+					hvMass.source_refs,
+					[
+						step(
+							`${value} ${unitLabel(unit)}`,
+							'÷',
+							`${hvMass.displayValue} ${hvMass.displayUnit}`,
+							`${formatValue(kgToKgDisplay(massKg), massExactness)} kg`,
+							`${basisLabel(basis)} heating value`
+						)
+					],
+					massExactness
+				)
 			);
 			addEmissions(builder, fuel, _options, { massKg, volumeM3: undefined });
 		} else if (hvVol) {
 			const volumeM3 = energyToAmountBase(energyJ, hvVol.jPerBase);
 			builder.add(
-				volumeResult(volumeM3, fuel, hvBasisAssumption(fuel, hvVol), hvVol.source_refs, [])
+				volumeResult(
+					volumeM3,
+					fuel,
+					hvBasisAssumption(fuel, hvVol),
+					hvVol.source_refs,
+					[],
+					heatingValueExactness(hvVol)
+				)
 			);
 			addEmissions(builder, fuel, _options, { volumeM3, massKg: undefined });
 		} else {
@@ -1330,15 +1346,25 @@ export function createConverter(data: DataBundle): Converter {
 		fuel: Fuel,
 		assumption: Assumption,
 		refs: string[],
-		formulas: string[]
+		formulas: string[],
+		/**
+		 * Floor of the chain that produced this mass (rulebook §A: exactness is a
+		 * floor, propagated by the weakest link; §B.3 gives energy→mass "same
+		 * floor"). Density is source_based, but an energy→mass step runs back
+		 * through a heating value that may only be an estimate — lignite's IPCC
+		 * 95% CI is 5.50–21.6 MJ/kg, so "1 GJ lignite" is anywhere from 46 to
+		 * 182 kg. Printing 84.03 kg as source_based claimed four significant
+		 * figures it had not earned.
+		 */
+		exactness: Exactness = 'source_based'
 	): ConversionResult {
 		return {
-			value: formatValue(kgToKgDisplay(massKg), 'source_based'),
+			value: formatValue(kgToKgDisplay(massKg), exactness),
 			raw: massKg,
 			unit_id: 'kilogram',
 			unit_label: 'kg',
 			category: 'mass',
-			exactness: 'source_based',
+			exactness,
 			formula: formulas[0],
 			assumptions: [assumption],
 			warnings: [],
@@ -1351,16 +1377,18 @@ export function createConverter(data: DataBundle): Converter {
 		fuel: Fuel,
 		assumption: Assumption,
 		refs: string[],
-		formulas: string[]
+		formulas: string[],
+		/** See `massResult` — same rulebook §B.3 "same floor" requirement. */
+		exactness: Exactness = 'source_based'
 	): ConversionResult {
 		const liters = new Decimal(volumeM3).times(1000).toFixed();
 		return {
-			value: formatValue(liters, 'source_based'),
+			value: formatValue(liters, exactness),
 			raw: liters,
 			unit_id: 'liter',
 			unit_label: 'L',
 			category: 'volume',
-			exactness: 'source_based',
+			exactness,
 			formula: formulas[0],
 			assumptions: [assumption],
 			warnings: [],

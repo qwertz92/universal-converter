@@ -386,6 +386,20 @@
 			"notes": "DESNZ 2025 'Natural gas' total 2.06672 kgCO2e/m³. Reference T/P of the m³ not stated (see fuel warning). Per kWh (Gross CV) DESNZ gives 0.18296 kgCO2e/kWh."
 		},
 		{
+			"id": "cng-co2e-desnz",
+			"fuel_id": "cng",
+			"pollutant": "CO2e",
+			"metric": "mass_per_volume",
+			"value": "0.4507",
+			"unit": "kg_co2e_per_l",
+			"scope": "direct_combustion",
+			"region": "UK",
+			"year": 2025,
+			"source_id": "uk-desnz-ghg-2025",
+			"source_table_or_page": "'Fuels' sheet, 'CNG' — total kgCO2e/litre",
+			"notes": "DESNZ 2025 CNG total 0.4507 kgCO2e/litre (also 0.18296 kgCO2e/kWh on a Gross CV basis). DESNZ publishes no CO2/CH4/N2O split for this row, so no CO2-only factor is carried — CO2 is never derived from CO2e. GWP set per DESNZ 2025 methodology (IPCC AR5, 100-yr)."
+		},
+		{
 			"id": "lng-co2e-desnz",
 			"fuel_id": "lng",
 			"pollutant": "CO2e",

@@ -21,25 +21,35 @@
 import type { Interpretation, Unit } from '$lib/conversion/types';
 import { levenshtein, normalizeLoose, normalizeSymbol } from './aliases';
 
-/** Tokens that must be treated as ambiguous, with the candidate units + default. */
-const AMBIGUOUS_TOKENS: Record<string, { candidates: string[]; note: string }> = {
-	ton: {
-		candidates: ['tonne', 'short_ton', 'long_ton'],
-		note: 'metric tonne (1000 kg) vs US short ton (907 kg) vs UK long ton (1016 kg)'
-	},
-	tons: {
-		candidates: ['tonne', 'short_ton', 'long_ton'],
-		note: 'metric tonne vs US short ton vs UK long ton'
-	},
-	gallon: {
-		candidates: ['us_gallon', 'imperial_gallon'],
-		note: 'US gallon (3.785 L) vs imperial gallon (4.546 L)'
-	},
-	gallons: {
-		candidates: ['us_gallon', 'imperial_gallon'],
-		note: 'US gallon vs imperial gallon'
+/**
+ * Tokens that must be treated as ambiguous, with the candidate units + default.
+ *
+ * Null-prototype: this object is indexed with UNVALIDATED user input. As a
+ * plain literal, `AMBIGUOUS_TOKENS['constructor']` returned an inherited
+ * function, `.candidates` was undefined and `.map` threw — so `5 constructor`
+ * crashed the parser and `/api/convert` answered 500 instead of a parse error.
+ */
+const AMBIGUOUS_TOKENS: Record<string, { candidates: string[]; note: string }> = Object.assign(
+	Object.create(null),
+	{
+		ton: {
+			candidates: ['tonne', 'short_ton', 'long_ton'],
+			note: 'metric tonne (1000 kg) vs US short ton (907 kg) vs UK long ton (1016 kg)'
+		},
+		tons: {
+			candidates: ['tonne', 'short_ton', 'long_ton'],
+			note: 'metric tonne vs US short ton vs UK long ton'
+		},
+		gallon: {
+			candidates: ['us_gallon', 'imperial_gallon'],
+			note: 'US gallon (3.785 L) vs imperial gallon (4.546 L)'
+		},
+		gallons: {
+			candidates: ['us_gallon', 'imperial_gallon'],
+			note: 'US gallon vs imperial gallon'
+		}
 	}
-};
+);
 
 export type UnitMatch =
 	| { kind: 'match'; unit: Unit; via: 'symbol' | 'name' | 'alias'; note?: string }

@@ -232,7 +232,10 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 	const priceClause = peelPrice(words, units);
 	if (priceClause && 'error' in priceClause) return err(priceClause.error);
 	const price = priceClause?.price;
-	if (priceClause) words = priceClause.rest;
+	if (priceClause) {
+		words = priceClause.rest;
+		if (priceClause.note) notes.push(`price: ${priceClause.note}`);
+	}
 
 	for (;;) {
 		const duration = peelDuration(words, units);
@@ -490,7 +493,7 @@ function peelEfficiency(
 function peelPrice(
 	words: string[],
 	units: UnitRegistry
-): { rest: string[]; price: Price } | { error: ParseError } | undefined {
+): { rest: string[]; price: Price; note?: string } | { error: ParseError } | undefined {
 	for (let i = words.length - 1; i >= 1; i--) {
 		if (!PRICE_WORDS.has(words[i].toLowerCase())) continue;
 		const tail = words
@@ -516,8 +519,27 @@ function peelPrice(
 			};
 		}
 
-		const amount = normalizeNumber(rawAmount.trim());
-		if (!/\d/.test(amount)) continue;
+		// The RAW shape is checked before normalising, because normalisation is
+		// lossy: "1,2,3" would come out as "123" and "1.2.3" would reach Decimal
+		// and throw. A price is a plain number, optionally grouped.
+		const rawTrimmed = rawAmount.trim().replace(/\s+/g, '');
+		const wellFormed =
+			/^\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?$/.test(rawTrimmed) ||
+			/^\d+(?:[.,]\d+)?$/.test(rawTrimmed);
+
+		// normalizeNumberWithWarning, not normalizeNumber: the thousands-separator
+		// reading of "1,500" is a guess, and swallowing the warning here would bill
+		// a German-locale user 1000x what they meant with nothing on screen.
+		const { value: amount, warning: amountWarning } = normalizeNumberWithWarning(rawTrimmed);
+		if (!wellFormed || !/^\d+(?:\.\d+)?$/.test(amount)) {
+			return {
+				error: {
+					kind: 'unsupported_value',
+					message: `"${rawAmount.trim()}" is not a price I can read. Use a plain number, e.g. "0.32 ${currency}/${perUnit.trim()}".`,
+					token: rawAmount.trim()
+				}
+			};
+		}
 		if (new Decimal(amount).isNegative()) {
 			return {
 				error: {
@@ -532,7 +554,8 @@ function peelPrice(
 
 		return {
 			rest: words.slice(0, i),
-			price: { amount, currency, per_unit_id: match.unit.id }
+			price: { amount, currency, per_unit_id: match.unit.id },
+			note: amountWarning
 		};
 	}
 	return undefined;
