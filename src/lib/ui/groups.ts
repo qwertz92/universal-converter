@@ -25,6 +25,10 @@ export const GROUP_META: Record<ResultGroupKey, GroupMeta> = {
 		blurb: 'CO₂ and CO₂e are separate — never derived from each other.'
 	},
 	energy_density: { title: 'Energy density', blurb: 'Energy per unit of mass or volume.' },
+	cost: {
+		title: 'Cost',
+		blurb: 'At the rate you typed. This tool carries no tariffs and converts no currencies.'
+	},
 	industrial_units: { title: 'Industrial units', blurb: 'therm, MMBTU, quad.' },
 	assumptions: { title: 'Assumptions' },
 	warnings: { title: 'Warnings' },

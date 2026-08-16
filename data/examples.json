@@ -161,6 +161,20 @@
 			"label": "10 L diesel to kg",
 			"category": "fuel",
 			"notes": "A cross-dimension target answered through the fuel density."
+		},
+		{
+			"id": "ex-price-per-kwh",
+			"input": "1000 kWh at 0.32 EUR/kWh",
+			"label": "1000 kWh at 0.32 EUR/kWh",
+			"category": "energy",
+			"notes": "Prices come from you, never from this tool: no tariffs are carried and no currency is converted."
+		},
+		{
+			"id": "ex-gas-bill",
+			"input": "100 m3 natural gas at 0.09 EUR/kWh",
+			"label": "100 m³ natural gas at 0.09 EUR/kWh",
+			"category": "fuel",
+			"notes": "The heating-bill case: gas is metered in cubic metres but billed per kWh, so the calorific value sits in between."
 		}
 	]
 }

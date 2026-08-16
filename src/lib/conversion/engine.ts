@@ -33,6 +33,7 @@ import type {
 	IllustrativeExample,
 	ParsedQuery,
 	ParseError,
+	Price,
 	Quantity,
 	ResultGroupKey,
 	Unit,
@@ -76,6 +77,15 @@ interface EnergyForBasis {
 	joulesRange?: { low: string; high: string };
 	hv: HeatingValueResolved;
 }
+
+/**
+ * `unit_id` for a cost row. Money is not a catalog unit — there are no exchange
+ * rates in this tool and the currency is whatever label the user typed — but
+ * `ConversionResult.unit_id` is required, so cost rows carry this sentinel. It
+ * deliberately does not resolve in the unit registry, which is what keeps a
+ * cost out of every dimension-based lookup.
+ */
+const CURRENCY_UNIT_ID = 'currency';
 
 /** Dimensions the fuel pipeline can bridge between (via density / heating value). */
 const BRIDGEABLE_VIA_FUEL = new Set<Unit['dimension']>(['mass', 'volume', 'energy']);
@@ -173,6 +183,9 @@ export function createConverter(data: DataBundle): Converter {
 			// An explicitly requested target must always be answered — or told,
 			// precisely, why it cannot be (§C.8). It never replaces the other groups.
 			if (target) ensureTarget(builder, query.value, unit, target, fuel, opts);
+			// A price is the user's own number, so it is applied last, on top of
+			// whatever the pipeline managed to produce.
+			if (query.price) addCost(builder, query.price, unit);
 		} catch (e) {
 			return unsupportedSet(
 				query,
@@ -183,6 +196,79 @@ export function createConverter(data: DataBundle): Converter {
 		const set = builder.build();
 		if (target) highlightTarget(set, target);
 		return set;
+	}
+
+	/**
+	 * Multiply a result by a price the USER supplied.
+	 *
+	 * This is the one number in the whole tool that does not come from a source,
+	 * and it is allowed precisely because it does not come from us either: the
+	 * catalog holds no tariffs, so the rate is the reader's own figure and the
+	 * cost is labeled `user_assumption`. Three things follow from that and are
+	 * enforced here:
+	 *
+	 *  - the cost is never more exact than the quantity it rests on, so the
+	 *    exactness is combined rather than taken from the price alone;
+	 *  - the currency is echoed as a label and never converted — there are no
+	 *    exchange rates in this tool and there will not be any;
+	 *  - if the priced unit is not among the results, the answer says which unit
+	 *    is missing instead of silently pricing something else. Pricing gas per
+	 *    kWh when the query was in m³ works only because the fuel pipeline has
+	 *    already produced the kWh row; where it has not, that is reported.
+	 */
+	function addCost(builder: ResultSetBuilder, price: Price, from: Unit): void {
+		const perUnit = units.get(price.per_unit_id);
+		if (!perUnit) return;
+		const label = `${price.currency}/${unitLabel(perUnit)}`;
+		const row = builder.resultFor(price.per_unit_id);
+
+		if (!row || row.raw === null) {
+			builder.add({
+				value: null,
+				raw: null,
+				unit_id: CURRENCY_UNIT_ID,
+				unit_label: price.currency,
+				category: 'cost',
+				exactness: 'context_required',
+				explanation: `A price of ${price.amount} ${label} needs a figure in ${unitLabel(perUnit)}, and this query does not produce one${
+					from.dimension === perUnit.dimension
+						? '.'
+						: ` — ${unitLabel(from)} is ${from.dimension}, ${unitLabel(perUnit)} is ${perUnit.dimension}. For a fuel, name it (e.g. "1 L diesel at ${price.amount} ${label}") so the energy can be derived.`
+				}`,
+				assumptions: [],
+				warnings: [],
+				source_refs: []
+			});
+			return;
+		}
+
+		const total = new Decimal(row.raw).times(price.amount);
+		const exactness = combineExactness(row.exactness, 'user_assumption');
+		builder.add({
+			// Money is read to the cent, so this is rounded for display rather than
+			// shown to the engine's full internal precision.
+			value: `~${formatMoney(total)}`,
+			raw: total.toFixed(),
+			unit_id: CURRENCY_UNIT_ID,
+			unit_label: price.currency,
+			category: 'cost',
+			exactness,
+			formula: `${row.raw} ${unitLabel(perUnit)} × ${price.amount} ${label} = ${formatMoney(total)} ${price.currency}`,
+			assumptions: [
+				{
+					kind: 'user_input',
+					text: `price: your figure of ${price.amount} ${label} — this tool carries no tariffs`
+				}
+			],
+			warnings: [],
+			source_refs: row.source_refs,
+			explanation: `${formatMoney(total)} ${price.currency} at your rate of ${price.amount} ${label}. The rate is yours, not a published figure, so this cost is only as good as it is.`
+		});
+	}
+
+	/** Two decimals, the way money is read. */
+	function formatMoney(d: Decimal): string {
+		return d.toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toFixed(2);
 	}
 
 	/**

@@ -101,14 +101,30 @@ statement of what the engine understood, honest out-of-scope messaging, a
 mobile pass that removed up to 451px of horizontal overflow, and browser-local
 recent conversions (the "saved scenarios" half that needs no new data).
 
-**Why the listed calculators did not ship.** Every one of them needs numbers
-this repository does not have a source for:
+**Update (v0.3.2): the price calculators shipped after all.** The blocker below
+was stated too broadly. "We cannot publish a tariff" is not the same as "we
+cannot compute with one" — and the second never followed from the first. A rate
+the reader types is their own number, so multiplying by it invents nothing.
+
+`1000 kWh at 0.32 EUR/kWh` and `100 m³ natural gas at 0.09 EUR/kWh` now answer,
+under three constraints that keep the rulebook intact: the catalog still carries
+no tariffs, the currency is a label that is never converted (this tool has no
+exchange rates and refuses currency conversion outright), and the cost is never
+labeled more exact than the quantity it rests on. The same reasoning applies to
+boiler efficiency and heat-pump COP — an efficiency the reader supplies is not
+an invented default — so those are unblocked too and simply not built yet.
+
+**Why the listed calculators did not ship in 0.3.0.** Every one of them needs
+numbers this repository does not have a source for:
 
 - *Heating-cost / electricity / gas price calculators* — tariffs are
   per-contract and change constantly; there is no citable dataset that would
-  make a shipped number true for any given reader.
+  make a shipped number true for any given reader. **Resolved in 0.3.2 by
+  taking the rate from the user instead of shipping one.**
 - *Boiler efficiency, heat-pump COP* — these are equipment properties with wide
-  real spread. Without a cited efficiency table, any default would be invented.
+  real spread. Without a cited efficiency table, any DEFAULT would be invented —
+  but a figure the reader supplies from their own appliance's data plate is not.
+  Unblocked on the same reasoning as prices; not yet built.
 - *Well-to-wheel factors* — requires an upstream/lifecycle dataset (e.g. JEC or
   a national equivalent) that has not been researched or licence-checked.
 - *Country presets* — the same blocker as the US grid factor: a preset per

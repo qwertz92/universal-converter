@@ -24,6 +24,7 @@ const GROUP_TITLES: Record<ResultGroupKey, string> = {
 	fuel_equivalents: 'Fuel Equivalents',
 	emissions: 'Emissions',
 	energy_density: 'Energy Density',
+	cost: 'Cost',
 	industrial_units: 'Industrial Units',
 	assumptions: 'Assumptions',
 	warnings: 'Warnings',
@@ -72,6 +73,20 @@ export class ResultSetBuilder {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * The first collected result carrying a value in exactly this unit. A price
+	 * is applied to it, so the caller needs the figure and its exactness, not
+	 * merely to know that one exists.
+	 */
+	resultFor(unitId: string): ConversionResult | undefined {
+		for (const bucket of this.buckets.values()) {
+			for (const r of bucket) {
+				if (r.unit_id === unitId && r.raw !== null) return r;
+			}
+		}
+		return undefined;
 	}
 
 	/**

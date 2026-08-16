@@ -2,6 +2,7 @@
  * Free-text parser (spec §8.2). Grammar:
  *
  *   [filler] <number> <unit> [fuel] [(to|in|→) <target unit>] [(for|×) <duration>]
+ *            [(at|@) <amount> <currency>/<unit>]
  *
  * Handles:
  *  - `1 kWh`, `1.5 MJ`, `1,5 MJ` (comma decimal), `1000 kcal`, `1 kilowatt hour`;
@@ -13,6 +14,9 @@
  *    replaces the other result groups);
  *  - a DURATION for the power→energy bridge: `5 kW for 3 h`, `2 kW × 30 min`
  *    (rulebook §B.3 — the tool still never assumes a duration on its own);
+ *  - a user-supplied PRICE: `1000 kWh at 0.32 EUR/kWh`, `1 L diesel @ 1.75 €/L`.
+ *    The catalog holds no tariffs and never will; a price only ever comes from
+ *    the person asking, and the currency is a label, never converted;
  *  - conversational phrasing: `convert 5 kwh to mj`,
  *    `how many kWh in 1 liter diesel?`.
  *
@@ -30,7 +34,7 @@
  */
 
 import Decimal from 'decimal.js';
-import type { ParseError, ParseResult, ParsedQuery, Quantity } from './types';
+import type { ParseError, ParseResult, ParsedQuery, Price, Quantity } from './types';
 import type { UnitRegistry } from '$lib/units/registry';
 import type { FuelRegistry } from '$lib/fuels/registry';
 
@@ -55,6 +59,8 @@ const STRONG_TARGET_WORDS = new Set(['to', 'into', '->', '→', '⇒', '=', '=>'
 const WEAK_TARGET_WORDS = new Set(['in', 'as']);
 /** Keywords introducing a duration for the power→energy bridge. */
 const DURATION_WORDS = new Set(['for', 'over', 'during', '×', 'x', '*', '·']);
+/** Introduces a user-supplied unit price: `1000 kWh at 0.32 EUR/kWh`. */
+const PRICE_WORDS = new Set(['at', '@', 'costing']);
 /** Articles accepted in a duration ("for an hour" → 1 hour). */
 const DURATION_ARTICLES = new Set(['a', 'an', 'one']);
 /** Words that carry no meaning between a unit and a material ("10 litres OF diesel"). */
@@ -138,7 +144,7 @@ const OUT_OF_SCOPE: { tokens: string[]; label: string; note: string }[] = [
 	{
 		tokens: ['eur', 'usd', 'gbp', 'chf', '€', '$', '£', 'cent', 'euro', 'dollar', 'dollars'],
 		label: 'Currency and prices',
-		note: 'Prices change daily and depend on your tariff, so this tool does not carry them. Energy-price calculators are on the roadmap.'
+		note: 'This tool carries no tariffs and converts no currencies. It will price a quantity at a rate YOU give it, though — try "1000 kWh at 0.32 EUR/kWh".'
 	},
 	{
 		tokens: ['ppm', 'ppb', 'percent', '%'],
@@ -210,6 +216,13 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 	let targetUnitId: string | undefined;
 	let time: Quantity | undefined;
 
+	// A price clause is peeled FIRST: it ends in a unit ("…/kWh") that the target
+	// and fuel matchers would otherwise try to claim.
+	const priceClause = peelPrice(words, units);
+	if (priceClause && 'error' in priceClause) return err(priceClause.error);
+	const price = priceClause?.price;
+	if (priceClause) words = priceClause.rest;
+
 	for (;;) {
 		const duration = peelDuration(words, units);
 		if (duration && 'error' in duration) return err(duration.error);
@@ -248,6 +261,7 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 			dimension: wholeMatch.unit.dimension,
 			target_unit_id: targetUnitId,
 			time,
+			price,
 			confidence: wholeMatch.via === 'symbol' ? 1 : 0.95,
 			notes: aliasNote(wholeMatch, notes),
 			original_input: original
@@ -337,6 +351,7 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 				fuel_id: fuelId,
 				target_unit_id: targetUnitId,
 				time,
+				price,
 				confidence: match.via === 'symbol' ? 1 : 0.9,
 				notes: aliasNote(match, notes),
 				original_input: original
@@ -395,6 +410,67 @@ function peelTarget(
 		if (strong) {
 			return { error: unknownUnitError(tail, words[i + 1], units, true) };
 		}
+	}
+	return undefined;
+}
+
+/**
+ * Split off a trailing `at <amount> <currency>/<unit>` clause —
+ * `1000 kWh at 0.32 EUR/kWh`, `1 L diesel @ 1.75 €/L`.
+ *
+ * The catalog carries no tariffs, so the ONLY way a price enters this tool is
+ * the user typing one. Accordingly this is strict: the clause is consumed only
+ * when it has an amount, a currency label and a real catalog unit after the
+ * slash. Anything looser is left alone for the other matchers, because a
+ * half-understood price would be worse than none.
+ */
+function peelPrice(
+	words: string[],
+	units: UnitRegistry
+): { rest: string[]; price: Price } | { error: ParseError } | undefined {
+	for (let i = words.length - 1; i >= 1; i--) {
+		if (!PRICE_WORDS.has(words[i].toLowerCase())) continue;
+		const tail = words
+			.slice(i + 1)
+			.join(' ')
+			.trim();
+		if (tail === '') continue;
+
+		// "0.32 EUR/kWh" / "0,32 €/kWh" / "1.75€ / L" — the slash is required, so
+		// "at 3 kWh" is not mistaken for a price.
+		const m = tail.match(/^([+-]?[\d.,\s]+?)\s*([^\s\d/]+)\s*\/\s*(.+)$/);
+		if (!m) continue;
+		const [, rawAmount, currency, perUnit] = m;
+
+		const match = units.resolve(perUnit.trim());
+		if (match.kind !== 'match') {
+			return {
+				error: {
+					kind: 'unknown_unit',
+					message: `"${perUnit.trim()}" is not a unit I know, so I cannot price per it. Try a price like "0.32 ${currency}/kWh".`,
+					token: perUnit.trim()
+				}
+			};
+		}
+
+		const amount = normalizeNumber(rawAmount.trim());
+		if (!/\d/.test(amount)) continue;
+		if (new Decimal(amount).isNegative()) {
+			return {
+				error: {
+					kind: 'unsupported_value',
+					message: `A price cannot be negative (got ${rawAmount.trim()}).`,
+					token: rawAmount.trim()
+				}
+			};
+		}
+		const magnitude = checkMagnitude(amount, rawAmount.trim());
+		if (magnitude) return { error: magnitude };
+
+		return {
+			rest: words.slice(0, i),
+			price: { amount, currency, per_unit_id: match.unit.id }
+		};
 	}
 	return undefined;
 }

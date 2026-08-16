@@ -43,6 +43,8 @@ export interface QueryInterpretation {
 	fuel?: { id: string; name: string };
 	target?: { id: string; symbol: string; name: string };
 	duration?: string;
+	/** The user's own unit price, echoed back so they can check it. */
+	price?: string;
 }
 
 /**
@@ -81,12 +83,20 @@ export function describeQuery(
 		? units.find((u) => u.id === query.target_unit_id)
 		: undefined;
 	const timeUnit = query.time ? units.find((u) => u.id === query.time?.unit_id) : undefined;
+	const priceUnit = query.price ? units.find((u) => u.id === query.price?.per_unit_id) : undefined;
+	const priceLabel =
+		query.price && priceUnit
+			? `${query.price.amount} ${query.price.currency}/${priceUnit.symbols[0]}`
+			: undefined;
 
 	const parts: string[] = [];
 	if (unit) parts.push(`${query.value} ${unit.symbols[0]} (${unit.names[0]})`);
 	if (query.fuel_id) parts.push(`of ${query.fuel_id.replace(/-/g, ' ')}`);
 	if (query.time && timeUnit) parts.push(`over ${query.time.value} ${timeUnit.symbols[0]}`);
 	if (target) parts.push(`→ ${target.symbols[0]} (${target.names[0]})`);
+	// The price is the one figure the tool did not source, so saying it back is
+	// not decoration — it is how the reader checks their own number.
+	if (priceLabel) parts.push(`at your price ${priceLabel}`);
 	// Parser notes record anything the reading glossed over (an ambiguous
 	// thousands separator, words that were dropped). They belong on the line
 	// that claims to say what was understood.
@@ -108,7 +118,8 @@ export function describeQuery(
 		target: target
 			? { id: target.id, symbol: target.symbols[0], name: target.names[0] }
 			: undefined,
-		duration: query.time && timeUnit ? `${query.time.value} ${timeUnit.symbols[0]}` : undefined
+		duration: query.time && timeUnit ? `${query.time.value} ${timeUnit.symbols[0]}` : undefined,
+		price: priceLabel
 	};
 }
 

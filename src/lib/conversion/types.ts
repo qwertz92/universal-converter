@@ -388,6 +388,7 @@ export type ResultGroupKey =
 	| 'fuel_equivalents'
 	| 'emissions'
 	| 'energy_density'
+	| 'cost'
 	| 'industrial_units'
 	| 'assumptions'
 	| 'warnings'
@@ -404,6 +405,7 @@ export const RESULT_GROUP_ORDER: readonly ResultGroupKey[] = [
 	'fuel_equivalents',
 	'emissions',
 	'energy_density',
+	'cost',
 	'industrial_units',
 	'assumptions',
 	'warnings',
@@ -477,6 +479,25 @@ export interface ParseError {
 	hint?: string;
 }
 
+/**
+ * A user-supplied unit price, e.g. `0.32 EUR/kWh`.
+ *
+ * The currency is a LABEL that is carried through and printed back, never
+ * converted: this tool has no exchange rates and refuses currency conversion
+ * outright. Multiplying an energy figure by a rate the user typed is ordinary
+ * arithmetic on their own number, which is why it does not violate the
+ * no-invented-numbers rule — but the result is never more exact than
+ * `user_assumption`.
+ */
+export interface Price {
+	/** Decimal string, as typed (normalised for separators). */
+	amount: string;
+	/** Currency label exactly as written: "EUR", "€", "$", "p"… */
+	currency: string;
+	/** The unit the price is PER — must be a real catalog unit. */
+	per_unit_id: string;
+}
+
 /** The result of parsing free text (spec §8.2). */
 export interface ParsedQuery {
 	value: string;
@@ -492,6 +513,13 @@ export interface ParsedQuery {
 	/** A duration parsed from the query (`5 kW for 3 h`) for the power→energy
 	 *  bridge. Still explicit: nothing is ever assumed (rulebook §B.3, §D.1). */
 	time?: Quantity;
+	/**
+	 * A price the USER supplied (`1000 kWh at 0.32 EUR/kWh`). The catalog carries
+	 * no tariffs and never will — they are per-contract and change daily — but
+	 * multiplying by a rate someone typed themselves invents nothing, so the cost
+	 * is computed and labeled `user_assumption`.
+	 */
+	price?: Price;
 	/** 0..1 heuristic confidence in the parse. */
 	confidence: number;
 	/** Alias/interpretation notes to gently confirm in the UI (e.g. "'Calorie' → kcal"). */
