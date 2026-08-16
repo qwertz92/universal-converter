@@ -104,8 +104,16 @@
 
 	const pinned = $derived(effectiveQuery(queryText));
 
+	/**
+	 * Set or clear the pin.
+	 *
+	 * Clearing drops the TARGET pin too. A `?pin=>MJ` link sets only `pin.to`,
+	 * which the interface never surfaced and this function never wrote — so that
+	 * link silently appended "to MJ" to every query for the rest of the session
+	 * with no way to stop it. One control, one thing it does: no pin left behind.
+	 */
 	function setPin(unitId: string | undefined): void {
-		pin = unitId ? { ...pin, from: unitId } : { ...pin, from: undefined };
+		pin = unitId ? { ...pin, from: unitId } : {};
 		if (queryText.trim()) {
 			runConversion(queryText);
 			pushUrl();
@@ -206,9 +214,18 @@
 	let saved = $state<SavedEntry[]>([]);
 	const store = $derived(browser ? window.localStorage : undefined);
 
+	/**
+	 * Record the query the ENGINE ran, not the text that was typed.
+	 *
+	 * Under a pin, "5" is a complete query — but only while that pin is set.
+	 * Storing the bare "5" meant the history chip stopped working the moment the
+	 * pin changed or came off: clicking it answered "Got the value 5, but no
+	 * unit." A history entry has to stand on its own.
+	 */
 	function remember(text: string): void {
-		const parsed = engine().parse(effectiveQuery(text).text);
-		if (parsed.ok) recent = pushRecent(store, text);
+		const effective = effectiveQuery(text);
+		const parsed = engine().parse(effective.text);
+		if (parsed.ok) recent = pushRecent(store, effective.text);
 	}
 
 	function runSaved(query: string): void {
@@ -385,6 +402,7 @@
 		effective={pinned.text}
 		pinApplied={pinned.usedFrom || pinned.usedTo}
 		pinnedFrom={pin.from}
+		pinnedTo={pin.to}
 		onpin={setPin}
 	/>
 

@@ -37,6 +37,7 @@
 		pinApplied = false,
 		/** The currently pinned units, for the toggle's label. */
 		pinnedFrom = undefined,
+		pinnedTo = undefined,
 		onpin = undefined
 	}: {
 		value: string;
@@ -50,6 +51,8 @@
 		effective?: string;
 		pinApplied?: boolean;
 		pinnedFrom?: string;
+		/** A pinned TARGET unit. Surfaced so a `?pin=>MJ` link can be seen and cleared. */
+		pinnedTo?: string;
 		/** Pin (or unpin, with undefined) the unit of the current query. */
 		onpin?: (unitId: string | undefined) => void;
 	} = $props();
@@ -66,6 +69,9 @@
 	// hide it.
 	const interpretation = $derived(describeQuery(effective ?? value, parse, units));
 	const pinnedUnit = $derived(units.find((u) => u.id === pinnedFrom));
+	const pinnedTarget = $derived(units.find((u) => u.id === pinnedTo));
+	/** Any pin at all — a target-only pin must be visible, or it cannot be removed. */
+	const anyPin = $derived(pinnedUnit ?? pinnedTarget);
 	/** The unit the current query could be pinned to. */
 	const pinnable = $derived(
 		interpretation.status === 'ok' && interpretation.unit ? interpretation.unit : undefined
@@ -321,19 +327,25 @@
 				{/if}
 			</p>
 
-			{#if onpin && (pinnedUnit || pinnable)}
+			{#if onpin && (anyPin || pinnable)}
 				<button
 					type="button"
 					class="shrink-0 rounded-full border px-2 py-1 text-xs font-medium whitespace-nowrap hover:bg-[var(--surface)]"
-					style="border-color:var(--border);color:{pinnedUnit
-						? 'var(--accent)'
-						: 'var(--text-muted)'}"
-					onclick={() => onpin(pinnedUnit ? undefined : pinnable?.id)}
-					title={pinnedUnit
-						? `Typing a bare number uses ${pinnedUnit.symbols[0]}. Click to unpin.`
+					style="border-color:var(--border);color:{anyPin ? 'var(--accent)' : 'var(--text-muted)'}"
+					onclick={() => onpin(anyPin ? undefined : pinnable?.id)}
+					title={anyPin
+						? `Pinned: ${pinnedUnit ? `bare numbers use ${pinnedUnit.symbols[0]}` : ''}${
+								pinnedUnit && pinnedTarget ? ', ' : ''
+							}${pinnedTarget ? `answers convert to ${pinnedTarget.symbols[0]}` : ''}. Click to unpin.`
 						: `Pin ${pinnable?.symbol} so a bare number is enough`}
 				>
-					{pinnedUnit ? `📌 ${pinnedUnit.symbols[0]}` : `Pin ${pinnable?.symbol}`}
+					{#if anyPin}
+						📌 {pinnedUnit?.symbols[0] ?? ''}{pinnedTarget
+							? `${pinnedUnit ? ' ' : ''}→ ${pinnedTarget.symbols[0]}`
+							: ''}
+					{:else}
+						Pin {pinnable?.symbol}
+					{/if}
 				</button>
 			{/if}
 		</div>

@@ -3,6 +3,71 @@
 All notable changes to Universal Converter. Versioning follows semver
 (pre-1.0: minor bumps may include behavior changes; they are listed here).
 
+## 0.3.3 — 2026-08-16
+
+An adversarial review of the whole repository — new work and old — found
+eleven defects. Every one of them had shipped, passed every gate, and was
+caught by nobody's test.
+
+### Fixed — wrong numbers
+
+- **CNG was an alias of natural gas, so every CNG answer was 218× low.** DESNZ
+  lists CNG as its own product at 175 kg/m³; the alias routed it to pipeline gas
+  at 0.802. `1 L CNG` reported 0.00207 kg CO₂e against a recorded 0.4507 —
+  labeled source-based and cited to DESNZ. CNG now ships as its own entry.
+- **Biomethane was an alias of biogas** — 2.45× low on calorific value, and it
+  inherited biogas's biogenic CO₂, a figure never recorded for it. It has no
+  recorded emission factor, so it must not ship _and_ must not silently resolve
+  to something else. It is now an honest "unknown material".
+- **"Heizöl" answered with residual bunker oil.** The entry is DESNZ "Fuel Oil"
+  (983 kg/m³, the heavy industrial grade) but claimed `heizöl` and
+  `light fuel oil`. German/Austrian Heizöl EL is a gasoil-grade distillate, so
+  answers were ~15% high. Phrases that name a product _class_ this catalog
+  splits — `heizöl`, `heating oil`, `light fuel oil`, `paraffin` — now offer the
+  candidate grades instead of picking one. Naming a class is a question.
+- **Energy → mass claimed more exactness than the heating value it used.**
+  `1 kg lignite` was correctly an estimate with a 5.5–21.6 MJ range, while the
+  inverse `1 GJ lignite` printed `84.03 kg` as source-based — four significant
+  figures from a factor whose own confidence interval spans 46 to 182 kg.
+- **A price could be misread by 1000× in silence.** Typing `1,500 EUR/kWh`
+  meaning €1.50 was billed €1,500,000 with nothing on screen. The
+  thousands-separator reading is a guess and now says so; malformed amounts are
+  refused rather than fed to the arithmetic.
+
+### Fixed — crashes and losses
+
+- **`5 constructor` crashed the parser** and returned HTTP 500 from the API: a
+  lookup table was indexed with raw user input and reached JavaScript's
+  prototype chain. In the browser the previous answer stayed on screen for the
+  new input.
+- **A corrupted browser-storage value took the whole page down**, because the
+  history list could contain two identical entries after trimming and the panel
+  keys its rows by that text.
+- **A second duration was silently discarded**: `5 kW for 3 h for 2 h` answered
+  15 kWh with no note, while the equivalent `5 kWh to MJ to GJ` was already an
+  error.
+- **Re-saving a conversation entry wiped its label.**
+- **A history entry recorded under a pin stopped working when the pin changed** —
+  the bare `5` was stored rather than the query that ran.
+- **A `?pin=>MJ` link could never be cleared**: the target pin was never shown,
+  so it silently appended `to MJ` to every query for the rest of the session.
+
+### Fixed — presentation
+
+- **The copy button resized on click**, sliding the export toolbar and, inside a
+  result row, re-wrapping the value line and pushing every row below it down.
+  Measured at zero now, in width, position and row height.
+- **The calculation path was dimensionally impossible for any fuel without a
+  per-litre calorific value** — gas oil, ethanol, hydrogen, the wood fuels. It
+  read `1 L gas oil × 42.569 MJ/kg`: litres times MJ per kilogram, with the
+  density step invisible. The value was right; the audit trail is the point.
+- Emission-factor units on fuel pages read `kg co2e per l` instead of `kgCO₂e/L`.
+
+### Changed
+
+- Spec §8.2 listed `1 liter heating oil` as a must-work input. It is amended in
+  place, with the reasoning, rather than quietly diverged from.
+
 ## 0.3.2 — 2026-08-16
 
 The calculators the roadmap had written off — built on your numbers, not ours.
