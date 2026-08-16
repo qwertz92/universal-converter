@@ -87,8 +87,8 @@
 		},
 		{
 			"id": "ex-1-l-heating-oil",
-			"input": "1 liter heating oil",
-			"label": "1 L heating oil",
+			"input": "1 liter fuel oil",
+			"label": "1 L fuel oil",
 			"category": "fuel",
 			"notes": "Heating oil (Fuel Oil grade): mass, energy, emissions."
 		},

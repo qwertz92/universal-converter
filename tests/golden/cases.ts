@@ -298,7 +298,7 @@ export const GOLDEN_CASES: GoldenCase[] = [
 	// ---------------------------------------------------------------- *
 	{
 		id: 'golden-1-l-heating-oil-energy',
-		input: '1 liter heating oil',
+		input: '1 liter fuel oil',
 		derivation:
 			"uk-desnz-ghg-2025 'Fuel Oil' Net CV (LHV) = 11.131 kWh/L => 11.131 x 3.6 = 40.0716 MJ.",
 		checks: [

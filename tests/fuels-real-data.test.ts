@@ -150,12 +150,18 @@ describe('§13.3 barrel crude oil -> energy degrades gracefully per catalog (no 
 describe('§13.3 every fuel in the catalog: available heating values produce basis-labeled, sourced results', () => {
 	// Use a representative amount unit per fuel (mass-based if the fuel has no
 	// density; otherwise volume, matching how the fuel is naturally metered).
-	function representativeInput(fuelId: string, hasDensity: boolean): string {
+	// Query by the fuel's NAME, not by its id spelled out. `heating-oil` keeps
+	// that id so its indexed URL stays valid, but the entry is DESNZ "Fuel Oil"
+	// and "heating oil" is deliberately an ambiguity prompt now (it covers three
+	// grades that differ by up to 15% per litre).
+	function representativeInput(name: string, hasDensity: boolean): string {
 		const unit = hasDensity ? 'L' : 'kg';
-		return `1 ${unit} ${fuelId.replace(/-/g, ' ')}`;
+		return `1 ${unit} ${name}`;
 	}
 
-	it.each(fuels.map((f) => [f.id, Boolean(f.density), (f.heating_values ?? []).length] as const))(
+	it.each(
+		fuels.map((f) => [f.names[0], Boolean(f.density), (f.heating_values ?? []).length] as const)
+	)(
 		'%s produces >=1 basis-labeled energy result with a source_ref, or an honest "not available"',
 		(fuelId, hasDensity, hvCount) => {
 			const input = representativeInput(fuelId, hasDensity);

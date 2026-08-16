@@ -39,6 +39,7 @@
 import Decimal from 'decimal.js';
 import type { Efficiency, ParseError, ParseResult, ParsedQuery, Price, Quantity } from './types';
 import type { UnitRegistry } from '$lib/units/registry';
+import { normalizeLoose } from '$lib/units/aliases';
 import type { FuelRegistry } from '$lib/fuels/registry';
 
 /** Leading number: optional sign, digits with `.` or `,` decimal (leading-dot
@@ -155,6 +156,62 @@ const OUT_OF_SCOPE: { tokens: string[]; label: string; note: string }[] = [
 		note: 'This tool covers energy, power, mass, volume and time (plus fuels and emissions).'
 	}
 ];
+
+/**
+ * Everyday words that name a real product class this catalog deliberately
+ * splits into several entries with materially different numbers.
+ *
+ * These must NOT be aliases of any one entry. "heizöl" resolved to DESNZ
+ * "Fuel Oil" — the residual bunker grade at 983 kg/m³ — while German/Austrian
+ * Heizöl EL is a gasoil-grade distillate, so every answer was about 15% high
+ * and looked fully sourced. Offering the candidates costs the reader one click
+ * and cannot be wrong; picking one for them can.
+ *
+ * Null-prototype for the same reason as `AMBIGUOUS_TOKENS`: indexed with raw
+ * user input.
+ */
+const SPLIT_MATERIALS: Record<string, { reason: string; candidates: string[] }> = Object.assign(
+	Object.create(null),
+	{
+		heizöl: {
+			reason: 'covers several different oils.',
+			candidates: ['gas-oil', 'burning-oil', 'heating-oil']
+		},
+		heizoel: {
+			reason: 'covers several different oils.',
+			candidates: ['gas-oil', 'burning-oil', 'heating-oil']
+		},
+		'heating oil': {
+			reason: 'is not one product — the grades differ by up to 15% per litre.',
+			candidates: ['gas-oil', 'burning-oil', 'heating-oil']
+		},
+		'light fuel oil': {
+			reason: 'is not a grade this catalog carries under that name.',
+			candidates: ['gas-oil', 'burning-oil', 'heating-oil']
+		},
+		paraffin: {
+			reason: 'means heating kerosene in the UK and aviation kerosene elsewhere.',
+			candidates: ['burning-oil', 'kerosene']
+		}
+	}
+);
+
+/** Offer the grades a split-material phrase covers, naming none of them as the default. */
+function splitMaterialError(
+	phrase: string,
+	split: { reason: string; candidates: string[] },
+	fuels: FuelRegistry
+): ParseError {
+	return {
+		kind: 'unknown_fuel',
+		message: `"${phrase}" ${split.reason} Pick the one you mean:`,
+		token: phrase,
+		suggestions: split.candidates
+			.map((id) => fuels.get(id)?.names[0])
+			.filter((n): n is string => Boolean(n)),
+		hint: 'These are different products with different numbers — none of them is a safe default.'
+	};
+}
 
 export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistry): ParseResult {
 	const original = text;
@@ -301,6 +358,17 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 	}
 
 	// 4. Peel a trailing fuel phrase, then match the leading words as the unit.
+	//
+	// A split-material phrase is checked FIRST, because the trailing matcher is
+	// greedy from the left and would read "light fuel oil" as "fuel oil" with
+	// "light" noted as ignored — answering with the residual grade for a phrase
+	// that says, in the word it dropped, that it is not the residual grade.
+	for (let start = 0; start < words.length; start++) {
+		const phrase = words.slice(start).join(' ');
+		const split = SPLIT_MATERIALS[normalizeLoose(phrase)];
+		if (split) return err(splitMaterialError(phrase, split, fuels));
+	}
+
 	const fuelMatch = fuels.matchTrailingFuel(words);
 	let unitWords = words;
 	let fuelId: string | undefined;
@@ -359,6 +427,12 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 						token: phrase
 					});
 				}
+				// A word that names a real product class the catalog splits into
+				// several entries gets those entries offered, rather than a bare
+				// "unknown material" — and rather than one of them being picked,
+				// which is how "heizöl" used to return residual bunker oil.
+				const split = SPLIT_MATERIALS[normalizeLoose(phrase)];
+				if (split) return err(splitMaterialError(phrase, split, fuels));
 				// Otherwise the leftover is most likely an unknown fuel phrase.
 				return err({
 					kind: 'unknown_fuel',

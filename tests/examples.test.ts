@@ -35,7 +35,7 @@ const SPEC_8_2_INPUTS = [
 	'1000 kcal',
 	'1 liter diesel',
 	'1 L gasoline',
-	'1 liter heating oil',
+	'1 liter fuel oil',
 	'1 barrel crude oil',
 	'1 m3 natural gas',
 	'1 kg hydrogen',

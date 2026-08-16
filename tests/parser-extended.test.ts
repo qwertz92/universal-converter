@@ -156,9 +156,25 @@ describe('§13.2 parser — German aliases (real catalog)', () => {
 		expect(r.ok && r.query.fuel_id).toBe('hydrogen');
 	});
 
-	it('parses "1 kg heizöl" via the German heating-oil alias', () => {
+	it('"1 kg heizöl" offers the grades instead of picking one', () => {
+		// It used to resolve to the catalog's `heating-oil` entry, which is DESNZ
+		// "Fuel Oil" — the residual bunker grade at 983 kg/m³. German/Austrian
+		// Heizöl EL is a gasoil-grade distillate, so every answer was ~15% high
+		// and looked fully sourced. No source equates the two, so the honest move
+		// is to name the candidates rather than choose.
 		const r = converter.parse('1 kg heizöl');
-		expect(r.ok && r.query.fuel_id).toBe('heating-oil');
+		expect(r.ok).toBe(false);
+		if (!r.ok) {
+			expect(r.error.kind).toBe('unknown_fuel');
+			expect(r.error.suggestions).toContain('gas oil');
+			expect(r.error.suggestions).toContain('burning oil');
+			expect(r.error.suggestions).toContain('fuel oil');
+		}
+	});
+
+	it('the unambiguous German aliases still resolve', () => {
+		expect(converter.parse('1 kg erdgas').ok).toBe(true);
+		expect(converter.parse('1 kg wasserstoff').ok).toBe(true);
 	});
 });
 

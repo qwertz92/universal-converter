@@ -163,3 +163,33 @@ describe('the calculation path is dimensionally possible', () => {
 		expect(row?.formula).not.toContain('density');
 	});
 });
+
+describe('a phrase that names several grades is a question, not a query', () => {
+	// "heizöl" resolved to DESNZ "Fuel Oil" — residual bunker oil at 983 kg/m3 —
+	// while German/Austrian Heizöl EL is a gasoil-grade distillate. Every answer
+	// was ~15% high and fully sourced-looking. No source equates the two, so the
+	// candidates are offered rather than one being chosen.
+	it.each(['1 kg heizöl', '1 L heating oil', '1 L light fuel oil'])(
+		'"%s" offers the grades',
+		(query) => {
+			const out = converter.convertText(query);
+			expect('error' in out).toBe(true);
+			if ('error' in out) {
+				expect(out.error.kind).toBe('unknown_fuel');
+				expect((out.error.suggestions ?? []).length).toBeGreaterThan(1);
+			}
+		}
+	);
+
+	it('"paraffin" no longer attaches the aviation radiative-forcing warning', () => {
+		const out = converter.convertText('1 L paraffin');
+		expect('error' in out).toBe(true);
+		if ('error' in out) expect(out.error.suggestions).toContain('burning oil');
+	});
+
+	it('each named grade still answers on its own', () => {
+		expect(Number(rowFor('1 L fuel oil', 'mass', 'kilogram')?.raw)).toBeCloseTo(0.983284, 5);
+		expect(Number(rowFor('1 L gas oil', 'mass', 'kilogram')?.raw)).toBeCloseTo(0.853971, 5);
+		expect(Number(rowFor('1 L burning oil', 'mass', 'kilogram')?.raw)).toBeCloseTo(0.802568, 5);
+	});
+});

@@ -389,9 +389,18 @@ V0.1 soll bereits eine ernsthafte Anwendung sein.
 ### 8.2 Eingabebeispiele (müssen funktionieren, notfalls über strukturierte UI)
 
 `1 kWh`, `1 MWh`, `1 MJ`, `1 GJ`, `1 BTU`, `1 MMBTU`, `1 therm`, `1 toe`,
-`1 boe`, `1000 kcal`, `1 liter diesel`, `1 L gasoline`, `1 liter heating oil`,
+`1 boe`, `1000 kcal`, `1 liter diesel`, `1 L gasoline`, `1 liter fuel oil`,
 `1 barrel crude oil`, `1 m3 natural gas`, `1 kg hydrogen`, `1 kg hard coal`,
 `1 kg lignite`, `1 kg wood pellets`
+
+> **Amended in v0.3.3.** This list originally read `1 liter heating oil`. Once
+> the catalog carried gas oil and burning oil alongside DESNZ "Fuel Oil"
+> (ADR 0005), "heating oil" stopped naming one product: the three grades differ
+> by up to 15% per litre, and the phrase was resolving to the heaviest of them.
+> It — along with `heizöl` and `paraffin` — is now answered with the candidate
+> grades instead of a chosen one. Naming a product class the catalog splits is
+> a question, not a query, and answering it with a default would be exactly the
+> confident wrong number this specification forbids.
 
 ### 8.3 Ergebnisgruppen
 

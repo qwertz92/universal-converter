@@ -296,8 +296,15 @@
 		},
 		{
 			"id": "heating-oil",
-			"names": ["heating oil", "fuel oil"],
-			"aliases": ["heizöl", "heizoel", "light fuel oil", "residual fuel oil", "hfo", "bunker oil"],
+			"names": ["fuel oil", "heavy fuel oil"],
+			"aliases": [
+				"residual fuel oil",
+				"hfo",
+				"bunker oil",
+				"bunker fuel",
+				"heavy oil",
+				"fuel oil (residual)"
+			],
 			"category": "oil",
 			"phase": "liquid",
 			"density": {
@@ -341,14 +348,14 @@
 			"source_refs": ["uk-desnz-ghg-2025"],
 			"notes": "DESNZ has no single 'heating oil' label. This entry uses DESNZ 'Fuel Oil' (heavier industrial/boiler grade). UK DOMESTIC heating oil is usually 'Gas Oil' (see diesel notes) or kerosene-type 'Burning Oil' (see kerosene). IPCC 2006 Residual Fuel Oil NCV 40.4 MJ/kg, CO2 77,400 kg/TJ; Gas/Diesel Oil is the alternative mapping. EIA US: No.2 heating oil ~138,500 Btu/gal.",
 			"warnings": [
-				"'Heating oil' is not one product: this entry models the heavier 'Fuel Oil' grade. UK domestic heating oil is typically kerosene-type burning oil or gas oil (diesel-grade) — pick the matching fuel for a domestic system."
+				"'Heating oil' is not one product, and this entry is the HEAVIEST grade: DESNZ 'Fuel Oil' (983.284 kg/m³), the residual bunker/industrial oil. Domestic heating oil is a lighter distillate — UK '28 second' kerosene is the 'burning oil' entry, and gasoil-grade heating oil (including German/Austrian Heizöl EL) is closest to 'gas oil'. Those differ from this entry by up to 15% per litre, so check you are on the right one."
 			],
-			"related_fuels": ["gas-oil", "burning-oil"]
+			"related_fuels": ["gas-oil", "burning-oil", "crude-oil"]
 		},
 		{
 			"id": "kerosene",
 			"names": ["kerosene", "jet fuel"],
-			"aliases": ["paraffin", "aviation turbine fuel", "jet a-1", "jet a", "kerosin", "avtur"],
+			"aliases": ["aviation turbine fuel", "jet a-1", "jet a", "kerosin", "avtur"],
 			"category": "oil",
 			"phase": "liquid",
 			"density": {
