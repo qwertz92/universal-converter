@@ -24,10 +24,46 @@ function systemPrefersDark(): boolean {
 	return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
-function readStored(): ThemeMode {
-	if (typeof localStorage === 'undefined') return 'system';
-	const v = localStorage.getItem(STORAGE_KEY);
-	return v === 'light' || v === 'dark' ? v : 'system';
+/** The slice of the Web Storage API this module needs (mirrors $lib/ui/history). */
+export interface ThemeStorage {
+	getItem(key: string): string | null;
+	setItem(key: string, value: string): void;
+}
+
+/**
+ * `typeof localStorage` is NOT a safe guard: in Chrome with all cookies blocked
+ * the property access itself throws a SecurityError. init() runs from the root
+ * layout, so that throw took the entire page down — a blank site because the
+ * browser refused to remember a colour scheme.
+ */
+function browserStore(): ThemeStorage | undefined {
+	try {
+		return typeof localStorage === 'undefined' ? undefined : localStorage;
+	} catch {
+		return undefined;
+	}
+}
+
+/** Read the persisted choice; anything unreadable or foreign means 'system'. */
+export function readStored(store: ThemeStorage | undefined = browserStore()): ThemeMode {
+	try {
+		const v = store?.getItem(STORAGE_KEY);
+		return v === 'light' || v === 'dark' ? v : 'system';
+	} catch {
+		return 'system';
+	}
+}
+
+/** Persist the choice; a storage that refuses only costs us the memory of it. */
+export function writeStored(
+	mode: ThemeMode,
+	store: ThemeStorage | undefined = browserStore()
+): void {
+	try {
+		store?.setItem(STORAGE_KEY, mode);
+	} catch {
+		/* quota or private mode — the theme still applies for this page load */
+	}
 }
 
 class ThemeStore {
@@ -90,7 +126,7 @@ class ThemeStore {
 	toggle(): void {
 		this.isDark = !this.isDark;
 		this.mode = this.isDark ? 'dark' : 'light';
-		if (typeof localStorage !== 'undefined') localStorage.setItem(STORAGE_KEY, this.mode);
+		writeStored(this.mode);
 		this.apply();
 	}
 }
