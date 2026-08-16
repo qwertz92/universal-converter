@@ -52,10 +52,10 @@ The rest of the adversarial review, plus what looking for it turned up.
   `localStorage` unguarded, and in Chrome with all cookies blocked the property
   access itself throws.
 - Asking for HHV on a fuel that has only LHV now says so, instead of showing the
-  LHV figure under a warning that implied a primary HHV existed. `1 barrel crude
-oil` said "no heating value" when what it lacks is a density. An exact value
-  is no longer rounded and still called exact. A negative amount is labeled a
-  reduction, not a removal.
+  LHV figure under a warning that implied a primary HHV existed.
+  A barrel of crude oil said "no heating value" when what it lacks is a density.
+  An exact value is no longer rounded and still called exact. A negative amount
+  is labeled a reduction, not a removal.
 - ~7rem of hydration shift on `/convert`, and a Firefox download race.
 
 ## 0.3.3 — 2026-08-16
