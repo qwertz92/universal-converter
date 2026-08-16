@@ -388,6 +388,7 @@ export type ResultGroupKey =
 	| 'fuel_equivalents'
 	| 'emissions'
 	| 'energy_density'
+	| 'delivered'
 	| 'cost'
 	| 'industrial_units'
 	| 'assumptions'
@@ -405,6 +406,7 @@ export const RESULT_GROUP_ORDER: readonly ResultGroupKey[] = [
 	'fuel_equivalents',
 	'emissions',
 	'energy_density',
+	'delivered',
 	'cost',
 	'industrial_units',
 	'assumptions',
@@ -498,6 +500,22 @@ export interface Price {
 	per_unit_id: string;
 }
 
+/**
+ * A user-supplied conversion efficiency: a boiler's 85%, a heat pump's COP 3.5.
+ *
+ * Kept as a plain ratio of useful output to energy input. A COP above 1 is not
+ * a mistake — a heat pump moves heat rather than making it — so no upper bound
+ * is imposed; only a non-positive ratio is refused.
+ */
+export interface Efficiency {
+	/** Output ÷ input, as a decimal string: "0.85", "3.5". */
+	ratio: string;
+	/** How it was written, for echoing back: "85%" or "3.5 COP". */
+	label: string;
+	/** `cop` suppresses the "you cannot exceed 100%" reading of the number. */
+	kind: 'percent' | 'cop';
+}
+
 /** The result of parsing free text (spec §8.2). */
 export interface ParsedQuery {
 	value: string;
@@ -520,6 +538,13 @@ export interface ParsedQuery {
 	 * is computed and labeled `user_assumption`.
 	 */
 	price?: Price;
+	/**
+	 * An appliance efficiency the USER supplied (`100 kWh gas at 85% efficiency`,
+	 * `100 kWh electricity at 3.5 COP`). Same reasoning as `price`: the catalog
+	 * ships no efficiency table because real appliances vary far too widely, but
+	 * the figure on someone's own data plate is not an invented default.
+	 */
+	efficiency?: Efficiency;
 	/** 0..1 heuristic confidence in the parse. */
 	confidence: number;
 	/** Alias/interpretation notes to gently confirm in the UI (e.g. "'Calorie' → kcal"). */

@@ -2,7 +2,7 @@
  * Free-text parser (spec §8.2). Grammar:
  *
  *   [filler] <number> <unit> [fuel] [(to|in|→) <target unit>] [(for|×) <duration>]
- *            [(at|@) <amount> <currency>/<unit>]
+ *            [(at|@) <amount> <currency>/<unit>] [(at|@) <n>% efficiency | <n> COP]
  *
  * Handles:
  *  - `1 kWh`, `1.5 MJ`, `1,5 MJ` (comma decimal), `1000 kcal`, `1 kilowatt hour`;
@@ -17,6 +17,9 @@
  *  - a user-supplied PRICE: `1000 kWh at 0.32 EUR/kWh`, `1 L diesel @ 1.75 €/L`.
  *    The catalog holds no tariffs and never will; a price only ever comes from
  *    the person asking, and the currency is a label, never converted;
+ *  - a user-supplied EFFICIENCY: `100 kWh at 85% efficiency`, `100 kWh at 3.5
+ *    COP`. Same rule — no efficiency table is shipped, because real appliances
+ *    vary far too widely for a default to be true of anyone;
  *  - conversational phrasing: `convert 5 kwh to mj`,
  *    `how many kWh in 1 liter diesel?`.
  *
@@ -34,7 +37,7 @@
  */
 
 import Decimal from 'decimal.js';
-import type { ParseError, ParseResult, ParsedQuery, Price, Quantity } from './types';
+import type { Efficiency, ParseError, ParseResult, ParsedQuery, Price, Quantity } from './types';
 import type { UnitRegistry } from '$lib/units/registry';
 import type { FuelRegistry } from '$lib/fuels/registry';
 
@@ -216,7 +219,15 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 	let targetUnitId: string | undefined;
 	let time: Quantity | undefined;
 
-	// A price clause is peeled FIRST: it ends in a unit ("…/kWh") that the target
+	// Efficiency before price: both are introduced by "at", and an efficiency is
+	// unambiguous (a percentage or an explicit COP), so recognising it first
+	// keeps "at 85% efficiency at 0.32 EUR/kWh" readable in either order.
+	const efficiencyClause = peelEfficiency(words);
+	if (efficiencyClause && 'error' in efficiencyClause) return err(efficiencyClause.error);
+	const efficiency = efficiencyClause?.efficiency;
+	if (efficiencyClause) words = efficiencyClause.rest;
+
+	// A price clause is peeled next: it ends in a unit ("…/kWh") that the target
 	// and fuel matchers would otherwise try to claim.
 	const priceClause = peelPrice(words, units);
 	if (priceClause && 'error' in priceClause) return err(priceClause.error);
@@ -262,6 +273,7 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 			target_unit_id: targetUnitId,
 			time,
 			price,
+			efficiency,
 			confidence: wholeMatch.via === 'symbol' ? 1 : 0.95,
 			notes: aliasNote(wholeMatch, notes),
 			original_input: original
@@ -352,6 +364,7 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 				target_unit_id: targetUnitId,
 				time,
 				price,
+				efficiency,
 				confidence: match.via === 'symbol' ? 1 : 0.9,
 				notes: aliasNote(match, notes),
 				original_input: original
@@ -412,6 +425,56 @@ function peelTarget(
 		}
 	}
 	return undefined;
+}
+
+/**
+ * Split off an appliance efficiency: `at 85% efficiency`, `85% efficient`,
+ * `at 3.5 COP`, `with a COP of 3.5`.
+ *
+ * Recognised anywhere in the tail, because it reads naturally in several
+ * positions, but only in these unmistakable shapes — a bare `85%` is NOT an
+ * efficiency, since a stray percentage in a query would otherwise silently
+ * change the answer.
+ */
+function peelEfficiency(
+	words: string[]
+): { rest: string[]; efficiency: Efficiency } | { error: ParseError } | undefined {
+	const text = words.join(' ');
+
+	// "85% efficiency" / "85 % efficient" / "at 85%" only when the word is there.
+	const pct = text.match(
+		/\s*(?:at|@|with)?\s*(?:an?\s+)?(\d+(?:[.,]\d+)?)\s*%\s*(?:efficiency|efficient|eff\.?)\b\.?/i
+	);
+	// "COP 3.5" / "3.5 COP" / "a COP of 3.5" / "SCOP 3.1"
+	const cop =
+		text.match(/\s*(?:at|@|with)?\s*(?:an?\s+)?s?cop\s*(?:of\s*)?(\d+(?:[.,]\d+)?)/i) ??
+		text.match(/\s*(?:at|@|with)?\s*(\d+(?:[.,]\d+)?)\s*s?cop\b/i);
+
+	const hit = pct ?? cop;
+	if (!hit) return undefined;
+
+	const raw = normalizeNumber(hit[1]);
+	const value = new Decimal(raw);
+	if (!value.isFinite() || value.lessThanOrEqualTo(0)) {
+		return {
+			error: {
+				kind: 'unsupported_value',
+				message: `An efficiency of ${hit[1]} is not usable — it has to be greater than zero.`,
+				token: hit[1]
+			}
+		};
+	}
+
+	const isPercent = hit === pct;
+	const ratio = isPercent ? value.dividedBy(100).toFixed() : value.toFixed();
+	const label = isPercent ? `${raw}%` : `COP ${raw}`;
+
+	const rest = (text.slice(0, hit.index) + text.slice(hit.index! + hit[0].length))
+		.trim()
+		.split(/\s+/)
+		.filter((w) => w !== '');
+
+	return { rest, efficiency: { ratio, label, kind: isPercent ? 'percent' : 'cop' } };
 }
 
 /**

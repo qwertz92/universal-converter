@@ -175,6 +175,20 @@
 			"label": "100 m³ natural gas at 0.09 EUR/kWh",
 			"category": "fuel",
 			"notes": "The heating-bill case: gas is metered in cubic metres but billed per kWh, so the calorific value sits in between."
+		},
+		{
+			"id": "ex-boiler-efficiency",
+			"input": "100 kWh at 85% efficiency",
+			"label": "100 kWh at 85% efficiency",
+			"category": "energy",
+			"notes": "What reaches the room. The efficiency is yours — no appliance table is shipped, because real boilers vary far too widely for a default to be true of anyone."
+		},
+		{
+			"id": "ex-heat-pump-cop",
+			"input": "100 kWh at 3.5 COP",
+			"label": "100 kWh at 3.5 COP",
+			"category": "energy",
+			"notes": "A heat pump delivers more heat than the electricity it draws, because it moves heat rather than making it."
 		}
 	]
 }

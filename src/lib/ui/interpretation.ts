@@ -45,6 +45,8 @@ export interface QueryInterpretation {
 	duration?: string;
 	/** The user's own unit price, echoed back so they can check it. */
 	price?: string;
+	/** The user's own appliance efficiency ("85%", "COP 3.5"). */
+	efficiency?: string;
 }
 
 /**
@@ -94,8 +96,9 @@ export function describeQuery(
 	if (query.fuel_id) parts.push(`of ${query.fuel_id.replace(/-/g, ' ')}`);
 	if (query.time && timeUnit) parts.push(`over ${query.time.value} ${timeUnit.symbols[0]}`);
 	if (target) parts.push(`→ ${target.symbols[0]} (${target.names[0]})`);
-	// The price is the one figure the tool did not source, so saying it back is
-	// not decoration — it is how the reader checks their own number.
+	// The price and efficiency are the figures the tool did NOT source, so saying
+	// them back is not decoration — it is how the reader checks their own number.
+	if (query.efficiency) parts.push(`at your ${query.efficiency.label}`);
 	if (priceLabel) parts.push(`at your price ${priceLabel}`);
 	// Parser notes record anything the reading glossed over (an ambiguous
 	// thousands separator, words that were dropped). They belong on the line
@@ -119,7 +122,8 @@ export function describeQuery(
 			? { id: target.id, symbol: target.symbols[0], name: target.names[0] }
 			: undefined,
 		duration: query.time && timeUnit ? `${query.time.value} ${timeUnit.symbols[0]}` : undefined,
-		price: priceLabel
+		price: priceLabel,
+		efficiency: query.efficiency?.label
 	};
 }
 

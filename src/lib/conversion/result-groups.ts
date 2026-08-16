@@ -24,6 +24,7 @@ const GROUP_TITLES: Record<ResultGroupKey, string> = {
 	fuel_equivalents: 'Fuel Equivalents',
 	emissions: 'Emissions',
 	energy_density: 'Energy Density',
+	delivered: 'Delivered Energy',
 	cost: 'Cost',
 	industrial_units: 'Industrial Units',
 	assumptions: 'Assumptions',

@@ -3,6 +3,38 @@
 All notable changes to Universal Converter. Versioning follows semver
 (pre-1.0: minor bumps may include behavior changes; they are listed here).
 
+## 0.3.2 — 2026-08-16
+
+The calculators the roadmap had written off — built on your numbers, not ours.
+
+### Added
+
+- **Price a quantity at a rate you supply.** `1000 kWh at 0.32 EUR/kWh`,
+  `1 L diesel @ 1.75 €/L`, and the one that matters most:
+  `100 m³ natural gas at 0.09 EUR/kWh` — the actual heating-bill case, where gas
+  is metered in cubic metres and billed per kWh and the calorific value sits in
+  between. The roadmap had parked this because no citable dataset makes a
+  shipped tariff true for any given reader. That rules out publishing a price;
+  it never ruled out multiplying by one you typed yourself.
+- **Apply your appliance's efficiency.** `100 kWh at 85% efficiency` shows what
+  reaches the room; `100 kWh at 3.5 COP` shows a heat pump delivering more heat
+  than the electricity it draws. The energy going in stays on screen next to the
+  energy delivered — they are two different facts. A percentage above 100% asks
+  which you meant (a COP, or a gross-calorific-value boiler figure); a COP does
+  not, because moving heat is not making it.
+- Both compose: `100 kWh at 3.5 COP at 0.32 EUR/kWh` gives 350 kWh of heat for
+  €32.00 of electricity.
+
+### Unchanged, deliberately
+
+The catalog still carries **no tariffs and no efficiency table**, and currency
+conversion is still refused outright — there are no exchange rates in this tool.
+A rate or an efficiency reaches a calculation only by being typed, it is echoed
+back on the interpretation line so it can be checked, and the result is never
+labeled more exact than the quantity underneath it. Priced electricity comes out
+as `user_assumption`; priced gas comes out as `source_based`, because the
+calorific value is the weaker link, not your own tariff.
+
 ## 0.3.1 — 2026-08-16
 
 Repeat use, and the fuels the catalog had been quietly rounding off.

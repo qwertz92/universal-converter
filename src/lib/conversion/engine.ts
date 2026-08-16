@@ -25,6 +25,7 @@ import type {
 	ConversionResultSet,
 	Converter,
 	DataBundle,
+	Efficiency,
 	EmissionFactor,
 	EngineOptions,
 	Exactness,
@@ -185,6 +186,9 @@ export function createConverter(data: DataBundle): Converter {
 			if (target) ensureTarget(builder, query.value, unit, target, fuel, opts);
 			// A price is the user's own number, so it is applied last, on top of
 			// whatever the pipeline managed to produce.
+			// Efficiency before price, so a cost can be asked of either the energy
+			// bought or the heat delivered without the two being confused.
+			if (query.efficiency) addDelivered(builder, query.efficiency, unit, opts);
 			if (query.price) addCost(builder, query.price, unit);
 		} catch (e) {
 			return unsupportedSet(
@@ -196,6 +200,84 @@ export function createConverter(data: DataBundle): Converter {
 		const set = builder.build();
 		if (target) highlightTarget(set, target);
 		return set;
+	}
+
+	/**
+	 * Apply an appliance efficiency the USER supplied: how much of the energy
+	 * bought actually reaches the room.
+	 *
+	 * Same licence as `addCost` — the catalog ships no efficiency table because
+	 * real boilers and heat pumps vary far too widely for a default to be true of
+	 * anyone, but the number on someone's own data plate is theirs. It is applied
+	 * to the energy figure the pipeline produced, so `100 m³ natural gas at 85%
+	 * efficiency` works through the calorific value already in hand.
+	 *
+	 * The input energy is deliberately NOT replaced: buying 100 kWh of gas and
+	 * getting 85 kWh of heat are two different facts and both stay on screen.
+	 */
+	function addDelivered(
+		builder: ResultSetBuilder,
+		efficiency: Efficiency,
+		from: Unit,
+		options: EngineOptions
+	): void {
+		const kwh = units.get('kilowatt_hour');
+		// Which unit the delivered figure appears in must not depend on bucket
+		// order. Answer in the unit the reader typed when they typed an energy
+		// one; otherwise in kWh, which is how heat and electricity are billed.
+		const source =
+			(from.dimension === 'energy' ? builder.resultFor(from.id) : undefined) ??
+			builder.resultFor('kilowatt_hour') ??
+			builder.findValueInDimension('energy', (id) => units.get(id));
+
+		if (!source || source.raw === null || !kwh) {
+			builder.add({
+				value: null,
+				raw: null,
+				unit_id: kwh?.id ?? from.id,
+				unit_label: kwh ? unitLabel(kwh) : unitLabel(from),
+				category: 'delivered',
+				exactness: 'context_required',
+				explanation: `An efficiency of ${efficiency.label} applies to an amount of energy, and this query does not produce one. For a fuel, name it (e.g. "100 m³ natural gas at ${efficiency.label}") so the energy can be derived first.`,
+				assumptions: [],
+				warnings: [],
+				source_refs: []
+			});
+			return;
+		}
+
+		const sourceUnit = units.get(source.unit_id) ?? kwh;
+		const delivered = new Decimal(source.raw).times(efficiency.ratio);
+		const exactness = combineExactness(source.exactness, 'user_assumption');
+		const rounded = roundToSigFigs(delivered.toFixed(), sigFigsFor(exactness, options.maxSigFigs));
+
+		builder.add({
+			value: formatValue(rounded, exactness),
+			raw: delivered.toFixed(),
+			unit_id: sourceUnit.id,
+			unit_label: unitLabel(sourceUnit),
+			category: 'delivered',
+			exactness,
+			formula: `${source.raw} ${unitLabel(sourceUnit)} × ${efficiency.ratio} (${efficiency.label}) = ${rounded} ${unitLabel(sourceUnit)}`,
+			assumptions: [
+				{
+					kind: 'user_input',
+					text: `efficiency: your figure of ${efficiency.label} — this tool ships no efficiency table`
+				}
+			],
+			warnings:
+				efficiency.kind === 'percent' && new Decimal(efficiency.ratio).greaterThan(1)
+					? [
+							{
+								kind: 'representative_value',
+								severity: 'caution',
+								text: `${efficiency.label} is above 100%. That is real for a heat pump, which moves heat rather than making it — but then the figure is a COP, and on a gross calorific value basis a condensing boiler can also read above 100%. Check which one you meant.`
+							}
+						]
+					: [],
+			source_refs: source.source_refs,
+			explanation: `Of the ${source.value} ${unitLabel(sourceUnit)} going in, ${rounded} ${unitLabel(sourceUnit)} is delivered at ${efficiency.label}. That figure is yours, not a published one.`
+		});
 	}
 
 	/**
