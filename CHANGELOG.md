@@ -75,6 +75,44 @@ type, and does the tool say what it understood?
   rows; theme and menu buttons were 36px.
 - Estimate and region badges were below WCAG AA contrast on their own tint.
 
+### Found by adversarial review of the whole repository
+
+Two independent reviews attacked the new work **and** everything that came
+before it. What they found, all fixed and test-pinned:
+
+- **A wrong number.** Hard coal shipped `2.37528994` kg CO₂e/kg where its own
+  note, its component sum and the research ledger all record `2.39528994` — a
+  digit transposition under-reporting it by 0.84%. Factor values are now
+  cross-checked against the breakdowns stated in their own notes.
+- **Biogenic combustion CO₂ was filed as "Scope 3 upstream (indirect, before
+  you buy it)"** — the opposite of what it is. It now has its own scope.
+- **Invented range bounds.** The volumetric natural-gas ranges were attributed
+  to DESNZ, which publishes no such range. Removed.
+- **"petroleum" resolved to kerosene**, so `1 barrel petroleum` answered with
+  jet fuel.
+- **The engine claimed missing data it had just used.** `1 L diesel to t` said
+  "the catalog has no density for diesel" directly above a mass computed from
+  that density. `5 kW to MJ` dropped the request entirely.
+- **Exactness stopped propagating** into per-energy emission factors: lignite's
+  CO₂ printed four significant figures derived from a 5.5–21.6 MJ/kg spread.
+- **A dimensionally meaningless calculation path**: `1 kg diesel × 9.905 kWh/L`.
+- **The disambiguation chips were a trap** — clicking one deleted the material
+  you had typed and left the ambiguity, forever.
+- **Every BreadcrumbList on the site** emitted
+  `https://universal-converter.org../units` (108 of 108 pages).
+- **Tab and Shift+Tab** both rewrote the input instead of moving focus.
+- **Screen readers** got ~165 words re-read on every keystroke.
+- **A lookbehind regex** would have failed to parse on Safari < 16.4, taking
+  the whole site down there rather than one input.
+- **Contrast**, all computed: the home page's key instruction at 4.28:1, input
+  borders at 1.28:1 against WCAG 1.4.11's 3:1, placeholders at 2.36:1 in
+  Safari, "Critical:" warnings at 4.43:1.
+- **`package.json`** — every script and all 22 devDependencies — shipped in the
+  client bundle to render a version string.
+- Range bounds rounded inward (understating spread), 40-digit bounds in the API
+  and CSV, density units filed under Energy, and a shared `?q=` link showing an
+  empty-state panel before swapping in the results.
+
 ### Not done, and why
 
 - The spec's original 0.3 list (heating-cost and price calculators, boiler
