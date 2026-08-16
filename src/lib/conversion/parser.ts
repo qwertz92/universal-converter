@@ -241,6 +241,15 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 		const duration = peelDuration(words, units);
 		if (duration && 'error' in duration) return err(duration.error);
 		if (duration) {
+			// A SECOND duration is a contradiction, not a correction. "5 kW for 3 h
+			// for 2 h" silently kept the first and answered 15 kWh; the target
+			// branch below already refuses the equivalent "5 kWh to MJ to GJ".
+			if (time) {
+				return err({
+					kind: 'unsupported_value',
+					message: `Two durations were given ("${duration.time.value}" and "${time.value}"). Keep one — energy = power × a single time.`
+				});
+			}
 			words = duration.rest;
 			time = duration.time;
 			continue;

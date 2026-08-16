@@ -77,6 +77,10 @@ interface EnergyForBasis {
 	joules: string;
 	joulesRange?: { low: string; high: string };
 	hv: HeatingValueResolved;
+	/** Which heating value was actually used — the caller needs this to write an
+	 *  honest calculation path when a VOLUME input had to go through a per-MASS
+	 *  heating value (the density step must be visible, not implied). */
+	via: 'per_mass' | 'per_volume';
 }
 
 /**
@@ -906,7 +910,17 @@ export function createConverter(data: DataBundle): Converter {
 			const energyJ = energyForBasis(fuel, b, amount, prefer);
 			if (!energyJ) continue;
 			anyEnergy = true;
-			addEnergyResults(builder, energyJ, b, amount.label, options, b === basis);
+			// When a VOLUME input runs through a per-MASS heating value — gas oil,
+			// ethanol, hydrogen and the wood fuels all lack a per-litre CV — the
+			// density step is real and must appear. Labeling it "1 L × 42.569 MJ/kg"
+			// printed a dimensionally impossible product: the value was right, the
+			// audit trail was not, and the audit trail is this product's whole
+			// proposition.
+			const stepLabel =
+				energyJ.via === 'per_mass' && amount.massKg !== undefined && prefer === 'per_volume'
+					? `${formatValue(kgToKgDisplay(amount.massKg), 'source_based')} kg (${amount.label} × density)`
+					: amount.label;
+			addEnergyResults(builder, energyJ, b, stepLabel, options, b === basis);
 		}
 		if (!anyEnergy) builder.add(notAvailable('energy', 'heating_value', fuel));
 
@@ -937,7 +951,8 @@ export function createConverter(data: DataBundle): Converter {
 			return {
 				joules: amountToEnergyJ(amount.volumeM3, hv.jPerBase),
 				joulesRange: energyRangeJ(amount.volumeM3, hv),
-				hv
+				hv,
+				via: 'per_volume' as const
 			};
 		};
 		const byMass = () => {
@@ -947,7 +962,8 @@ export function createConverter(data: DataBundle): Converter {
 			return {
 				joules: amountToEnergyJ(amount.massKg, hv.jPerBase),
 				joulesRange: energyRangeJ(amount.massKg, hv),
-				hv
+				hv,
+				via: 'per_mass' as const
 			};
 		};
 		return prefer === 'per_mass' ? (byMass() ?? byVolume()) : (byVolume() ?? byMass());

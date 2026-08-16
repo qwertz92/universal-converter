@@ -130,3 +130,36 @@ describe('energy → mass inherits the heating value’s floor (rulebook §B.3)'
 		expect(rowFor('1 GJ diesel', 'mass', 'kilogram')?.exactness).toBe('source_based');
 	});
 });
+
+describe('a second duration is refused, not silently discarded', () => {
+	// "5 kW for 3 h for 2 h" kept the first and answered 15 kWh with no note. The
+	// target branch already refuses the equivalent "5 kWh to MJ to GJ".
+	it('reports the contradiction', () => {
+		const out = converter.convertText('5 kW for 3 h for 2 h');
+		expect('error' in out).toBe(true);
+		if ('error' in out) expect(out.error.message).toMatch(/two durations/i);
+	});
+
+	it('a single duration still works', () => {
+		expect(rowFor('5 kW for 3 h', 'energy', 'kilowatt_hour')?.raw).toBe('15');
+	});
+});
+
+describe('the calculation path is dimensionally possible', () => {
+	// Gas oil has no per-litre calorific value, so a litre input runs through the
+	// per-KILOGRAM one. The formula read "1 L gas oil × 42.569 MJ/kg = 36.35 MJ"
+	// — litres times MJ per kilogram, with the × density step invisible. The
+	// value was right; the audit trail, which is this product's whole point,
+	// was not.
+	it('a volume priced by a per-mass heating value shows the density step', () => {
+		const row = rowFor('1 L gas oil', 'energy', 'megajoule');
+		expect(row?.formula).toContain('density');
+		expect(row?.formula).toContain('kg');
+		expect(row?.formula).not.toMatch(/^1 L gas oil × [\d.]+ MJ\/kg/);
+	});
+
+	it('a fuel WITH a per-litre value still shows the simple path', () => {
+		const row = rowFor('1 L diesel', 'energy', 'megajoule');
+		expect(row?.formula).not.toContain('density');
+	});
+});

@@ -146,3 +146,33 @@ describe('storage resilience', () => {
 		expect(clearSaved(hostileStore)).toEqual([]);
 	});
 });
+
+describe('defects found by adversarial review', () => {
+	it('a stored list whose entries differ only by padding does not yield duplicates', () => {
+		// The module's own trim CREATES the duplicate, and HistoryPanel keys its
+		// {#each} by the query text — a duplicate key is a hard Svelte error that
+		// takes the whole page down in production.
+		const s = fakeStore({ 'uc-recent': '["1 kWh","  1 kWh  ","1 KWH"]' });
+		expect(readRecent(s)).toEqual(['1 kWh']);
+	});
+
+	it('the same applies to the saved list', () => {
+		const s = fakeStore({ 'uc-saved': '[{"query":"1 kWh"},{"query":"  1 kWh "}]' });
+		expect(readSaved(s)).toEqual([{ query: '1 kWh' }]);
+	});
+
+	it('re-saving without a label keeps the label that is already there', () => {
+		const s = fakeStore();
+		save(s, '1 m3 natural gas', 'boiler sizing');
+		expect(save(s, '1 m3 natural gas')[0]).toEqual({
+			query: '1 m3 natural gas',
+			label: 'boiler sizing'
+		});
+	});
+
+	it('an explicit new label still replaces the old one', () => {
+		const s = fakeStore();
+		save(s, '1 kWh', 'old');
+		expect(save(s, '1 kWh', 'new')[0].label).toBe('new');
+	});
+});

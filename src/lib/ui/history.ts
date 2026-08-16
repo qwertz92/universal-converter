@@ -68,11 +68,35 @@ function usableQuery(query: string): string | undefined {
 export function readRecent(store: HistoryStore | undefined): string[] {
 	const parsed = readJson(store, RECENT_KEY);
 	if (!Array.isArray(parsed)) return [];
-	return parsed
-		.filter((v): v is string => typeof v === 'string')
-		.map((v) => v.trim())
-		.filter((v) => v.length > 0 && v.length <= MAX_LENGTH)
-		.slice(0, MAX_RECENT);
+	return dedupe(
+		parsed
+			.filter((v): v is string => typeof v === 'string')
+			.map((v) => v.trim())
+			.filter((v) => v.length > 0 && v.length <= MAX_LENGTH),
+		(q) => q
+	).slice(0, MAX_RECENT);
+}
+
+/**
+ * Drop repeats, comparing case-insensitively — the same key `pushRecent`/`save`
+ * use when writing.
+ *
+ * Reading has to do this too, and not only for tidiness: the trim above can
+ * CREATE a duplicate out of a stored `["1 kWh", "  1 kWh  "]`, and the panel
+ * keys its `{#each}` by the query text. A duplicate key is a hard Svelte error
+ * that takes the whole page down in production — so one hand-edited or
+ * half-written storage value would break the site rather than the feature.
+ */
+function dedupe<T>(items: T[], key: (item: T) => string): T[] {
+	const seen = new Set<string>();
+	const out: T[] = [];
+	for (const item of items) {
+		const k = key(item).toLowerCase();
+		if (seen.has(k)) continue;
+		seen.add(k);
+		out.push(item);
+	}
+	return out;
 }
 
 /**
@@ -124,7 +148,7 @@ export function readSaved(store: HistoryStore | undefined): SavedEntry[] {
 		const label = typeof record.label === 'string' ? record.label.trim().slice(0, 60) : undefined;
 		out.push(label ? { query: q, label } : { query: q });
 	}
-	return out.slice(0, MAX_SAVED);
+	return dedupe(out, (e) => e.query).slice(0, MAX_SAVED);
 }
 
 /** True when this exact query (case-insensitively) is already saved. */
@@ -138,10 +162,15 @@ export function save(store: HistoryStore | undefined, query: string, label?: str
 	const trimmed = usableQuery(query);
 	if (!trimmed) return readSaved(store);
 	const key = trimmed.toLowerCase();
-	const entry: SavedEntry = label?.trim()
-		? { query: trimmed, label: label.trim().slice(0, 60) }
-		: { query: trimmed };
-	const next = [entry, ...readSaved(store).filter((e) => e.query.toLowerCase() !== key)].slice(
+	const existing = readSaved(store);
+	// Re-saving without a label must not WIPE a label that is already there —
+	// the docstring promised "or update its label", and dropping one silently is
+	// the same class of bug as dropping a word.
+	const keptLabel = label?.trim()
+		? label.trim().slice(0, 60)
+		: existing.find((e) => e.query.toLowerCase() === key)?.label;
+	const entry: SavedEntry = keptLabel ? { query: trimmed, label: keptLabel } : { query: trimmed };
+	const next = [entry, ...existing.filter((e) => e.query.toLowerCase() !== key)].slice(
 		0,
 		MAX_SAVED
 	);
