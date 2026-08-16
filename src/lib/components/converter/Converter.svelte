@@ -69,6 +69,10 @@
 			: ''
 	);
 	let showStructured = $state(false);
+	// Per-instance, because the converter renders twice on some pages (compact
+	// on a fuel page, full on /convert) and a literal id would collide.
+	const structuredUid = $props.id();
+	const structuredPanelId = `uc-structured-${structuredUid}`;
 	const initialPin = untrack(() =>
 		syncUrl && browser ? decodePin(page.url.searchParams.get('pin'), units) : {}
 	);
@@ -460,6 +464,7 @@
 				style="color:var(--text-muted)"
 				onclick={() => (showStructured = !showStructured)}
 				aria-expanded={showStructured}
+				aria-controls={structuredPanelId}
 			>
 				<svg
 					width="14"
@@ -476,6 +481,7 @@
 			</button>
 			{#if showStructured}
 				<div
+					id={structuredPanelId}
 					class="rounded-xl border p-4"
 					style="border-color:var(--border);background:var(--surface-2)"
 				>
