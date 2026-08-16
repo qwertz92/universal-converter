@@ -76,20 +76,29 @@ build-status dashboard.
   reference-condition tables), not just engine work.
 - *Advanced search* — unit/fuel search exists; "advanced" (cross-entity,
   fuzzy, synonyms beyond aliases) unscoped.
-- *More fuels* — DESNZ variant rows (100% mineral petrol/diesel, gas oil,
-  burning oil, wood chips, biomethane, …) are recorded verbatim in
-  `docs/research-notes.md`, but shipping them as near-duplicate fuel ids
-  without a variant/compare model risks catalog confusion — blocked on the
-  data-model ADR below.
+- *More fuels* — **unblocked and partly shipped.** ADR 0005 (accepted in v0.3.1)
+  decided the variant model: each DESNZ variant is a first-class fuel that names
+  its close relatives via `related_fuels`. 100% mineral petrol, 100% mineral
+  diesel, gas oil (red diesel) and burning oil shipped with it; the DESNZ coal
+  grades (domestic, coking, electricity generation) followed. What remains open
+  is the rest of the recorded rows — wood chips, biomethane, landfill gas,
+  biodiesel BtL/HVO, aviation spirit — each admissible only when density (where
+  the fuel has one), at least one calorific value **and** its emission factors
+  are all recorded verbatim in `docs/research-notes.md`. Biopropane fails that
+  test today (a CO₂e figure, no density, no calorific value) and stays out.
 - *US grid factor* — the ~370 gCO2/kWh figure in research-notes is flagged
   provisional/unverified; shipping it would break the no-invented-numbers
   rule. Needs a bounded re-extraction of EPA Hub Table 6 (XLSX).
-- *Source Diff Viewer* — the catalog currently ships exactly one factor per
-  fuel+metric+scope, so there is nothing to diff yet; follows the variant
-  ADR.
-- **New prerequisite ADR:** fuel variants / multi-source values (density as
-  array vs. separate fuel ids, GWP-set field on factors) — see the data
-  audit's schema findings.
+- *Source Diff Viewer* — the catalog still ships exactly one factor per
+  fuel+metric+scope, so there is no same-product divergence to diff. ADR 0005
+  changed what the feature would show: with variants shipped, the honest
+  comparison is between neighbouring *products* (road diesel vs gas oil,
+  industrial vs domestic coal), which is a real comparison rather than a
+  side-by-side of sources for one product that the rulebook forbids averaging
+  anyway. Unblocked, not yet built.
+- ~~**New prerequisite ADR:** fuel variants / multi-source values~~ — **written
+  and accepted:** `docs/adr/0005-fuel-variants.md` (v0.3.1). A GWP-set field on
+  emission factors is still not modeled.
 
 ### 0.3 — Heating-cost calculator, electricity/gas price calculator, boiler efficiency, heat pump COP, well-to-wheel factors, country presets, saved scenarios
 
@@ -158,8 +167,9 @@ Per spec §15, unchanged.
 
 > **Status update (v0.2.0):** items 1, 3 and 4 below shipped in 0.2.0
 > (region/year presets, `/api/convert`, uncertainty display). Item 2 (Source
-> Diff Viewer) remains open — see the 0.2 section above for why it is blocked
-> on the fuel-variants ADR. The list is kept for the original reasoning.
+> Diff Viewer) remains unbuilt, but is no longer blocked: the fuel-variants ADR
+> it waited on was written and accepted in v0.3.1 (see the 0.2 section above).
+> The list is kept for the original reasoning.
 
 The spec's §16 "long-term feature ideas" list is large and mostly
 un-prioritized. Of that list, the following are the ones most worth pulling

@@ -88,16 +88,16 @@ clause (spec header).
   `2 kW × 3 h → 6 kWh` (the arithmetic is exact; see §C.7 on how the *result*
   exactness is nonetheless bounded by the least-exact input).
 - **`standard_definition`** — `1 toe = 41.868 GJ` (IEA/OECD convention);
-  `1 tce = 29.3076 GJ`; `1 therm(US) = 105 480 400 J`; `1 cal_IT = 4.1868 J`;
+  `1 tce = 29.3076 GJ`; `1 therm = 105 505 585.262 J`; `1 cal_IT = 4.1868 J`;
   `1 BTU_IT = 1055.05585262 J`; `1 quad = 10^15 BTU_IT`. The number is exact, but
   it stands for a *conventional* quantity, not a measured property of any real oil
   or coal.
 - **`source_based`** — `diesel density = 0.835 kg/L (source X, year Y)`;
   `natural gas NCV = 3X.X MJ/m³ (source)`; `gasoline CO2 factor = 2.3X kg/L
   (source)`. Correct for the source's basis/conditions; genuine real-world spread.
-- **`estimated`** — energy content of *one physical barrel of crude oil*
-  (crude grade varies); energy in `1 kg wood` (species + moisture); anything the
-  Data agent can only give as a representative mid-range figure.
+- **`estimated`** — energy in `1 kg lignite` (the source's own NCV range spans
+  5.5–21.6 MJ/kg); energy in `1 kg wood` (species + moisture); anything the Data
+  agent can only give as a representative mid-range figure.
 - **`region_year_specific`** — `1 kWh electricity → gCO2e`, valid only for a
   named grid + year; `district heat → CO2e`. Never global, never timeless.
 - **`user_assumption`** — the user overrides diesel density with `0.84 kg/L`, or
@@ -280,17 +280,22 @@ changes accordingly. The engine never assumes the two are interchangeable
 | Entity | Kind | v0.1 value & exactness | Rule |
 |---|---|---|---|
 | **barrel** | *volume* | `1 barrel = 42 US gallons = 158.987294928 L` — **exact** | A pure volume unit. Convert freely within the volume dimension. Never assume it "contains" any particular energy without a fuel + density + HV. |
-| **boe** (barrel of oil equivalent) | *energy* (convention) | **[DECISION] v0.1 adopts boe = 5.8 × 10⁶ BTU_IT ≈ 6.1 GJ** → `1 boe = 6 119 320.395… MJ`; exactness `standard_definition` | This is the US/IRS convention (5.8 MMBTU). We adopt it because it is the most widely cited single value and is what most "boe" figures in oil-and-gas reporting mean. The result **must state** "boe (5.8 MMBTU convention)" and note that other conventions exist (e.g. IEA's ~7.15–7.40 boe per toe implies a slightly different value). |
+| **boe** (barrel of oil equivalent) | *energy* (convention) | **[DECISION] v0.1 adopts boe = 5.8 × 10⁶ BTU_IT ≈ 6.1 GJ** → `1 boe = 6119.323945196 MJ` (5.8 × 10⁶ × 1055.05585262 J, the value `data/units.json` ships); exactness `standard_definition` | This is the US/IRS convention (5.8 MMBTU). We adopt it because it is the most widely cited single value and is what most "boe" figures in oil-and-gas reporting mean. The result **must state** "boe (5.8 MMBTU convention)" and note that other conventions exist (e.g. IEA's ~7.15–7.40 boe per toe implies a slightly different value). |
 | **toe** (tonne of oil equivalent) | *energy* (convention) | `1 toe = 41.868 GJ` — `standard_definition` (IEA/OECD) | Fixed by definition, derived historically from a net calorific value of ~10⁷ kcal_IT. Not a property of any real oil. |
 | **tce** (tonne of coal equivalent) | *energy* (convention) | `1 tce = 29.3076 GJ` — `standard_definition` | Adopted. `1 toe = 1.428571… tce`. Not a property of any real coal. |
 
 **Critical separation:** the **energy content of one *physical* barrel of crude
-oil** is a *different, `estimated`* quantity from `boe`. A physical barrel's energy
-depends on crude grade/API gravity and is a representative estimate (~5.6–6.3 GJ
-range depending on grade); `boe` is a fixed 6.1 GJ *by convention*. The engine must
-never present a physical-barrel-of-crude energy figure as `boe`, and must never
-present `boe` as if it were the measured energy of the specific oil in question
-(§D "boe as physical barrel").
+oil** is a *different* quantity from `boe`. It depends on the crude's grade/API
+gravity, and computing it needs a density this catalog does not have:
+`docs/research-notes.md` §4.1 records **no primary-source crude density** (only a
+plausibility-only ~800–950 kg/m³ band, explicitly marked NOT FOUND). So the
+physical-barrel energy is **"not available"**, not a range — an earlier
+`~5.6–6.3 GJ` figure appeared here and in `data/fuels.json` without ever being
+recorded in the research ledger, and has been removed rather than back-fitted
+with a citation. `boe`, by contrast, is a fixed ~6.1 GJ *by convention*. The
+engine must never present a physical-barrel-of-crude energy figure as `boe`, and
+must never present `boe` as if it were the measured energy of the specific oil in
+question (§D "boe as physical barrel").
 
 ### C.4 [DECISION] Calorie and BTU definitions
 
@@ -299,7 +304,7 @@ present `boe` as if it were the measured energy of the specific oil in question
 | `cal`, `kcal` | **International Table (IT) calorie** | `1 cal_IT = 4.1868 J`; `1 kcal = 4186.8 J` | `standard_definition` |
 | `Cal`, `food Calorie`, `dietary calorie` | **alias → kcal** (IT) | `1 Cal = 1 kcal = 4186.8 J` | `standard_definition` |
 | `BTU`, `kBTU`, `MMBTU` | **International Table BTU** | `1 BTU_IT = 1055.05585262 J`; `1 MMBTU = 10⁶ BTU_IT` | `standard_definition` |
-| `therm` | **therm (US)** = 100 000 BTU_IT | `1 therm = 1.0550559 × 10⁸ J` (i.e. `10⁵ × 1055.05585262`) | `standard_definition` |
+| `therm` | **therm (US)** = 100 000 BTU_IT | `1 therm = 1.05505585262 × 10⁸ J` exactly (i.e. `10⁵ × 1055.05585262`) | `standard_definition` |
 | `quad` | `10¹⁵ BTU_IT` | — | `standard_definition` |
 
 **Justification.**
@@ -311,10 +316,14 @@ present `boe` as if it were the measured energy of the specific oil in question
 - **IT BTU (1055.05585262 J)** over thermochemical BTU (1054.35 J): same coherence
   argument; the IT BTU is the standard general-engineering value and underpins the
   `therm` and `quad`.
-- **`therm` = US therm (based on BTU_IT).** We adopt the US therm because the tool
-  leans to internationally-recognized SI-coherent conventions and the US therm is
-  the legal unit of the US gas industry; the EC therm differs only at the ~10⁻⁵
-  level. The choice is labeled on the unit's detail page.
+- **`therm` = 100 000 BTU_IT**, labeled "therm (US)" after the definition EIA
+  states (100 000 Btu; `docs/research-notes.md` §3), read with this rulebook's own
+  IT BTU. The recorded sources describe the UK/EC therm through the same
+  100 000-Btu_IT chain and DESNZ's own tables agree with it
+  (1 therm = 0.105506 GJ = 29.30711 kWh), so no divergence between the two is
+  claimed here — a therm quoted from a source that pins a different BTU flavour
+  can differ slightly, which is why the unit's detail page states the chain used
+  rather than just the name.
 
 **Alias rule.** "food calorie", "Calorie" (capital C), "dietary calorie",
 "nutritional calorie" all resolve to **kcal**. The parser records that an alias was
@@ -402,7 +411,7 @@ display time**, per this table:
 1. Never display more sig figs than the *least* precise input to the calculation
    allows. A chain `source_based × exact` is `source_based` (3–4 sig figs).
 2. **Ranges over point estimates** where a fuel property genuinely spans a range
-   (crude energy, wood energy, coal grade): show `~A–B`, and if a single number is
+   (lignite or anthracite NCV, wood energy): show `~A–B`, and if a single number is
    needed use a representative mid value marked `~`. A displayed range is
    **converted into the row's own display unit** (the MJ row shows an MJ range,
    the kWh row a kWh range) — raw per-kg/per-m³ source bounds are never reused
@@ -520,8 +529,11 @@ Each entry: **what goes wrong**, and **how our model prevents it**.
 ### D.5 boe as the physical energy of *this* oil
 - **Wrong:** reporting a specific crude's energy as exactly `boe`, or `boe` as the
   measured energy of a real barrel.
-- **Prevented by:** physical-barrel-of-crude energy is `estimated` with a range
-  and is a **separate** quantity from the fixed-by-convention `boe` (§C.3).
+- **Prevented by:** the physical energy of a barrel of crude is a **separate**
+  quantity from the fixed-by-convention `boe` (§C.3), and this catalog cannot
+  produce it at all — crude has no sourced density (§C.3), so a barrel of crude
+  answers "not available" for mass and energy rather than borrowing the `boe`
+  number.
 
 ### D.6 CO2 vs CO2e
 - **Wrong:** presenting a CO2 figure as CO2e (or summing them), or inventing a
