@@ -479,6 +479,13 @@ export interface ParseError {
 	token?: string;
 	/** A second, calmer line explaining what to do (or why it is out of scope). */
 	hint?: string;
+	/**
+	 * True when the phrase names a product CLASS the catalog splits into several
+	 * entries ("coal", "heizöl"), rather than something misspelled or unknown.
+	 * The distinction is the difference between "did you mean" and "pick one",
+	 * and the UI must be able to tell them apart without matching on wording.
+	 */
+	split_material?: boolean;
 }
 
 /**

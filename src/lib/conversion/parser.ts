@@ -214,6 +214,11 @@ function splitMaterialError(
 		kind: 'unknown_fuel',
 		message: `"${phrase}" ${split.reason} Pick the one you mean:`,
 		token: phrase,
+		// A structural flag, not a phrase the UI has to string-match. The heading
+		// above the choices differs for a split ("The options") from a typo guess
+		// ("Did you mean"), and keying that off the message text meant rewording
+		// this sentence would silently revert the heading.
+		split_material: true,
 		suggestions: split.candidates
 			.map((id) => fuels.get(id)?.names[0])
 			.filter((n): n is string => Boolean(n)),
@@ -571,7 +576,14 @@ function peelEfficiency(
 	// once (see the separator normalisation in `prepare`).
 	const numberAt = (hit.index ?? 0) + hit[0].indexOf(hit[1]);
 	const before = numberAt > 0 ? text[numberAt - 1] : '';
-	if (before !== '' && /[\w.,+-]/.test(before)) return undefined;
+	// Only DIGIT-ish neighbours disqualify. A letter before the number is the
+	// glued form people actually write — "COP3.5", "85%efficiency" — and
+	// rejecting those broke input that had worked. What must not match is a
+	// number continuing: "1e5" (the e preceded by a digit), "1.5", "1,5", "-5".
+	const glued =
+		/[\d.,+-]/.test(before) ||
+		(/[eE]/.test(before) && numberAt > 1 && /\d/.test(text[numberAt - 2]));
+	if (before !== '' && glued) return undefined;
 
 	const raw = normalizeNumber(hit[1]);
 	const value = new Decimal(raw);
@@ -629,7 +641,11 @@ function peelPrice(
 		// UNITS through: `1 L diesel at 0.84 kg/L` produced a Cost group reading
 		// "~0.84 kg" — money in kilograms, for an input the rulebook itself gives
 		// as the user-density example. A token that names a unit is not a currency.
-		if (units.resolve(currency).kind === 'match') {
+		// `!== 'unknown'`, not `=== 'match'`: "ton", "gallon" and case-collisions
+		// like "MG" resolve as AMBIGUOUS, and `1 kWh at 5 ton/kWh` slipped through
+		// to a Cost group reading "~5.00 ton". A token the unit registry
+		// recognises at all is not a currency.
+		if (units.resolve(currency).kind !== 'unknown') {
 			return {
 				error: {
 					kind: 'unsupported_value',

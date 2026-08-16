@@ -100,9 +100,14 @@ clause (spec header).
   agent can only give as a representative mid-range figure.
 - **`region_year_specific`** — `1 kWh electricity → gCO2e`, valid only for a
   named grid + year; `district heat → CO2e`. Never global, never timeless.
-- **`user_assumption`** — the user overrides diesel density with `0.84 kg/L`, or
-  toggles the heating-value basis to HHV, or enters gas reference conditions; the
-  result's provenance is "your input", not a source.
+- **`user_assumption`** — the user supplies a price (`1000 kWh at 0.32 EUR/kWh`)
+  or an appliance efficiency (`100 kWh at 3.5 COP`), or toggles the heating-value
+  basis to HHV; the result's provenance is "your input", not a source. (This
+  clause used to give "the user overrides diesel density with `0.84 kg/L`" as the
+  example. No such override exists — a user-supplied density or calorific value
+  is *not* accepted, and since v0.3.5 that exact input is refused with a message
+  saying so, because it was being misread as a price denominated in kilograms.
+  Prices and efficiencies are the two user inputs this tool does take.)
 - **`context_required`** — `1 kWh electricity → CO2e` with no region/year;
   `1 kW → kWh` with no time; `1 m³ gas → kg` with no density/composition chosen
   and no default assumption accepted.

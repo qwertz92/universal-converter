@@ -275,10 +275,20 @@ export function createConverter(data: DataBundle): Converter {
 		// underlying quality is named in the explanation instead.
 		const underlying = source.exactness;
 		const exactness: Exactness = 'user_assumption';
-		const rounded = roundToSigFigs(delivered.toFixed(), sigFigsFor(exactness, options.maxSigFigs));
+		// The BADGE and the PRECISION are different questions. Badging the row as
+		// a user assumption is right; letting that badge also set the display
+		// precision is not — user_assumption allows 6 significant figures and no
+		// approximation marker, so a delivered figure resting on lignite's
+		// 5.5-21.6 MJ/kg estimate started printing 2.80972 kWh where the energy
+		// row above it said ~3.31. The floor still governs how much may be shown.
+		const precisionFloor = combineExactness(underlying, exactness);
+		const rounded = roundToSigFigs(
+			delivered.toFixed(),
+			sigFigsFor(precisionFloor, options.maxSigFigs)
+		);
 
 		builder.add({
-			value: formatValue(rounded, exactness),
+			value: formatValue(rounded, precisionFloor),
 			raw: delivered.toFixed(),
 			unit_id: sourceUnit.id,
 			unit_label: unitLabel(sourceUnit),
@@ -984,6 +994,35 @@ export function createConverter(data: DataBundle): Converter {
 	}
 
 	/**
+	 * The right-hand side of the calculation path: the product in the heating
+	 * value's OWN unit, then the row's unit if they differ.
+	 *
+	 * Fixing the left operand alone was not enough. The formula is emitted on the
+	 * megajoule row, but 12 of 29 fuels publish their calorific value in kWh —
+	 * so `159 L (1 bbl diesel) × 9.905 kWh/L = 5,669 MJ` still did not compute:
+	 * 159 × 9.905 is 1,575, and the missing step is the kWh→MJ conversion, a
+	 * factor of exactly 3.6. Showing the intermediate keeps the source's own
+	 * published figure on screen — converting the factor to MJ/L instead would
+	 * have printed a number that appears in no source.
+	 */
+	function productThenTarget(
+		hv: HeatingValueResolved,
+		joules: string,
+		converted: string,
+		target: Unit,
+		exactness: Exactness,
+		options: EngineOptions
+	): string {
+		const final = `${formatValue(converted, exactness, { maxExactSigFigs: options.maxSigFigs })} ${unitLabel(target)}`;
+		const numerator = hv.displayUnit.split('/')[0]?.trim();
+		const hvUnit = numerator ? units.resolve(numerator) : undefined;
+		if (!hvUnit || hvUnit.kind !== 'match' || hvUnit.unit.id === target.id) return final;
+
+		const intermediate = convertWithinDimension(joules, units.get('joule')!, hvUnit.unit);
+		return `${formatValue(intermediate, exactness, { maxExactSigFigs: options.maxSigFigs })} ${unitLabel(hvUnit.unit)} = ${final}`;
+	}
+
+	/**
 	 * The amount, expressed in the unit the heating value is stated PER, so the
 	 * calculation path multiplies out.
 	 *
@@ -1132,7 +1171,7 @@ export function createConverter(data: DataBundle): Converter {
 								label,
 								'×',
 								`${hv.displayValue} ${hv.displayUnit}`,
-								`${formatValue(converted, exactness)} ${unitLabel(target)}`,
+								productThenTarget(hv, energy.joules, converted, target, exactness, options),
 								`${basisLabel(basis)}${isPrimary ? '' : ' — secondary'}`
 							)
 						: undefined,

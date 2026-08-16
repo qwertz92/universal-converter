@@ -7,7 +7,7 @@
 	 * notes rather than errors (rulebook §A.2, §C.6).
 	 */
 	import type { ConversionResult } from '$lib/conversion/types';
-	import { formatRange, roundToSigFigs, sigFigsFor } from '$lib/formatting/numbers';
+	import { formatRange, formatValue } from '$lib/formatting/numbers';
 	import { resolveSources } from '$lib/ui/engine';
 	import ExactnessBadge from '$lib/components/badges/ExactnessBadge.svelte';
 	import CopyButton from './CopyButton.svelte';
@@ -54,10 +54,15 @@
 	 * where it ships next to an `exactness_note` explaining what it does and does
 	 * not mean; a clipboard has no room for that caveat, and a pasted number
 	 * loses every label this tool spent its effort attaching.
+	 *
+	 * It goes through `formatValue`, the same function the display uses, so the
+	 * clipboard and the screen can never disagree. Applying `sigFigsFor` directly
+	 * did disagree: it capped `exact` rows at 6 figures while the display showed
+	 * them whole, so `1 therm to J` read 105,505,585.262 and copied 105506000.
 	 */
 	const copyValue = $derived.by(() => {
 		if (result.raw === null || result.raw === undefined) return (result.value ?? '').toString();
-		return roundToSigFigs(result.raw, sigFigsFor(result.exactness));
+		return formatValue(result.raw, result.exactness, { thousands: false }).replace(/^~/, '');
 	});
 
 	// Range formatted through the exactness-bounded formatter (sig-fig cap + ~),

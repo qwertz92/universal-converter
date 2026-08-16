@@ -65,6 +65,21 @@ const NON_SOURCED_EXACTNESS = new Set(['exact', 'standard_definition']);
  * reported rather than skipped, so adding an emission-intensity unit forces a
  * decision about which metric it carries instead of silently escaping the check.
  */
+/**
+ * The unit-id numerator each pollutant must be measured in.
+ *
+ * `biogenic_CO2` is carbon dioxide and is measured as such — what makes it
+ * biogenic is the `biogenic` flag and its `outside_of_scopes` placement, not a
+ * different molecule. CH4 and N2O have no unit of their own in the catalog,
+ * which is exactly why they need naming here: without an entry they could only
+ * ever borrow a CO2 unit, and one did — a CH4 factor rendered as "kg CO2".
+ */
+const POLLUTANT_NUMERATOR: Record<string, string> = {
+	CO2: 'co2',
+	CO2e: 'co2e',
+	biogenic_CO2: 'co2'
+};
+
 const METRIC_BY_DENOMINATOR: Record<string, string> = {
 	j: 'mass_per_energy',
 	kj: 'mass_per_energy',
@@ -386,30 +401,53 @@ export function validateAll(): ValidationReport {
 		// unit passed — and the engine then files the row under a CO2e unit id
 		// while labeling it "kg CO2". A CO2/CO2e mislabel on a single row is the
 		// one invariant this project cannot afford to get wrong (§B.2, §D.6).
-		const numerator = /^(?:kg|g|t)_(co2e|co2)_per_/.exec(ef.unit)?.[1];
+		//
+		// Every pollutant in the schema is covered, not just the CO2/CO2e pair:
+		// there is no `*_ch4_*` unit, so a CH4 factor could only ever wear a CO2
+		// one — and did, undetected, rendering as "~2.06 kg CO2".
+		const numerator = /^(?:kg|g|t)_([a-z0-9]+)_per_/.exec(ef.unit)?.[1];
+		const expectedNumerator = POLLUTANT_NUMERATOR[ef.pollutant];
 		if (numerator) {
-			const pollutantIsCo2e = ef.pollutant === 'CO2e';
-			const unitIsCo2e = numerator === 'co2e';
-			if (pollutantIsCo2e !== unitIsCo2e) {
+			if (!expectedNumerator) {
+				issues.push({
+					file: 'emission-factors',
+					path: `emission_factors[${i}] (${ef.id}).pollutant`,
+					message: `no unit numerator is defined for pollutant '${ef.pollutant}' — add one (and a unit to carry it) rather than letting it borrow another gas's unit`
+				});
+			} else if (numerator !== expectedNumerator) {
 				issues.push({
 					file: 'emission-factors',
 					path: `emission_factors[${i}] (${ef.id})`,
-					message: `pollutant '${ef.pollutant}' disagrees with unit '${ef.unit}' — CO2 and CO2e are never interchangeable`
+					message: `pollutant '${ef.pollutant}' disagrees with unit '${ef.unit}' (expected a '${expectedNumerator}' numerator) — greenhouse gases are never interchangeable`
 				});
 			}
 		}
 
 		// A fuel may only cite factors that are ABOUT that fuel. Nothing stopped
 		// gasoline from listing diesel's factor and validating cleanly.
-		if (ef.fuel_id) {
-			for (const [fi, f] of fuels.entries()) {
-				if (f.emission_factor_ids.includes(ef.id) && f.id !== ef.fuel_id) {
+		//
+		// A factor with NO `fuel_id` is not a free-for-all either: the three grid
+		// factors are the only such entries, they are per-kWh, and citing one from
+		// diesel would apply UK grid intensity to diesel energy. They belong to
+		// electricity alone.
+		for (const [fi, f] of fuels.entries()) {
+			if (!f.emission_factor_ids.includes(ef.id)) continue;
+			if (!ef.fuel_id) {
+				if (f.id !== 'electricity') {
 					issues.push({
 						file: 'cross-file',
 						path: `fuels[${fi}] (${f.id}).emission_factor_ids`,
-						message: `cites '${ef.id}', which is a factor for '${ef.fuel_id}'`
+						message: `cites '${ef.id}', which names no fuel_id — an unattributed factor may only be cited by electricity`
 					});
 				}
+				continue;
+			}
+			if (f.id !== ef.fuel_id) {
+				issues.push({
+					file: 'cross-file',
+					path: `fuels[${fi}] (${f.id}).emission_factor_ids`,
+					message: `cites '${ef.id}', which is a factor for '${ef.fuel_id}'`
+				});
 			}
 		}
 	}

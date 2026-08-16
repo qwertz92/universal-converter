@@ -87,9 +87,11 @@ describe('an exact value is never quietly rounded', () => {
 	});
 
 	it('still rounds a value with more precision than anyone needs', () => {
-		// 1 kWh in BTU does not terminate at the engine's 40-digit precision.
+		// 1 kWh in BTU does not terminate at the engine's 40-digit precision. The
+		// conversion is exact by DEFINITION; the printed decimal is not the value,
+		// so it carries the marker that says so.
 		const long = '3412.141633127942139845173508305108425372';
-		expect(formatValue(long, 'exact')).toBe('3,412.14');
+		expect(formatValue(long, 'exact')).toBe('~3,412.14');
 	});
 
 	it('an explicitly requested cap still wins over showing it in full', () => {
@@ -156,7 +158,68 @@ describe('the lossless budget is drawn between typed and computed', () => {
 		expect(formatValue('1234567890123456', 'exact')).toBe('1,234,567,890,123,456');
 	});
 
-	it('a 40-digit non-terminating conversion is still capped', () => {
-		expect(formatValue('3412.141633127942139845173508305108425372', 'exact')).toBe('3,412.14');
+	it('a 40-digit non-terminating conversion is capped, and says so', () => {
+		expect(formatValue('3412.141633127942139845173508305108425372', 'exact')).toBe('~3,412.14');
+	});
+
+	it('a value that survives the cap unchanged carries no marker', () => {
+		expect(formatValue('3600000', 'exact')).toBe('3,600,000');
+		expect(formatValue('1.5', 'exact')).toBe('1.5');
+	});
+
+	it('an explicitly requested cap is not marked as an approximation', () => {
+		// The caller asked to be rounded; telling them it was rounded is noise.
+		expect(formatValue('0.45359237', 'exact', { maxExactSigFigs: 2 })).toBe('0.45');
+	});
+});
+
+describe('the calculation path is verified by DOING the arithmetic', () => {
+	// The previous test asserted the formula "contains 159 L" — which is why
+	// `159 L × 9.905 kWh/L = 5,669 MJ` survived it. 159 × 9.905 is 1,575, not
+	// 5,669; the missing step was kWh→MJ. This one multiplies the line out.
+	const NUM = String.raw`([\d,]+(?:\.\d+)?)`;
+	const parse = (s: string) => Number(s.replace(/,/g, ''));
+
+	it.each([
+		'1 bbl diesel',
+		'1 gal diesel',
+		'1 L diesel',
+		'1 m3 natural gas',
+		'1 t coking coal',
+		'1 lb hard coal',
+		'1 g lignite',
+		'1 L gas oil',
+		'10 L ethanol',
+		'1 kg hydrogen',
+		'1 L lpg',
+		'1 tonne wood pellets'
+	])('%s: every product in the path computes', (query) => {
+		const row = rows(query).find((r) => r.category === 'energy' && r.formula);
+		expect(row?.formula, query).toBeDefined();
+		// "<amount> <unit> (…) × <factor> <unit>/<unit> [basis] = <a> <u> [= <b> <u>]"
+		// Greedy middle, so the `×` taken is the one before the FACTOR — a density
+		// step writes its own `×` inside the parentheses ("1 L gas oil × density").
+		const m = row!.formula!.match(
+			new RegExp(String.raw`^${NUM}\s.*×\s*${NUM}\s\S+\s\[[^\]]+\]\s=\s*~?${NUM}`)
+		);
+		expect(m, `unparseable path: ${row!.formula}`).not.toBeNull();
+		const [, amount, factor, product] = m!;
+		const expected = parse(amount) * parse(factor);
+		const shown = parse(product);
+		// Both sides are display-rounded, so allow the rounding but not a unit slip.
+		expect(Math.abs(shown - expected) / expected, row!.formula).toBeLessThan(0.01);
+	});
+});
+
+describe('an exact value that had to be rounded says so', () => {
+	it('1 kWh to BTU carries the marker its digits require', () => {
+		const btu = rows('1 kWh to BTU').find((r) => r.unit_id === 'btu');
+		expect(btu?.value).toMatch(/^~/);
+		expect(btu?.exactness).toBe('standard_definition');
+	});
+
+	it('a conversion that lands whole carries none', () => {
+		const mj = rows('1 kWh to MJ').find((r) => r.unit_id === 'megajoule');
+		expect(mj?.value).toBe('3.6');
 	});
 });

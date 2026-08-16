@@ -75,7 +75,7 @@
 					if the tool thought the input was a mistake.
 				-->
 				<p class="mt-1 text-sm" style="color:var(--text-muted)">
-					{error.message.endsWith('Pick the one you mean:') ? 'The options:' : 'Did you mean:'}
+					{error.split_material ? 'The options:' : 'Did you mean:'}
 				</p>
 				<div class="mt-2 flex flex-wrap gap-2">
 					{#each suggestions as sug (sug)}

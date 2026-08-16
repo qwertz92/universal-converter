@@ -97,13 +97,34 @@ export function formatValue(
 	// An explicit maxExactSigFigs is a caller ASKING to be capped (the API's
 	// ?sigfigs= parameter), and it wins — the rule below is about the default
 	// readability budget, not about overriding a request.
+	// A digit budget only MOVES the boundary: at 15 a 16-digit input was mangled,
+	// at 25 a 26-digit one still would be. The invariant that matters is not
+	// length — it is that an EXACT value is never shown as a different number
+	// without saying so.
 	const showInFull =
 		opts.maxExactSigFigs === undefined &&
 		isExactLevel(exactness) &&
 		significantDigits(value) <= MAX_LOSSLESS_SIG_FIGS;
 	const rounded = showInFull ? normalizeDecimalString(value) : roundToSigFigs(value, sig);
 	const withSep = opts.thousands === false ? rounded : withThousandsSeparators(rounded);
-	return usesApproxMarker(exactness) ? `~${withSep}` : withSep;
+
+	// So: when an exact value could NOT be shown whole, it gets the marker. A
+	// conversion can be exact by definition and still have no terminating
+	// decimal — 1 kWh in BTU is 3412.14163312794…, and printing "3,412.14" with
+	// no tilde promised a precision the digits do not carry.
+	// An explicitly requested cap is excluded: the caller asked to be rounded, so
+	// marking their own request as an approximation tells them nothing.
+	const approximated =
+		opts.maxExactSigFigs === undefined &&
+		!showInFull &&
+		isExactLevel(exactness) &&
+		!isLossless(value, rounded);
+	return usesApproxMarker(exactness) || approximated ? `~${withSep}` : withSep;
+}
+
+/** True when the rounded form is the same number as the original. */
+function isLossless(value: string, rounded: string): boolean {
+	return new Decimal(value).equals(new Decimal(rounded));
 }
 
 /** Levels that promise the displayed number IS the number (rulebook §C.7). */

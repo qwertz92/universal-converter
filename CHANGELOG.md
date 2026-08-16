@@ -3,6 +3,50 @@
 All notable changes to Universal Converter. Versioning follows semver
 (pre-1.0: minor bumps may include behavior changes; they are listed here).
 
+## 0.3.6 — 2026-08-16
+
+A third pass, aimed only at the previous release's own fixes. Four of them were
+wrong or incomplete — including two regressions the fixes themselves introduced.
+
+### Fixed — the previous release's mistakes
+
+- **The calculation path still did not multiply out.** 0.3.5 corrected the left
+  operand and left the right one alone, so for the twelve fuels whose calorific
+  value is published in kWh the line read `159 L (1 bbl diesel) × 9.905 kWh/L =
+5,669 MJ` — 159 × 9.905 is 1,575, and the missing step was kWh→MJ. It now
+  shows the intermediate: `= 1,575 kWh = 5,669 MJ`, keeping the source's own
+  published figure on screen rather than converting it to a number that appears
+  in no source. The test that let this through asserted the formula _contained_
+  "159 L"; it now multiplies every path out.
+- **Badging a cost as a user assumption silently coarsened it.** That level
+  allows six significant figures and no `~`, so `1 kg lignite at 85% efficiency`
+  started printing `2.80972 kWh` under an energy row reading `~3.31` whose
+  source spans 5.5–21.6 MJ/kg. The badge and the display precision are now
+  separate questions.
+- **The copy button disagreed with the screen.** Capping it by exactness rounded
+  `exact` rows to six figures while the display showed them whole: `1 therm to J`
+  read 105,505,585.262 and copied 105506000. Both now go through one function.
+- **A ratio of units was still accepted as a price when the unit was
+  ambiguous** — `1 kWh at 5 ton/kWh` gave a Cost group of "~5.00 ton".
+- A Learn page claimed crude oil has no calorific value. It has one (IPCC, 42.3
+  MJ/kg); what it lacks is a density.
+
+### Changed
+
+- **An exact value that had to be rounded now says so.** `1 kWh to BTU` is
+  3412.14163… — the conversion is exact by definition, but the printed decimal
+  is not the value, and showing `3,412.14` with no marker promised a precision
+  the digits do not carry. It reads `~3,412.14`. A conversion that lands whole
+  (`1 kWh to MJ` → `3.6`) is unmarked, and an explicitly requested `?sigfigs=`
+  cap is never marked — the caller asked for it.
+
+### Fixed — validation, again
+
+Two more constructible cases: a CH₄ or N₂O factor could only ever wear a CO₂
+unit (there is no CH₄ unit), and it rendered as "kg CO₂"; and the three grid
+factors, which name no fuel, could be cited by any fuel at all — diesel could
+have carried UK grid intensity.
+
 ## 0.3.5 — 2026-08-16
 
 A second adversarial pass, told to assume the first round's fixes were wrong.

@@ -57,9 +57,11 @@ estimates, with a leading `~`).
   where data exists (§C.1).
 - **Emission factors** (fuel → CO2 / CO2e): source-, basis-, scope-, region-, and
   year-dependent (§C.5).
-- **Energy in "wood"/"coal"** — genuine ranges, shown as `~A–B`. (A physical
-  barrel of crude was listed here too, against a ~5.6–6.3 GJ range that traced
-  to no source; the range was withdrawn in v0.3.4.)
+- **Energy in lignite and anthracite** — genuine ranges, shown as `~A–B` (IPCC
+  records 5.5–21.6 and 21.6–32.2 MJ/kg). The wood fuels and the four coal grades
+  each have a single sourced value, not a range. (A physical barrel of crude was
+  listed here too, against a ~5.6–6.3 GJ range that traced to no source; the
+  range was withdrawn in v0.3.4.)
 
 ### 2.1 Per-fuel variability (qualitative)
 
