@@ -3,6 +3,61 @@
 All notable changes to Universal Converter. Versioning follows semver
 (pre-1.0: minor bumps may include behavior changes; they are listed here).
 
+## 0.3.4 — 2026-08-16
+
+The rest of the adversarial review, plus what looking for it turned up.
+
+### Fixed — wrong numbers
+
+- **Bare "coal" meant the industrial grade.** DESNZ publishes four: industrial
+  2395.29, domestic 2904.95, coking 3164.65 and electricity-generation 2225.22
+  kg CO₂e/tonne — a 42% spread. All four now ship, and "coal" joins "heizöl" as
+  a phrase that names a class rather than a product, answered with the grades.
+  Someone burning coal in a domestic stove was previously answered 21% low.
+- **The rulebook contradicted itself and the catalog.** `1 boe` was stated as
+  6,119,320.395 MJ (wrong by three orders of magnitude and in its digits;
+  correct is 6119.323945196 MJ), and the therm appeared as both 105,480,400 J
+  and 105,505,585.262 J in different sections. The shipped values were right
+  throughout; the normative document was not.
+- **An unsourced range was being presented as an estimate.** The `~5.6–6.3 GJ`
+  per physical barrel of crude appears nowhere in the research ledger. It is
+  withdrawn from the catalog, the learn content and four places in the rulebook,
+  and the withdrawal is recorded. Crude oil now answers "not available" for
+  volume→energy rather than citing a figure that traces to nothing.
+- A note on hard coal quoted `2.37528994` against its own shipped `2.39528994`.
+
+### Added — provenance is now enforced, not asserted
+
+- **Every shipped number is checked against the research ledger by a test.** It
+  reads machine values, recomputes the two derived ones from their recorded
+  inputs, and scans prose for unit-carrying figures. It is what caught the
+  barrel range and the hard-coal note.
+- **Validation gained four rules**: `related_fuels` must be symmetric (six links
+  were one-way), a fuel may not collide with a unit, no two units may collide
+  under the registry's own key function, and an emission factor's `metric` must
+  agree with its unit — the field had been unvalidated and unused, with three
+  electricity factors disagreeing with the rest and nothing noticing.
+
+### Fixed — the interface
+
+- **The copy button, the duration prompt and the grid picker.** One missing
+  input is now asked for once: `5 kW to MJ` rendered two duration controls with
+  identical element ids, so every label focused the first one.
+- **Accessibility**: a click-toggled panel holding a link was marked as a
+  tooltip; the combobox announced the option you had arrowed to as _not_
+  selected and kept a rejected highlight armed after Escape; five disclosures
+  had `aria-expanded` with nothing to control; the skip link moved the viewport
+  but not focus.
+- **Two ways the page could die**: `theme.init()` and the converter both reached
+  `localStorage` unguarded, and in Chrome with all cookies blocked the property
+  access itself throws.
+- Asking for HHV on a fuel that has only LHV now says so, instead of showing the
+  LHV figure under a warning that implied a primary HHV existed. `1 barrel crude
+oil` said "no heating value" when what it lacks is a density. An exact value
+  is no longer rounded and still called exact. A negative amount is labeled a
+  reduction, not a removal.
+- ~7rem of hydration shift on `/convert`, and a Firefox download race.
+
 ## 0.3.3 — 2026-08-16
 
 An adversarial review of the whole repository — new work and old — found
