@@ -11,3 +11,6 @@ worker-configuration.d.ts
 
 # Owned/authored by other agents in parallel; not this project's formatting concern
 /docs/
+
+# Agent worktrees — a second checkout of this repo, already formatted on its own.
+.claude/worktrees/

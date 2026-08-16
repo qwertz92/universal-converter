@@ -11,11 +11,20 @@
 
 	let {
 		units,
-		onapply
+		onapply,
+		id = 'uc-duration'
 	}: {
 		units: Unit[];
 		/** Receives the duration clause to append, e.g. "for 3 h". */
 		onapply: (clause: string) => void;
+		/**
+		 * Base for this instance's element ids. More than one prompt can exist on
+		 * a page — `5 kW to MJ` asks for a duration on the requested-target row
+		 * AND on the kWh row — and hardcoded ids made every `label for` in both
+		 * prompts resolve to the FIRST input, so the second prompt's label
+		 * focused the first prompt's field and each kept separate state.
+		 */
+		id?: string;
 	} = $props();
 
 	const timeUnits = $derived(units.filter((u) => u.dimension === 'time'));
@@ -39,25 +48,21 @@
 
 <div class="flex flex-wrap items-end gap-2">
 	<div>
-		<label
-			for="uc-duration-amount"
-			class="mb-1 block text-xs font-medium"
-			style="color:var(--text-muted)"
-		>
+		<label for="{id}-amount" class="mb-1 block text-xs font-medium" style="color:var(--text-muted)">
 			For how long?
 		</label>
 		<div class="flex items-center gap-1.5">
 			<input
-				id="uc-duration-amount"
+				id="{id}-amount"
 				type="text"
 				inputmode="decimal"
 				bind:value={amount}
 				class="uc-num w-20 rounded-lg border px-2.5 py-1.5 text-sm outline-none"
 				style="background:var(--surface);border-color:var(--border);color:var(--text)"
 			/>
-			<label for="uc-duration-unit" class="sr-only">Time unit</label>
+			<label for="{id}-unit" class="sr-only">Time unit</label>
 			<select
-				id="uc-duration-unit"
+				id="{id}-unit"
 				bind:value={unitId}
 				class="rounded-lg border px-2 py-1.5 text-sm outline-none"
 				style="background:var(--surface);border-color:var(--border);color:var(--text)"

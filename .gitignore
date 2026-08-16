@@ -17,3 +17,9 @@ dist/
 Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Agent worktrees: separate checkouts of THIS repo that agents run in.
+# They live inside the project, so without this every tool that walks the tree
+# (git, eslint, prettier, the vite watcher) would treat a second copy of the
+# whole codebase as new files in this one.
+.claude/worktrees/

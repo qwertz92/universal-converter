@@ -906,6 +906,12 @@ export function createConverter(data: DataBundle): Converter {
 		// Compute energy on the requested basis first, then any other basis present.
 		const orderedBases: HeatingBasis[] = basis === 'lhv' ? ['lhv', 'hhv'] : ['hhv', 'lhv'];
 		let anyEnergy = false;
+		const basesProduced = new Set<HeatingBasis>();
+		// "Secondary" only means something when a PRIMARY exists. If the requested
+		// basis has no value for this fuel, the other basis is not an alternative
+		// shown alongside a default — it is the only figure there is, and calling
+		// it secondary implied a primary the reader could never find.
+		const requestedBasisExists = Boolean(energyForBasis(fuel, basis, amount, prefer));
 		for (const b of orderedBases) {
 			const energyJ = energyForBasis(fuel, b, amount, prefer);
 			if (!energyJ) continue;
@@ -920,9 +926,36 @@ export function createConverter(data: DataBundle): Converter {
 				energyJ.via === 'per_mass' && amount.massKg !== undefined && prefer === 'per_volume'
 					? `${formatValue(kgToKgDisplay(amount.massKg), 'source_based')} kg (${amount.label} × density)`
 					: amount.label;
-			addEnergyResults(builder, energyJ, b, stepLabel, options, b === basis);
+			addEnergyResults(
+				builder,
+				energyJ,
+				b,
+				stepLabel,
+				options,
+				requestedBasisExists ? b === basis : true
+			);
+			basesProduced.add(b);
 		}
-		if (!anyEnergy) builder.add(notAvailable('energy', 'heating_value', fuel));
+		if (!anyEnergy) {
+			// Name the piece that is ACTUALLY missing. `1 barrel crude oil` said
+			// "crude oil has no heating value" — it has one, stated per kilogram;
+			// what it has no density for is getting from barrels to kilograms.
+			// Pointing at the wrong gap sends the reader looking for the wrong fix.
+			const hasAnyHeatingValue = allHeatingValues(fuel).length > 0;
+			const blockedByDensity =
+				hasAnyHeatingValue && amount.massKg === undefined && amount.volumeM3 !== undefined;
+			builder.add(notAvailable('energy', blockedByDensity ? 'density' : 'heating_value', fuel));
+		}
+
+		// Rulebook §C.1 rule 4: when only ONE basis exists in data, show it AND
+		// state that the other is not available. Without this, asking for HHV on
+		// an LHV-only fuel (crude oil, lignite, anthracite) returned the LHV
+		// figure carrying a "shown alongside the default" warning — which implies
+		// a primary HHV figure that does not exist, and made the basis toggle look
+		// broken rather than honest.
+		if (anyEnergy && !basesProduced.has(basis)) {
+			builder.add(missingBasis(fuel, basis));
+		}
 
 		// Energy density group (per kg and/or per L) from the requested basis HV.
 		addEnergyDensity(builder, fuel, basis);
@@ -1468,6 +1501,32 @@ export function createConverter(data: DataBundle): Converter {
 			exactness: 'context_required',
 			explanation: `Not available: ${fuel.names[0]} has no ${missing.replace('_', ' ')} in the data set. No value is invented.`,
 			missing: [missing],
+			assumptions: [],
+			warnings: [],
+			source_refs: []
+		};
+	}
+
+	/**
+	 * "You asked for HHV; this fuel only has LHV in the data set."
+	 *
+	 * Rulebook §C.1 rule 4 requires saying this out loud, and §D.2 forbids
+	 * deriving one basis from the other — the LHV→HHV gap depends on the fuel's
+	 * hydrogen and moisture content, so there is no generic factor to apply.
+	 * Silence here was worse than a missing number: the reader saw an LHV figure
+	 * after asking for HHV and had no way to tell the toggle had done nothing.
+	 */
+	function missingBasis(fuel: Fuel, basis: HeatingBasis): ConversionResult {
+		const other: HeatingBasis = basis === 'hhv' ? 'lhv' : 'hhv';
+		return {
+			value: null,
+			raw: null,
+			unit_id: '',
+			unit_label: '',
+			category: 'energy',
+			exactness: 'context_required',
+			explanation: `Not available: ${fuel.names[0]} has no ${basisLabel(basis)} value in the data set, so the ${basisLabel(other)} figure above is the only one there is. The two are never derived from each other — the gap depends on the fuel's hydrogen and moisture content.`,
+			missing: ['heating_value'],
 			assumptions: [],
 			warnings: [],
 			source_refs: []

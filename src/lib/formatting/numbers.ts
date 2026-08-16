@@ -88,9 +88,48 @@ export function formatValue(
 	opts: { maxExactSigFigs?: number; thousands?: boolean } = {}
 ): string {
 	const sig = sigFigsFor(exactness, opts.maxExactSigFigs ?? 6);
-	const rounded = roundToSigFigs(value, sig);
+	// An EXACT value that already terminates is shown in full, never rounded.
+	// The 6-significant-figure cap is a readability budget for values with more
+	// precision than anyone needs — applied to an exact one it changed the
+	// number while still labeling it "exact": `1234567 kWh to kWh` echoed back
+	// 1,234,570, three off from what the reader had typed, with no `~` (which is
+	// correctly suppressed for exact) to hint that anything had been rounded.
+	// An explicit maxExactSigFigs is a caller ASKING to be capped (the API's
+	// ?sig= parameter), and it wins — the rule below is about the default
+	// readability budget, not about overriding a request.
+	const showInFull =
+		opts.maxExactSigFigs === undefined &&
+		isExactLevel(exactness) &&
+		significantDigits(value) <= MAX_LOSSLESS_SIG_FIGS;
+	const rounded = showInFull ? normalizeDecimalString(value) : roundToSigFigs(value, sig);
 	const withSep = opts.thousands === false ? rounded : withThousandsSeparators(rounded);
 	return usesApproxMarker(exactness) ? `~${withSep}` : withSep;
+}
+
+/** Levels that promise the displayed number IS the number (rulebook §C.7). */
+function isExactLevel(exactness: Exactness): boolean {
+	return exactness === 'exact' || exactness === 'standard_definition';
+}
+
+/**
+ * How many digits a terminating decimal may have before rounding it is the
+ * lesser evil. Beyond this a value is the tail of a division that does not
+ * terminate (1 kWh in BTU carries 40 digits at the engine's precision), and
+ * printing all of it helps nobody.
+ */
+const MAX_LOSSLESS_SIG_FIGS = 15;
+
+/** Significant digits in a plain decimal string, ignoring sign and leading zeros. */
+function significantDigits(value: string): number {
+	const digits = value.replace(/^[+-]/, '').replace('.', '').replace(/^0+/, '');
+	// Trailing zeros of an integer are not significant for this purpose: "3600000"
+	// is one meaningful figure plus scale, and must not be forced through rounding.
+	return digits.replace(/0+$/, '').length || 1;
+}
+
+/** Strip a redundant trailing ".0…" so an exact value reads as a plain number. */
+function normalizeDecimalString(value: string): string {
+	return value.includes('.') ? value.replace(/\.?0+$/, '') : value;
 }
 
 /** Format a low–high range as "~A–B" (used for estimates; rulebook §C.7 rule 2). */

@@ -105,6 +105,32 @@
 	const pinned = $derived(effectiveQuery(queryText));
 
 	/**
+	 * The single result row that owns each context control.
+	 *
+	 * More than one row can be missing the SAME thing: `5 kW to MJ` asks for a
+	 * duration on both the requested-target row and the kWh row, and
+	 * `1 kWh electricity to kg CO2e` asks for a region/year twice. Both rows are
+	 * correct and both must stay — §C.8 requires an explicitly requested target
+	 * to be answered or told precisely why not — but rendering the INPUT twice
+	 * gave the reader two controls for one question, each with its own state and
+	 * (before the id prop) colliding element ids.
+	 *
+	 * So: every row keeps its explanation, the first one to ask gets the control.
+	 */
+	const controlOwner = $derived.by<{ region?: ConversionResult; time?: ConversionResult }>(() => {
+		const rows = resultSet?.groups.flatMap((g) => g.results) ?? [];
+		return {
+			region: rows.find(
+				(r) =>
+					r.category === 'emissions' &&
+					r.exactness === 'context_required' &&
+					r.missing?.includes('region')
+			),
+			time: rows.find((r) => r.exactness === 'context_required' && r.missing?.includes('time'))
+		};
+	});
+
+	/**
 	 * Set or clear the pin.
 	 *
 	 * Clearing drops the TARGET pin too. A `?pin=>MJ` link sets only `pin.to`,
@@ -212,7 +238,21 @@
 	// up with half-typed fragments.
 	let recent = $state<string[]>([]);
 	let saved = $state<SavedEntry[]>([]);
-	const store = $derived(browser ? window.localStorage : undefined);
+	/**
+	 * Reaching localStorage is itself guarded, not just using it. With all
+	 * cookies blocked, Chrome throws on the property ACCESS — before any
+	 * getItem — so `window.localStorage` alone would take the page down for
+	 * anyone with strict privacy settings. The history module already tolerates
+	 * a store whose methods throw; this covers the step before that.
+	 */
+	const store = $derived.by<Storage | undefined>(() => {
+		if (!browser) return undefined;
+		try {
+			return window.localStorage;
+		} catch {
+			return undefined;
+		}
+	});
 
 	/**
 	 * Record the query the ENGINE ran, not the text that was typed.
@@ -369,7 +409,10 @@
 		a.href = url;
 		a.download = filename;
 		a.click();
-		URL.revokeObjectURL(url);
+		// Revoking synchronously after click() races the download in Firefox,
+		// which can still be reading the blob — the download then fails silently.
+		// One frame is enough for every browser to have taken the handle.
+		setTimeout(() => URL.revokeObjectURL(url), 0);
 	}
 
 	function downloadJson(): void {
@@ -478,15 +521,15 @@
 	     "what's missing?" sits exactly where the question is asked. Present in
 	     compact mode too, where the OptionsBar picker is not shown. -->
 	{#snippet gridControl(result: ConversionResult)}
-		{#if result.category === 'emissions' && result.exactness === 'context_required' && result.missing?.includes('region')}
+		{#if result === controlOwner.region}
 			<!-- Only where a region/year is actually being ASKED for. Rendering it
 			     for every region_year_specific row put two identical, inert
 			     "Grid region & year" selects (with the same DOM id) under a diesel
 			     conversion, where picking one changed nothing but still wrote
 			     ?region=&year= into the shared URL. -->
 			<div class="mt-2"><GridPicker bind:value={grid} id="uc-grid-inline" /></div>
-		{:else if result.exactness === 'context_required' && result.missing?.includes('time')}
-			<div class="mt-2"><DurationPrompt {units} onapply={appendClause} /></div>
+		{:else if result === controlOwner.time}
+			<div class="mt-2"><DurationPrompt {units} onapply={appendClause} id="uc-duration" /></div>
 		{/if}
 	{/snippet}
 
@@ -498,8 +541,17 @@
 	-->
 	<p class="sr-only" role="status" aria-live="polite">{resultSummary}</p>
 
-	<!-- Results / errors -->
-	<div>
+	<!--
+		Results / errors.
+
+		The min-height reserves the empty-state panel's own height. That panel is
+		gated on `settled`, which is only ever true after hydration — so without a
+		reserved box the server sent nothing here and the panel popped in on
+		hydration, pushing the history section and the footer down by about 7rem
+		on the plain entry path. Reserving the space costs nothing when a result
+		is present, because a result is always taller than the box.
+	-->
+	<div class={compact ? undefined : 'min-h-[7.5rem]'}>
 		{#if parseError}
 			<ParseErrorNote error={parseError} onpick={onErrorPick} />
 		{:else if resultSet}
