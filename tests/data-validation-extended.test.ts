@@ -20,6 +20,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadDataBundle, loadExamples } from '$lib/data/load-data';
 import { UnitRegistry } from '$lib/units/registry';
+import { normalizeLoose } from '$lib/units/aliases';
 
 const { units, fuels, emissionFactors, sources } = loadDataBundle();
 const sourceIds = new Set(sources.map((s) => s.id));
@@ -218,6 +219,98 @@ describe('§13.5 fuel aliases do not collide across fuels (no alias maps to two 
 	});
 });
 
+describe('§13.5 no token is claimed by both a fuel and a unit', () => {
+	/**
+	 * The parser fills the unit slot and the material slot by position, so a
+	 * token both catalogs claim would resolve by sentence shape rather than by
+	 * data — "1 X Y" would answer differently from "1 Y X" for reasons no reader
+	 * could see. There are zero such collisions today; this keeps it that way as
+	 * both catalogs grow (a fuel named "therm" or a unit aliased "coal").
+	 */
+	it('every fuel key and every unit key live in disjoint namespaces', () => {
+		const fuelKeys = new Map<string, string>();
+		for (const f of fuels) {
+			for (const token of [f.id, ...f.names, ...f.aliases])
+				fuelKeys.set(normalizeLoose(token), f.id);
+		}
+		const collisions: string[] = [];
+		for (const u of units) {
+			for (const token of [u.id, ...u.symbols, ...u.names, ...u.aliases]) {
+				const owner = fuelKeys.get(normalizeLoose(token));
+				if (owner) collisions.push(`"${token}" -> fuel ${owner} AND unit ${u.id}`);
+			}
+		}
+		expect(collisions, collisions.join('; ')).toHaveLength(0);
+	});
+});
+
+describe('§13.5 related_fuels (ADR 0005) are symmetric', () => {
+	it('every related_fuels link is named from both ends', () => {
+		const byId = new Map(fuels.map((f) => [f.id, f]));
+		const oneWay: string[] = [];
+		for (const f of fuels) {
+			for (const rid of f.related_fuels ?? []) {
+				const target = byId.get(rid);
+				expect(target, `${f.id} -> ${rid} does not resolve`).toBeDefined();
+				if (!(target!.related_fuels ?? []).includes(f.id)) oneWay.push(`${f.id} -> ${rid}`);
+			}
+		}
+		// A one-way link renders the pair on one detail page and hides it on the
+		// other — and the reader on the page that stays silent is exactly the one
+		// who picked the wrong neighbour.
+		expect(oneWay, `one-way related_fuels links: ${oneWay.join(', ')}`).toEqual([]);
+	});
+
+	it('the fuels ADR 0005 names as easy to confuse actually point at each other', () => {
+		const related = (id: string) => fuels.find((f) => f.id === id)?.related_fuels ?? [];
+		for (const [a, b] of [
+			['lpg', 'propane'],
+			['lpg', 'butane'],
+			['propane', 'butane'],
+			['natural-gas', 'lng'],
+			['natural-gas', 'methane'],
+			['natural-gas', 'biogas'],
+			['hard-coal', 'lignite'],
+			['hard-coal', 'anthracite'],
+			['hard-coal', 'coal-domestic'],
+			['gasoline', 'ethanol']
+		]) {
+			expect(related(a), `${a} -> ${b}`).toContain(b);
+			expect(related(b), `${b} -> ${a}`).toContain(a);
+		}
+	});
+});
+
+describe('§13.5 emission-factor metric agrees with its unit', () => {
+	// `metric` is what the UI and factors.ts claim the number multiplies; `unit`
+	// is what the engine actually keys off. Three electricity factors said
+	// "intensity_per_energy" while every other per-energy factor said
+	// "mass_per_energy", and nothing noticed until a reader compared them.
+	const EXPECTED: Record<string, string> = {
+		gj: 'mass_per_energy',
+		kwh: 'mass_per_energy',
+		kg: 'mass_per_mass',
+		l: 'mass_per_volume',
+		m3: 'mass_per_volume'
+	};
+
+	it('every factor declares the metric its unit implies', () => {
+		for (const ef of emissionFactors) {
+			const denominator = /_per_([a-z0-9]+)$/.exec(ef.unit)?.[1];
+			const expected = denominator ? EXPECTED[denominator] : undefined;
+			expect(expected, `factor ${ef.id}: unhandled unit denominator in '${ef.unit}'`).toBeDefined();
+			expect(ef.metric, `factor ${ef.id} (${ef.unit})`).toBe(expected);
+		}
+	});
+
+	it('no factor uses a metric outside the schema enum', () => {
+		const allowed = new Set(['mass_per_energy', 'mass_per_mass', 'mass_per_volume']);
+		for (const ef of emissionFactors) {
+			expect(allowed.has(ef.metric), `factor ${ef.id} metric '${ef.metric}'`).toBe(true);
+		}
+	});
+});
+
 describe('§13.5 unit aliases: case-insensitive-loose collisions across DIFFERENT units', () => {
 	/**
 	 * NOTE ON DESIGN: names are matched case-INSENSITIVELY; symbols AND aliases
@@ -241,29 +334,58 @@ describe('§13.5 unit aliases: case-insensitive-loose collisions across DIFFEREN
 	 * case (a loose-cased query like "MG", matching neither "mg" nor "Mg"
 	 * exactly) is now reported as `ambiguous`, never silently picked.
 	 */
-	it('lists every loose-key collision across different units for inspection', () => {
-		const map = new Map<string, string>();
-		const collisions: Array<{ key: string; a: string; b: string }> = [];
+	/**
+	 * The two deliberate collisions, pinned to the exact units AND the exact
+	 * case-sensitive tokens that make each one safe. A blanket `new Set(['mg',
+	 * 'cal'])` used to stand here, which permanently excused ANY future clash on
+	 * those two keys — including a genuinely dangerous one, e.g. a new unit
+	 * claiming the lowercase "mg" that milligram already owns.
+	 */
+	const DELIBERATE_COLLISIONS = [
+		{ key: 'mg', units: ['milligram', 'tonne'], tokens: ['mg', 'Mg'] },
+		{ key: 'cal', units: ['calorie', 'food_calorie'], tokens: ['cal', 'Cal'] }
+	];
+
+	it('the only loose-key collisions are the two case-sensitive pairs, exactly as pinned', () => {
+		// normalizeLoose, not toLowerCase(): the registry also folds ³→3, ²→2,
+		// μ→µ and collapses internal whitespace, so "m³" on one unit and "m3" on
+		// another DO collide there. Checking with the weaker key would have let
+		// that pair through.
+		const owners = new Map<string, Map<string, Set<string>>>();
 		for (const u of units) {
 			for (const token of [...u.symbols, ...u.names, ...u.aliases]) {
-				const key = token.toLowerCase().trim();
-				const owner = map.get(key);
-				if (owner && owner !== u.id) {
-					collisions.push({ key, a: owner, b: u.id });
-				} else {
-					map.set(key, u.id);
-				}
+				const key = normalizeLoose(token);
+				const perUnit = owners.get(key) ?? new Map<string, Set<string>>();
+				const tokens = perUnit.get(u.id) ?? new Set<string>();
+				tokens.add(token);
+				perUnit.set(u.id, tokens);
+				owners.set(key, perUnit);
 			}
 		}
-		// Documented, understood collisions — both are case-sensitively distinct
-		// symbols/aliases ("cal" vs "Cal", "mg" vs "Mg"), resolved via the
-		// case-sensitive pass in units/registry.ts before ever reaching this
-		// loose (lowercased) view. No OTHER collisions are tolerated.
-		const known = new Set(['mg', 'cal']);
-		const unexpected = collisions.filter((c) => !known.has(c.key));
-		expect(unexpected, JSON.stringify(unexpected)).toHaveLength(0);
-		expect(collisions.map((c) => c.key)).toContain('mg');
-		expect(collisions.map((c) => c.key)).toContain('cal');
+
+		const collisions = [...owners.entries()]
+			.filter(([, perUnit]) => perUnit.size > 1)
+			.map(([key, perUnit]) => ({
+				key,
+				units: [...perUnit.keys()].sort(),
+				tokens: [...perUnit.values()].flatMap((t) => [...t]).sort()
+			}));
+
+		expect(
+			collisions.map((c) => c.key).sort(),
+			`unexpected unit-key collision(s): ${JSON.stringify(collisions)}`
+		).toEqual(DELIBERATE_COLLISIONS.map((c) => c.key).sort());
+
+		for (const pinned of DELIBERATE_COLLISIONS) {
+			const found = collisions.find((c) => c.key === pinned.key);
+			expect(found, `the documented '${pinned.key}' collision has disappeared`).toBeDefined();
+			expect(found!.units).toEqual([...pinned.units].sort());
+			expect(found!.tokens).toEqual([...pinned.tokens].sort());
+			// What makes it safe: the raw tokens differ case-sensitively, so
+			// registry.ts resolves both before it ever consults the loose map.
+			expect(new Set(pinned.tokens).size).toBe(pinned.tokens.length);
+			expect(new Set(pinned.tokens.map((t) => t.toLowerCase())).size).toBe(1);
+		}
 	});
 
 	it(

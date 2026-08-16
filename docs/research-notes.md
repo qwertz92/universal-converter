@@ -744,3 +744,58 @@ They are `region: "UK"`, `year: 2025`, `biogenic: true`. This closes the gap not
 in §4.12 ("DESNZ 'Outside of scopes' biogenic CO2 figures: not yet
 extracted") and satisfies the review's provenance-ledger check (P1-D):
 every shipped value now resolves to a research-notes entry.
+
+---
+
+## Post-review addendum (2026-08-16)
+
+> Added after an adversarial review found a shipped range with no entry in this
+> ledger, and after `tests/data-provenance.test.ts` was written to enforce the
+> ledger contract mechanically. As with the 2026-07-05 addendum, **no new
+> research was performed**: the entries below either remove a figure or record
+> arithmetic already documented in the shipped data files.
+
+### §4.1 addendum — energy per physical barrel of crude: withdrawn
+
+`data/fuels.json` (crude oil `typical_ranges`), `docs/conversion-rules.md` §C.3
+and the "barrel vs boe" Learn page each carried **"~5.6–6.3 GJ"** as the energy
+in one physical barrel of crude. That figure appears **nowhere** in this
+document — §4.1 records only the IPCC NCV (42.3 MJ/kg) and an explicitly
+plausibility-only density band (~800–950 kg/m³, marked NOT FOUND in a primary
+source). A barrel-energy range can only be produced by multiplying that
+unsourced density band by a barrel volume, so it inherited the very gap §4.1
+warned about. **It has been removed everywhere rather than fitted with a
+citation after the fact**; crude oil now answers "not available" for
+volume→mass and volume→energy, which is what §4.1 asked for.
+
+### §4.7/§4.11 addendum — the four DERIVED volumetric heating values
+
+Four shipped heating values are **not** DESNZ cells. They are products of two
+DESNZ cells that ARE recorded above, computed because DESNZ's own volumetric
+figure is rounded too coarsely to use (natural gas: 0.01 kWh/L) or is absent
+(LNG). Each carries "DERIVED" in its own `notes` field in `data/fuels.json`, and
+`tests/data-provenance.test.ts` recomputes each product from the recorded inputs
+rather than accepting the shipped digits:
+
+| Fuel | Basis | Shipped value | Recorded inputs (both above) |
+|---|---|---|---|
+| Natural gas | LHV/Net CV | **10.191 kWh/m³** | density 0.802 kg/m³ × 12.707 kWh/kg (§4.7) |
+| Natural gas | HHV/Gross CV | **11.290 kWh/m³** | density 0.802 kg/m³ × 14.077 kWh/kg (§4.7) |
+| LNG | LHV/Net CV | **5.750 kWh/L** | density 0.452489 kg/L × 12.707 kWh/kg (§4.7) |
+| LNG | HHV/Gross CV | **6.370 kWh/L** | density 0.452489 kg/L × 14.077 kWh/kg (§4.7) |
+
+Both LNG rows use natural gas's gravimetric CV because DESNZ gives LNG the same
+Net/Gross CV per tonne (45.745 / 50.678 GJ/tonne) — LNG *is* natural gas. The
+reference-condition caveat in §4.7 applies unchanged to the two per-m³ figures.
+
+### §4.9 addendum — the other three DESNZ coal grades now ship
+
+§4.9 recorded four DESNZ coal rows; only "Coal (industrial)" was shipped, as the
+catalog's bare `coal` / `hard coal`. That silently gave anyone burning coal in a
+domestic stove a figure 21% low. Applying ADR 0005's criterion (density where the
+fuel has one — no coal grade has a recorded density — plus at least one calorific
+value **and** the emission factors, all recorded verbatim), all three remaining
+rows qualify, and ship as `coal-domestic`, `coking-coal` and
+`coal-electricity-generation`, cross-linked with `related_fuels`. No new numbers:
+NCV/GCV and the per-tonne CO₂e totals are the §4.9 values, converted tonne→kg by
+÷1000 (exact) exactly as `hard-coal` already was.

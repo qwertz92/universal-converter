@@ -165,6 +165,16 @@ export const fuelsFileSchema = z
  * ------------------------------------------------------------------ */
 
 const pollutantSchema = z.enum(['CO2', 'CH4', 'N2O', 'CO2e', 'biogenic_CO2']);
+
+/**
+ * What physical amount a factor multiplies. A free-form string let three
+ * electricity factors say `intensity_per_energy` while every other per-energy
+ * factor said `mass_per_energy`, and nothing noticed — the engine keys off
+ * `unit` alone. The enum pins the vocabulary; `validate-data.ts` additionally
+ * checks that the declared metric agrees with the factor's unit, so a
+ * `kg_co2_per_l` factor can never claim to be per-energy.
+ */
+const emissionMetricSchema = z.enum(['mass_per_energy', 'mass_per_mass', 'mass_per_volume']);
 const scopeSchema = z.enum([
 	'direct_combustion',
 	'scope_1',
@@ -182,7 +192,7 @@ export const emissionFactorSchema = z
 		id: idSchema,
 		fuel_id: idSchema.optional(),
 		pollutant: pollutantSchema,
-		metric: z.string().min(1),
+		metric: emissionMetricSchema,
 		value: decimalString,
 		unit: idSchema,
 		basis: heatingBasisSchema.optional(),

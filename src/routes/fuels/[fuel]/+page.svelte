@@ -4,21 +4,29 @@
 	import Breadcrumbs from '$lib/components/layout/Breadcrumbs.svelte';
 	import ResultSet from '$lib/components/results/ResultSet.svelte';
 	import SourceRefs from '$lib/components/results/SourceRefs.svelte';
-	import { engine } from '$lib/ui/engine';
+	import { engine, fuelById, unitById } from '$lib/ui/engine';
 	import { basisLabel } from '$lib/fuels/heating-values';
 	import { SCOPE_LABEL, POLLUTANT_LABEL } from '$lib/emissions/scopes';
-	import type { EmissionFactor, ConversionResultSet } from '$lib/conversion/types';
+	import type { Density, EmissionFactor, ConversionResultSet } from '$lib/conversion/types';
 	import { loadDataBundle } from '$lib';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 	const { fuel, sources, learn } = $derived(data);
 
+	/**
+	 * `loadDataBundle()` re-parses and re-validates ~120 KB of JSON through Zod on
+	 * every call, so it is held once here. `$lib/ui/engine` already memoizes the
+	 * bundle for units and fuels (used below); it exposes no emission-factor
+	 * getter, so this page keeps the one parse it needs for factors.
+	 */
+	let allFactors: EmissionFactor[] | undefined;
+	const emissionFactors = (): EmissionFactor[] => (allFactors ??= loadDataBundle().emissionFactors);
+
 	// Emission factors that apply to this fuel (resolved from the bundle).
 	const factors = $derived.by<EmissionFactor[]>(() => {
-		const all = loadDataBundle().emissionFactors;
 		const ids = new Set(fuel.emission_factor_ids ?? []);
-		return all.filter((f) => ids.has(f.id) || f.fuel_id === fuel.id);
+		return emissionFactors().filter((f) => ids.has(f.id) || f.fuel_id === fuel.id);
 	});
 
 	/**
@@ -27,8 +35,7 @@
 	 * underscores instead printed "kg co2e per l", which reads as sloppy on a
 	 * page whose whole job is to look trustworthy about numbers.
 	 */
-	const unitLabel = (id: string) =>
-		loadDataBundle().units.find((u) => u.id === id)?.symbols[0] ?? id.replace(/_/g, ' ');
+	const unitLabel = (id: string) => unitById(id)?.symbols[0] ?? id.replace(/_/g, ' ');
 
 	/**
 	 * Close relatives (ADR 0005). Variants such as gas oil (red diesel) sit next
@@ -37,15 +44,12 @@
 	 * emission factor — rather than a prose claim about how they differ.
 	 */
 	const related = $derived.by(() => {
-		const bundle = loadDataBundle();
 		const ids = fuel.related_fuels ?? [];
 		return ids
-			.map((id) => bundle.fuels.find((f) => f.id === id))
+			.map((id) => fuelById(id))
 			.filter((f) => f !== undefined)
 			.map((f) => {
-				const factor = bundle.emissionFactors.find(
-					(e) => e.fuel_id === f.id && e.pollutant === 'CO2e'
-				);
+				const factor = emissionFactors().find((e) => e.fuel_id === f.id && e.pollutant === 'CO2e');
 				return { fuel: f, density: f.density, factor };
 			});
 	});
@@ -71,8 +75,12 @@
 		return 'error' in out ? null : out;
 	});
 
-	function densityDisplay(): string | null {
-		const d = fuel.density;
+	/**
+	 * Every catalog density is kg/m³ today, but the unit is a data field: a
+	 * kg_per_l entry printed under a hardcoded "kg/m³" would be wrong by 1000×.
+	 * Both the headline density and the related-fuels table go through here.
+	 */
+	function densityDisplay(d: Density | undefined): string | null {
 		if (!d) return null;
 		const unit = { kg_per_l: 'kg/L', kg_per_m3: 'kg/m³', g_per_cm3: 'g/cm³' }[d.unit] ?? d.unit;
 		return `${d.value} ${unit}${d.range ? ` (${d.range.low}–${d.range.high})` : ''}`;
@@ -172,7 +180,7 @@
 						>
 						{#if r.density}
 							<span class="uc-num text-xs" style="color:var(--text-muted)">
-								{r.density.value} kg/m³
+								{densityDisplay(r.density)}
 							</span>
 						{/if}
 						{#if r.factor}
@@ -200,8 +208,8 @@
 			>
 				Density
 			</h2>
-			{#if densityDisplay()}
-				<p class="uc-num text-lg font-semibold">{densityDisplay()}</p>
+			{#if densityDisplay(fuel.density)}
+				<p class="uc-num text-lg font-semibold">{densityDisplay(fuel.density)}</p>
 				{#if fuel.density?.reference_conditions}
 					<p class="mt-1 text-xs" style="color:var(--text-faint)">
 						at {fuel.density.reference_conditions}
