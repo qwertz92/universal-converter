@@ -42,6 +42,23 @@ export function hydrogenCombustionWarning(): Warning {
 	};
 }
 
+/**
+ * A negative input is allowed — "5 litres less diesel" is a real question, and
+ * refusing it would break savings calculations — but the emissions row it
+ * produces reads as a REMOVAL, which is a different and much stronger claim
+ * than a reduction. Say which one this is.
+ */
+export function negativeAmountWarning(): Warning {
+	return {
+		kind: 'negative_amount',
+		severity: 'caution',
+		text:
+			'You entered a negative amount, so these figures describe a REDUCTION — how much less is ' +
+			'used or emitted. They are not a removal: nothing here takes CO₂ back out of the air, and ' +
+			'a negative emissions figure must not be reported as sequestration.'
+	};
+}
+
 export function representativeValueWarning(): Warning {
 	return {
 		kind: 'representative_value',

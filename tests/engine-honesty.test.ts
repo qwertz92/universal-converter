@@ -123,3 +123,28 @@ describe('one missing input is asked for once', () => {
 		expect(contextRows.some((r) => r.unit_id === 'kilogram_co2e')).toBe(true);
 	});
 });
+
+describe('a negative amount is a reduction, not a removal', () => {
+	// Negative inputs are deliberately allowed — "5 litres less diesel" is a real
+	// savings question — but an unlabeled "~-2.54 kg CO2" reads as sequestration,
+	// which is a far stronger claim than a saving and the kind of figure that
+	// ends up in a report.
+	it('says so, in the warnings', () => {
+		const out = set('-5 L diesel');
+		const w = out.warnings.find((x) => x.kind === 'negative_amount');
+		expect(w).toBeDefined();
+		expect(w!.text).toMatch(/reduction/i);
+		expect(w!.text).toMatch(/not a removal/i);
+		expect(w!.severity).toBe('caution');
+	});
+
+	it('still computes the figures rather than refusing them', () => {
+		const mass = rows('-5 L diesel').find((r) => r.category === 'mass' && r.unit_id === 'kilogram');
+		expect(Number(mass?.raw)).toBeCloseTo(-4.161805, 5);
+	});
+
+	it('a positive amount carries no such warning', () => {
+		expect(set('5 L diesel').warnings.some((w) => w.kind === 'negative_amount')).toBe(false);
+		expect(set('0 kWh').warnings.some((w) => w.kind === 'negative_amount')).toBe(false);
+	});
+});

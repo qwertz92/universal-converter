@@ -66,6 +66,7 @@ import {
 	biogenicCo2Warning,
 	boeConventionWarning,
 	hydrogenCombustionWarning,
+	negativeAmountWarning,
 	representativeValueWarning
 } from './warnings';
 
@@ -94,6 +95,15 @@ const CURRENCY_UNIT_ID = 'currency';
 
 /** Dimensions the fuel pipeline can bridge between (via density / heating value). */
 const BRIDGEABLE_VIA_FUEL = new Set<Unit['dimension']>(['mass', 'volume', 'energy']);
+
+/** True for a value that is strictly below zero, tolerating a non-numeric string. */
+function isNegativeValue(value: string): boolean {
+	try {
+		return new Decimal(value).isNegative() && !new Decimal(value).isZero();
+	} catch {
+		return false;
+	}
+}
 
 /** Whether a dimension is a GHG mass (the thing an emissions answer is in). */
 function isEmissionMass(dim: Unit['dimension']): boolean {
@@ -152,6 +162,9 @@ export function createConverter(data: DataBundle): Converter {
 		for (const note of query.notes ?? []) {
 			builder.addAssumption({ kind: 'parser_note', text: note });
 		}
+		// A negative amount is deliberately allowed (see tests/engine-robustness),
+		// but an unlabeled "-2.54 kg CO2" reads as a removal rather than a saving.
+		if (isNegativeValue(query.value)) builder.addWarning(negativeAmountWarning());
 
 		// Route by the input unit's dimension. convert() is public API: a
 		// hand-built ParsedQuery/EngineOptions can carry non-numeric strings that
