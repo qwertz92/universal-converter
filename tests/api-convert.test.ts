@@ -7,6 +7,7 @@
 import { describe, expect, it } from 'vitest';
 import { handleConvertRequest, API_VERSION } from '$lib/api/convert-endpoint';
 import type { ConversionResultSet } from '$lib/conversion/types';
+import { APP_VERSION } from '$lib/version';
 
 function req(query: string) {
 	return handleConvertRequest(new URL(`https://example.org/api/convert${query}`));
@@ -103,5 +104,25 @@ describe('GET /api/convert — error handling', () => {
 			.flatMap((g) => g.results)
 			.find((r) => r.category === 'emissions');
 		expect(emissions?.exactness).toBe('context_required');
+	});
+});
+
+describe('a corrected number reaches people who already asked', () => {
+	// A flat 24-hour cache meant a correction reached nobody who had already run
+	// the query. v0.3.3-v0.3.6 fixed CNG (218x low), heizöl (15% high) and coal
+	// (21% low) — each of those wrong answers would have been served for another
+	// day to exactly the people who had seen it.
+	it('caches briefly and revalidates, rather than for a day', () => {
+		const res = handleConvertRequest(new URL('http://x/api/convert?q=1+kWh'));
+		const cc = res.headers?.['cache-control'] ?? '';
+		expect(cc).toMatch(/max-age=(\d+)/);
+		const maxAge = Number(/max-age=(\d+)/.exec(cc)?.[1]);
+		expect(maxAge).toBeLessThanOrEqual(600);
+		expect(cc).toContain('must-revalidate');
+	});
+
+	it('says which catalog version produced the answer', () => {
+		const res = handleConvertRequest(new URL('http://x/api/convert?q=1+kWh'));
+		expect(res.headers?.['x-catalog-version']).toBe(APP_VERSION);
 	});
 });

@@ -17,6 +17,7 @@
 
 import { getConverter } from '$lib/index';
 import type { EngineOptions, HeatingBasis } from '$lib/conversion/types';
+import { APP_VERSION } from '$lib/version';
 
 /** Bumped when the response shape changes; mirrors the app version line. */
 export const API_VERSION = '0.2-draft';
@@ -43,8 +44,26 @@ function ok(body: unknown): EndpointResult {
 	return {
 		status: 200,
 		body,
-		// Pure function of the URL → safe to cache publicly for a day.
-		headers: { ...BASE_HEADERS, 'cache-control': 'public, max-age=86400' }
+		/**
+		 * A conversion is a pure function of the URL *and the shipped catalog*, and
+		 * the catalog is exactly what changes when a wrong number is corrected. A
+		 * flat 24-hour cache meant a correction reached nobody who had already
+		 * asked the question — v0.3.3–v0.3.6 fixed CNG (218x low), heizöl (15%
+		 * high) and coal (21% low), and each of those wrong answers would have
+		 * kept being served for another day.
+		 *
+		 * So: cache briefly, then revalidate. `stale-while-revalidate` keeps the
+		 * edge fast — a repeat query is still served instantly — while a corrected
+		 * figure propagates in minutes instead of a day. `must-revalidate` stops
+		 * anything serving a known-stale number once the window has passed.
+		 */
+		headers: {
+			...BASE_HEADERS,
+			'cache-control': 'public, max-age=300, stale-while-revalidate=3600, must-revalidate',
+			// The catalog version the answer was computed from, so a caller can tell
+			// two responses apart without diffing the numbers.
+			'x-catalog-version': APP_VERSION
+		}
 	};
 }
 

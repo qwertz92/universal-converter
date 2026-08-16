@@ -3,6 +3,18 @@
 All notable changes to Universal Converter. Versioning follows semver
 (pre-1.0: minor bumps may include behavior changes; they are listed here).
 
+## 0.3.7 — 2026-08-16
+
+### Fixed
+
+- **A corrected number did not reach the people who had already asked.** The API
+  cached every answer for 24 hours, so the wrong-number fixes in 0.3.3–0.3.6 —
+  CNG 218x low, heizöl 15% high, coal 21% low — would each have kept being served
+  for another day to exactly the readers who had seen them. Answers now cache for
+  five minutes and revalidate, which keeps repeat queries instant while a
+  correction propagates in minutes. Responses carry an header
+  so two answers can be told apart without diffing the numbers.
+
 ## 0.3.6 — 2026-08-16
 
 A third pass, aimed only at the previous release's own fixes. Four of them were
