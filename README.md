@@ -187,7 +187,17 @@ follow-on work is tracked in [`docs/roadmap.md`](docs/roadmap.md).
 
 ## License
 
-**Not yet decided — all rights reserved for now.** Data sources used by this
-project carry their own licenses (Open Government Licence v3.0, US public
-domain, citation-only, etc.) — see [`docs/sources.md`](docs/sources.md) for
-the per-source terms and required attribution.
+**MIT** for the source code — see [`LICENSE`](LICENSE).
+
+The reference data in `data/` is **not** covered by that licence: it carries the
+terms of the bodies that published it (Open Government Licence v3.0 for UK
+DESNZ, citation-only for IPCC, US public domain for EPA/EIA/NIST, …). Every
+figure names its source, and the per-source terms are documented in
+[`docs/sources.md`](docs/sources.md). If you reuse a number, follow its source's
+licence.
+
+## Found a wrong number?
+
+That is the single most useful thing you can report. Open an issue with the
+query you ran and what you expected — every figure on the site names the source
+it came from, so a correction can be checked against the primary document.

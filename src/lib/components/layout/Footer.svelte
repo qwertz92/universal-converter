@@ -75,17 +75,26 @@
 			>
 			<span>Sources over invented numbers · exact vs. estimate kept distinct.</span>
 		</div>
-		<!-- No public issue tracker or contact address is published yet, so this
-		     points at the thing a reader can actually do today: check the figure
-		     against its own named source. -->
 		<p class="mt-3 text-xs" style="color:var(--text-faint)">
-			A number looks wrong? Every figure here is traceable — each result names the source it came
-			from, and the full register with publishers, years and licences is on the
+			A number looks wrong? Every figure here names the source it came from — see the
 			<a
 				href={resolve('/sources')}
 				class="underline decoration-dotted underline-offset-2 hover:text-[var(--accent)]"
 				>sources page</a
-			>. If it still looks wrong, the source is the place to start.
+			>
+			— and reporting an error is the most useful thing you can do:
+			<a
+				href="https://github.com/qwertz92/universal-converter/issues/new"
+				rel="noopener external"
+				class="underline decoration-dotted underline-offset-2 hover:text-[var(--accent)]"
+				>open an issue</a
+			>. The
+			<a
+				href="https://github.com/qwertz92/universal-converter"
+				rel="noopener external"
+				class="underline decoration-dotted underline-offset-2 hover:text-[var(--accent)]"
+				>source code is open</a
+			>.
 		</p>
 		<p class="mt-3 text-xs leading-relaxed" style="color:var(--text-faint)">
 			Contains public sector information licensed under the
