@@ -16,7 +16,7 @@ GET /api/convert?q=<free-text query>
 | `q`       | yes      | free text, e.g. `1 L diesel`, `1000 kcal`, `5 kWh to MJ`, `5 kW for 3 h`, `1000 kWh at 0.32 EUR/kWh`, `100 kWh at 3.5 COP` | Same grammar as the website's input: `[number] [unit] [optional fuel] [to <target unit>] [for <duration>] [at <price>] [at <efficiency>]` (see the rulebook §C.9). A price or efficiency is **your** figure — no tariffs or appliance efficiencies are shipped, and no currency is ever converted. They produce `cost` and `delivered` result groups, never more exact than the quantity underneath them. |
 | `basis`   | no       | `lhv` (default) \| `hhv` | Heating-value basis for fuel-energy results (always labeled in the result). |
 | `region` + `year` | no (only together) | e.g. `region=UK&year=2025` | Grid region/year for electricity emissions. Only combinations with a cited factor produce a value; anything else stays `context_required` — nothing is estimated. |
-| `sigfigs` | no       | integer 1–12 (default 6) | Max significant figures for `exact`/`standard_definition` display values. Non-exact results keep their exactness-bounded caps. |
+| `sigfigs` | no       | integer 1–12 (no default) | Caps significant figures for `exact`/`standard_definition` display values. Without it, an exact value that terminates within 25 significant figures is shown in FULL — rounding a number the caller typed while still labeling it exact was a defect, not a feature. Non-exact results keep their exactness-bounded caps either way, and `raw` is always full precision. |
 
 ## Responses
 

@@ -148,3 +148,15 @@ describe('a negative amount is a reduction, not a removal', () => {
 		expect(set('0 kWh').warnings.some((w) => w.kind === 'negative_amount')).toBe(false);
 	});
 });
+
+describe('the lossless budget is drawn between typed and computed', () => {
+	// 15 digits left `1234567890123456 kWh to kWh` echoing 1,234,570,000,000,000
+	// — the defect the rule exists to prevent, one digit past its edge.
+	it('a 16-digit typed value comes back whole', () => {
+		expect(formatValue('1234567890123456', 'exact')).toBe('1,234,567,890,123,456');
+	});
+
+	it('a 40-digit non-terminating conversion is still capped', () => {
+		expect(formatValue('3412.141633127942139845173508305108425372', 'exact')).toBe('3,412.14');
+	});
+});

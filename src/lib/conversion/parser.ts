@@ -372,7 +372,14 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 	// "light" noted as ignored — answering with the residual grade for a phrase
 	// that says, in the word it dropped, that it is not the residual grade.
 	for (let start = 1; start < words.length; start++) {
-		const phrase = words.slice(start).join(' ');
+		// "1 kg OF coal" names the same class as "1 kg coal". Filler is dropped
+		// here the way the fuel matcher drops it, or the prompt was replaced by a
+		// bare "'of coal' is not a material" with no suggestions at all — the
+		// least useful of the three possible answers.
+		const phrase = words
+			.slice(start)
+			.filter((w) => !FILLER_WORDS.has(w.toLowerCase()))
+			.join(' ');
 		const split = SPLIT_MATERIALS[normalizeLoose(phrase)];
 		// The words BEFORE it must resolve as a unit on their own — that is what
 		// makes this suffix the whole material phrase rather than the tail of a
@@ -554,6 +561,18 @@ function peelEfficiency(
 	const hit = pct ?? cop;
 	if (!hit) return undefined;
 
+	// The number must be a whole token, not the tail of one. `100 kWh at 1e5 COP`
+	// matched the "5" of "1e5" and left "at 1e" behind, which was then reported
+	// as an unknown material — a nonsense message for an input whose real problem
+	// is that an efficiency is not written in exponent notation.
+	//
+	// Checked by hand rather than with a lookbehind: a lookbehind is a SYNTAX
+	// error in Safari before 16.4, and this file has already been bitten by that
+	// once (see the separator normalisation in `prepare`).
+	const numberAt = (hit.index ?? 0) + hit[0].indexOf(hit[1]);
+	const before = numberAt > 0 ? text[numberAt - 1] : '';
+	if (before !== '' && /[\w.,+-]/.test(before)) return undefined;
+
 	const raw = normalizeNumber(hit[1]);
 	const value = new Decimal(raw);
 	if (!value.isFinite() || value.lessThanOrEqualTo(0)) {
@@ -605,6 +624,20 @@ function peelPrice(
 		const m = tail.match(/^([+-]?[\d.,\s]+?)\s*([^\s\d/]+)\s*\/\s*(.+)$/);
 		if (!m) continue;
 		const [, rawAmount, currency, perUnit] = m;
+
+		// The "currency" slot accepts any non-digit token, which let a ratio of two
+		// UNITS through: `1 L diesel at 0.84 kg/L` produced a Cost group reading
+		// "~0.84 kg" — money in kilograms, for an input the rulebook itself gives
+		// as the user-density example. A token that names a unit is not a currency.
+		if (units.resolve(currency).kind === 'match') {
+			return {
+				error: {
+					kind: 'unsupported_value',
+					message: `"${currency}/${perUnit.trim()}" is a ratio of units, not a price. This tool has no user-supplied densities or heating values — give a price like "0.32 EUR/${perUnit.trim()}", or pick a material whose properties are in the catalog.`,
+					token: `${currency}/${perUnit.trim()}`
+				}
+			};
+		}
 
 		const match = units.resolve(perUnit.trim());
 		if (match.kind !== 'match') {
@@ -916,8 +949,24 @@ export function normalizeNumberWithWarning(raw: string): { value: string; warnin
 		};
 	}
 
-	// Lone dots are already valid decimals; multiple dots as thousands are rare
-	// and left to fail validation downstream rather than guessed wrongly.
+	// A lone DOT with exactly three trailing digits is the mirror image of the
+	// comma case above: "1.500" is 1.5 to an English reader and 1500 to a German
+	// one. The decimal reading is kept (it is what a dot means in this tool's
+	// output), but the ambiguity is stated — it was silent, and silently reading
+	// a German "1.500 kWh" as 1.5 is a 1000x error in the owner's own locale
+	// while the comma form got a warning.
+	if (hasDot && !hasComma) {
+		const parts = s.split('.');
+		if (parts.length === 2 && parts[1].length === 3 && !/^0+$/.test(parts[0])) {
+			return {
+				value: s,
+				warning: `read "${raw}" as the decimal ${parts[0]}.${parts[1]}; write "${parts[0]}${parts[1]}" if you meant ${parts[0]}${parts[1]}`
+			};
+		}
+	}
+
+	// Lone dots are otherwise already valid decimals; multiple dots as thousands
+	// are rare and left to fail validation downstream rather than guessed wrongly.
 	return { value: s };
 }
 

@@ -58,11 +58,14 @@ describe('a price the user typed becomes a cost', () => {
 		const c = cost('100 m3 natural gas at 0.09 EUR/kWh');
 		expect(c).toBeDefined();
 		expect(Number(c!.raw)).toBeGreaterThan(0);
-		// Not `user_assumption`: EXACTNESS_ORDER deliberately ranks a user
-		// assumption ABOVE a sourced figure, because the reader's own tariff is
-		// exactly right for them while a published calorific value carries real
-		// spread. So the weakest link here is the gas CV, and the cost says so.
-		expect(c!.exactness).toBe('source_based');
+		// A cost always badges `user_assumption`, whatever the rest of the chain
+		// was. EXACTNESS_ORDER deliberately ranks a user assumption ABOVE
+		// source_based — the reader's own tariff is exact FOR THEM — so the
+		// documented floor would have returned `source_based` here, putting a
+		// provenance claim on a figure that rests on a tariff nobody sourced. The
+		// badge is what a reader scans; the underlying quality goes in the text.
+		expect(c!.exactness).toBe('user_assumption');
+		expect(c!.explanation).toContain('source based');
 	});
 
 	it('rounds money to the cent but keeps full precision in raw', () => {

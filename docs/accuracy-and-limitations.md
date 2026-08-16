@@ -51,13 +51,15 @@ results carry `source_based` or `estimated`, cite their source, show their basis
 and assumptions, and are precision-capped (3–4 sig figs source-based, 2–3 for
 estimates, with a leading `~`).
 
-- **Fuel density** (volume ↔ mass): diesel, gasoline, heating oil, crude, etc.
+- **Fuel density** (volume ↔ mass): diesel, gasoline, fuel oil, etc. Crude oil has
+  none recorded, so a barrel of it converts to neither mass nor energy here.
 - **Heating values** (mass/volume → energy): LHV/NCV by default, HHV/GCV alongside
   where data exists (§C.1).
 - **Emission factors** (fuel → CO2 / CO2e): source-, basis-, scope-, region-, and
   year-dependent (§C.5).
-- **Energy of a physical barrel of crude**, **energy in "wood"/"coal"** — genuine
-  ranges, shown as `~A–B`.
+- **Energy in "wood"/"coal"** — genuine ranges, shown as `~A–B`. (A physical
+  barrel of crude was listed here too, against a ~5.6–6.3 GJ range that traced
+  to no source; the range was withdrawn in v0.3.4.)
 
 ### 2.1 Per-fuel variability (qualitative)
 

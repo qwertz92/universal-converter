@@ -69,8 +69,13 @@ together under their shared category.
 
 - `data/fuels.json` gains variant entries. Every figure is transcribed verbatim
   from `docs/research-notes.md` with its source cell — the no-invented-numbers
-  rule applies unchanged, and a variant is only added when density, at least one
-  calorific value **and** its emission factors are all recorded.
+  rule applies unchanged, and a variant is only added when density **where the
+  fuel has one**, at least one calorific value **and** its emission factors are
+  all recorded. (Amended in v0.3.5. The criterion originally read "density, at
+  least one calorific value and its emission factors", which no coal grade can
+  meet — coal has no density in any source here, and `hard-coal` had already
+  shipped without one since v0.1. The requirement was always about not inventing
+  a missing figure, not about demanding one the substance does not have.)
 - `Fuel` gains `related_fuels?: string[]`, validated to resolve like any other
   cross-reference.
 - The parser needs no change: variants are matched by the existing alias

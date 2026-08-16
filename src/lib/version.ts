@@ -6,4 +6,4 @@
  * with their exact ranges — into the client bundle of a public site, to render
  * one string. Kept in step with package.json by a test.
  */
-export const APP_VERSION = '0.3.4';
+export const APP_VERSION = '0.3.5';

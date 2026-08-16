@@ -233,3 +233,79 @@ describe('bare "coal" names four grades spanning 42%', () => {
 		expect(Math.max(...values) / Math.min(...values)).toBeGreaterThan(1.4);
 	});
 });
+
+describe('final-review findings', () => {
+	it('a filler word does not defeat the split prompt', () => {
+		// "1 kg of coal" fell through to '"of coal" is not a material' with NO
+		// suggestions — the least useful of the three possible answers.
+		for (const q of ['1 kg of coal', '2 tonnes of coal', '1 L of heizöl']) {
+			const out = converter.convertText(q);
+			expect('error' in out, q).toBe(true);
+			if ('error' in out) expect((out.error.suggestions ?? []).length, q).toBeGreaterThan(1);
+		}
+	});
+
+	it('a dot-thousands reading is flagged, like the comma one already was', () => {
+		// "1.500 kWh" is 1.5 in English and 1500 in German. Reading it silently as
+		// 1.5 is a 1000x error in the owner's own locale; the mirror-image comma
+		// form had warned since v0.3.0.
+		const out = converter.convertText('1.500 kWh');
+		if ('error' in out) throw new Error('should parse');
+		expect(out.assumptions.some((a) => a.kind === 'parser_note')).toBe(true);
+	});
+
+	it('a ratio of two units is not accepted as a price', () => {
+		// "1 L diesel at 0.84 kg/L" produced a Cost group reading "~0.84 kg" —
+		// money denominated in kilograms, for the input the rulebook itself gives
+		// as its user-density example.
+		for (const q of [
+			'1 L diesel at 0.84 kg/L',
+			'1 kWh at 3 t/kWh',
+			'1 kg coking coal at 30 MJ/kg'
+		]) {
+			const out = converter.convertText(q);
+			expect('error' in out, q).toBe(true);
+			if ('error' in out) expect(out.error.message, q).toMatch(/ratio of units/i);
+		}
+		// A real price still works.
+		expect('error' in converter.convertText('1 L diesel at 1.75 EUR/L')).toBe(false);
+	});
+
+	it('an efficiency written in exponent notation fails cleanly', () => {
+		// The regex used to match the "5" of "1e5" and leave "at 1e" behind, so the
+		// error quoted a fragment of the user's own words back at them. It must
+		// quote the whole unparsed phrase.
+		const out = converter.convertText('100 kWh at 1e5 COP');
+		expect('error' in out).toBe(true);
+		if ('error' in out) {
+			expect(out.error.token).toBe('at 1e5 COP');
+			expect(out.error.message).toContain('at 1e5 COP');
+		}
+		// The same shape without an exponent still parses as an efficiency.
+		const ok = converter.convertText('100 kWh at 5 COP');
+		expect('error' in ok).toBe(false);
+	});
+
+	it('the calculation path multiplies out for a non-base input unit', () => {
+		// "1 t coking coal × 30.24 MJ/kg = 30,240 MJ" — 1 × 30.24 is not 30,240.
+		const row = rowFor('1 t coking coal', 'energy', 'megajoule');
+		expect(row?.formula).toContain('1,000 kg');
+		expect(rowFor('1 bbl diesel', 'energy', 'megajoule')?.formula).toContain('159 L');
+		// An identity needs no extra step and must not gain noise.
+		expect(rowFor('1 L diesel', 'energy', 'megajoule')?.formula).toMatch(/^1 L diesel ×/);
+	});
+
+	it('a barrel of crude names the density it lacks, in both groups', () => {
+		// It has a cited IPCC emission factor and a cited calorific value; what it
+		// has no density for is getting from a barrel to the mass they need.
+		const rows = results('1 barrel crude oil').filter((r) => r.value === null);
+		const explanations = rows.map((r) => r.explanation ?? '').join(' ');
+		expect(explanations).toMatch(/density/);
+		expect(explanations).not.toMatch(/no emission factor in the data set/);
+	});
+
+	it('a cost is badged as the user assumption it contains', () => {
+		const c = results('100 m3 natural gas at 0.09 EUR/kWh').find((r) => r.category === 'cost');
+		expect(c?.exactness).toBe('user_assumption');
+	});
+});

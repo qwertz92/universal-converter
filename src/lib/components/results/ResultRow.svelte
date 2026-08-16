@@ -7,7 +7,7 @@
 	 * notes rather than errors (rulebook §A.2, §C.6).
 	 */
 	import type { ConversionResult } from '$lib/conversion/types';
-	import { formatRange } from '$lib/formatting/numbers';
+	import { formatRange, roundToSigFigs, sigFigsFor } from '$lib/formatting/numbers';
 	import { resolveSources } from '$lib/ui/engine';
 	import ExactnessBadge from '$lib/components/badges/ExactnessBadge.svelte';
 	import CopyButton from './CopyButton.svelte';
@@ -44,8 +44,21 @@
 		)
 	);
 
-	// Plain value for copy (strip the ~ estimate marker and thousands separators).
-	const copyValue = $derived((result.raw ?? result.value ?? '').toString());
+	/**
+	 * Plain value for copy: no `~` marker, no thousands separators — and no more
+	 * precision than the result's own exactness allows.
+	 *
+	 * Copying `raw` verbatim handed out 29 significant digits for `1 kg lignite`
+	 * (`3.3055555555555555555555555555 kWh`) — a figure whose source records a
+	 * 5.5–21.6 MJ/kg range. Full precision is deliberately available on the API,
+	 * where it ships next to an `exactness_note` explaining what it does and does
+	 * not mean; a clipboard has no room for that caveat, and a pasted number
+	 * loses every label this tool spent its effort attaching.
+	 */
+	const copyValue = $derived.by(() => {
+		if (result.raw === null || result.raw === undefined) return (result.value ?? '').toString();
+		return roundToSigFigs(result.raw, sigFigsFor(result.exactness));
+	});
 
 	// Range formatted through the exactness-bounded formatter (sig-fig cap + ~),
 	// in THIS row's target unit — the engine converts it per unit (§C.7 rule 2).

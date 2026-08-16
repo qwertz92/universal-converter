@@ -265,7 +265,16 @@ export function createConverter(data: DataBundle): Converter {
 
 		const sourceUnit = units.get(source.unit_id) ?? kwh;
 		const delivered = new Decimal(source.raw).times(efficiency.ratio);
-		const exactness = combineExactness(source.exactness, 'user_assumption');
+		// The BADGE is what a reader scans, and it must not claim a provenance
+		// this number does not have. EXACTNESS_ORDER deliberately ranks a user
+		// assumption ABOVE source_based (the reader's own figure is exact FOR
+		// THEM), so combineExactness returns source_based here — technically the
+		// documented floor, but it puts a provenance claim on a figure that rests
+		// on a tariff nobody sourced. A number containing the reader's own input is
+		// at best a user assumption, whatever the rest of the chain was; the
+		// underlying quality is named in the explanation instead.
+		const underlying = source.exactness;
+		const exactness: Exactness = 'user_assumption';
 		const rounded = roundToSigFigs(delivered.toFixed(), sigFigsFor(exactness, options.maxSigFigs));
 
 		builder.add({
@@ -293,7 +302,7 @@ export function createConverter(data: DataBundle): Converter {
 						]
 					: [],
 			source_refs: source.source_refs,
-			explanation: `Of the ${source.value} ${unitLabel(sourceUnit)} going in, ${rounded} ${unitLabel(sourceUnit)} is delivered at ${efficiency.label}. That figure is yours, not a published one.`
+			explanation: `Of the ${source.value} ${unitLabel(sourceUnit)} going in, ${rounded} ${unitLabel(sourceUnit)} is delivered at ${efficiency.label}. The efficiency is yours, not a published one; the energy it acts on is ${underlying.replace(/_/g, ' ')}.`
 		});
 	}
 
@@ -342,7 +351,16 @@ export function createConverter(data: DataBundle): Converter {
 		}
 
 		const total = new Decimal(row.raw).times(price.amount);
-		const exactness = combineExactness(row.exactness, 'user_assumption');
+		// The BADGE is what a reader scans, and it must not claim a provenance
+		// this number does not have. EXACTNESS_ORDER deliberately ranks a user
+		// assumption ABOVE source_based (the reader's own figure is exact FOR
+		// THEM), so combineExactness returns source_based here — technically the
+		// documented floor, but it puts a provenance claim on a figure that rests
+		// on a tariff nobody sourced. A number containing the reader's own input is
+		// at best a user assumption, whatever the rest of the chain was; the
+		// underlying quality is named in the explanation instead.
+		const underlying = row.exactness;
+		const exactness: Exactness = 'user_assumption';
 		builder.add({
 			// Money is read to the cent, so this is rounded for display rather than
 			// shown to the engine's full internal precision.
@@ -361,7 +379,7 @@ export function createConverter(data: DataBundle): Converter {
 			],
 			warnings: [],
 			source_refs: row.source_refs,
-			explanation: `${formatMoney(total)} ${price.currency} at your rate of ${price.amount} ${label}. The rate is yours, not a published figure, so this cost is only as good as it is.`
+			explanation: `${formatMoney(total)} ${price.currency} at your rate of ${price.amount} ${label}. The rate is yours, not a published figure, so this cost is only as good as it is; the quantity it multiplies is ${underlying.replace(/_/g, ' ')}.`
 		});
 	}
 
@@ -929,16 +947,7 @@ export function createConverter(data: DataBundle): Converter {
 			const energyJ = energyForBasis(fuel, b, amount, prefer);
 			if (!energyJ) continue;
 			anyEnergy = true;
-			// When a VOLUME input runs through a per-MASS heating value — gas oil,
-			// ethanol, hydrogen and the wood fuels all lack a per-litre CV — the
-			// density step is real and must appear. Labeling it "1 L × 42.569 MJ/kg"
-			// printed a dimensionally impossible product: the value was right, the
-			// audit trail was not, and the audit trail is this product's whole
-			// proposition.
-			const stepLabel =
-				energyJ.via === 'per_mass' && amount.massKg !== undefined && prefer === 'per_volume'
-					? `${formatValue(kgToKgDisplay(amount.massKg), 'source_based')} kg (${amount.label} × density)`
-					: amount.label;
+			const stepLabel = amountInHvDenominator(energyJ, amount, prefer);
 			addEnergyResults(
 				builder,
 				energyJ,
@@ -972,6 +981,49 @@ export function createConverter(data: DataBundle): Converter {
 
 		// Energy density group (per kg and/or per L) from the requested basis HV.
 		addEnergyDensity(builder, fuel, basis);
+	}
+
+	/**
+	 * The amount, expressed in the unit the heating value is stated PER, so the
+	 * calculation path multiplies out.
+	 *
+	 * The formula line used to print the amount exactly as the reader typed it,
+	 * against a factor in whatever unit the source published. That produced
+	 * products that do not compute — `1 t coking coal × 30.24 MJ/kg = 30,240 MJ`
+	 * (1 × 30.24 is 30.24), `1 bbl diesel × 9.905 kWh/L = 5,669 MJ`, `1 L gas oil
+	 * × 42.569 MJ/kg`. The values were right; every one of those lines was an
+	 * arithmetic claim that a reader checking our work would find false, on the
+	 * one surface whose entire job is to be checkable.
+	 *
+	 * When the conversion is not the identity, the converted amount is shown with
+	 * the step that produced it named — a unit conversion, a density, or both.
+	 */
+	function amountInHvDenominator(
+		energy: EnergyForBasis,
+		amount: { volumeM3?: string; massKg?: string; label: string },
+		prefer: 'per_mass' | 'per_volume'
+	): string {
+		const denominator = energy.hv.displayUnit.split('/')[1]?.trim();
+		if (!denominator) return amount.label;
+
+		// The density step is separate from the unit step and is named when it ran:
+		// a volume input priced by a per-mass heating value went through it.
+		const viaDensity = energy.via === 'per_mass' && prefer === 'per_volume';
+		let converted: string | undefined;
+		if (denominator === 'kg' && amount.massKg !== undefined) {
+			converted = formatValue(kgToKgDisplay(amount.massKg), 'source_based');
+		} else if (denominator === 'L' && amount.volumeM3 !== undefined) {
+			converted = formatValue(new Decimal(amount.volumeM3).times(1000).toFixed(), 'source_based');
+		} else if ((denominator === 'm³' || denominator === 'm3') && amount.volumeM3 !== undefined) {
+			converted = formatValue(amount.volumeM3, 'source_based');
+		}
+		if (converted === undefined) return amount.label;
+
+		const shown = `${converted} ${denominator}`;
+		// Identity: the reader typed exactly this, so naming a step would be noise.
+		if (!viaDensity && amount.label.startsWith(`${converted} ${denominator}`)) return amount.label;
+		if (amount.label === shown) return amount.label;
+		return `${shown} (${amount.label}${viaDensity ? ' × density' : ''})`;
 	}
 
 	/**
@@ -1168,7 +1220,18 @@ export function createConverter(data: DataBundle): Converter {
 
 		const any = addFactorEmissions(builder, fuel, amount, prefer);
 		if (!any) {
-			builder.add(notAvailable('emissions', 'emission_factor', fuel));
+			// Name the piece that is ACTUALLY missing, the same way the energy path
+			// does. Crude oil HAS a cited factor (IPCC, per GJ); what it has no
+			// density for is getting from a barrel to the mass that factor needs.
+			// Saying "no emission factor" sent the reader looking for the wrong
+			// gap — and, for a catalog whose credibility rests on provenance,
+			// wrongly implied nobody had sourced one.
+			const hasFactor = (fuel.emission_factor_ids ?? []).some((id) => factorsById.has(id));
+			const blockedByDensity =
+				hasFactor && amount.massKg === undefined && amount.volumeM3 !== undefined;
+			builder.add(
+				notAvailable('emissions', blockedByDensity ? 'density' : 'emission_factor', fuel)
+			);
 		}
 	}
 

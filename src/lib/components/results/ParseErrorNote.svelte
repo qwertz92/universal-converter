@@ -67,7 +67,16 @@
 					{/each}
 				</div>
 			{:else if suggestions.length}
-				<p class="mt-1 text-sm" style="color:var(--text-muted)">Did you mean:</p>
+				<!--
+					"Did you mean" is typo-correction framing, and it is wrong for a
+					split material: nobody mistyped "coal" or "heizöl", the word simply
+					names several products. The message above already says "Pick the one
+					you mean:", so repeating a guess-flavoured heading under it read as
+					if the tool thought the input was a mistake.
+				-->
+				<p class="mt-1 text-sm" style="color:var(--text-muted)">
+					{error.message.endsWith('Pick the one you mean:') ? 'The options:' : 'Did you mean:'}
+				</p>
 				<div class="mt-2 flex flex-wrap gap-2">
 					{#each suggestions as sug (sug)}
 						<button

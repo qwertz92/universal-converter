@@ -168,7 +168,13 @@ export function validateAll(): ValidationReport {
 		if (f.density) {
 			checkUnitRef(issues, 'fuels', `fuels[${i}] (${f.id}).density.unit`, f.density.unit, unitIds);
 			checkPositive(issues, 'fuels', `fuels[${i}] (${f.id}).density`, f.density.value);
-			checkRange(issues, 'fuels', `fuels[${i}] (${f.id}).density.range`, f.density.range);
+			checkRange(
+				issues,
+				'fuels',
+				`fuels[${i}] (${f.id}).density.range`,
+				f.density.range,
+				f.density.value
+			);
 			for (const ref of f.density.source_refs) {
 				if (!sourceIds.has(ref)) {
 					issues.push({
@@ -196,7 +202,13 @@ export function validateAll(): ValidationReport {
 				unitIds
 			);
 			checkPositive(issues, 'fuels', `fuels[${i}] (${f.id}).heating_values[${j}]`, hv.value);
-			checkRange(issues, 'fuels', `fuels[${i}] (${f.id}).heating_values[${j}].range`, hv.range);
+			checkRange(
+				issues,
+				'fuels',
+				`fuels[${i}] (${f.id}).heating_values[${j}].range`,
+				hv.range,
+				hv.value
+			);
 			for (const ref of hv.source_refs) {
 				if (!sourceIds.has(ref)) {
 					issues.push({
@@ -368,6 +380,38 @@ export function validateAll(): ValidationReport {
 				message: `metric '${ef.metric}' disagrees with unit '${ef.unit}', which is ${expected}`
 			});
 		}
+
+		// The NUMERATOR must agree with the pollutant. The metric check above only
+		// looks at the denominator, so a CO2e factor carrying a `kg_co2_per_l`
+		// unit passed — and the engine then files the row under a CO2e unit id
+		// while labeling it "kg CO2". A CO2/CO2e mislabel on a single row is the
+		// one invariant this project cannot afford to get wrong (§B.2, §D.6).
+		const numerator = /^(?:kg|g|t)_(co2e|co2)_per_/.exec(ef.unit)?.[1];
+		if (numerator) {
+			const pollutantIsCo2e = ef.pollutant === 'CO2e';
+			const unitIsCo2e = numerator === 'co2e';
+			if (pollutantIsCo2e !== unitIsCo2e) {
+				issues.push({
+					file: 'emission-factors',
+					path: `emission_factors[${i}] (${ef.id})`,
+					message: `pollutant '${ef.pollutant}' disagrees with unit '${ef.unit}' — CO2 and CO2e are never interchangeable`
+				});
+			}
+		}
+
+		// A fuel may only cite factors that are ABOUT that fuel. Nothing stopped
+		// gasoline from listing diesel's factor and validating cleanly.
+		if (ef.fuel_id) {
+			for (const [fi, f] of fuels.entries()) {
+				if (f.emission_factor_ids.includes(ef.id) && f.id !== ef.fuel_id) {
+					issues.push({
+						file: 'cross-file',
+						path: `fuels[${fi}] (${f.id}).emission_factor_ids`,
+						message: `cites '${ef.id}', which is a factor for '${ef.fuel_id}'`
+					});
+				}
+			}
+		}
 	}
 
 	return { ok: issues.length === 0, issues };
@@ -445,7 +489,9 @@ function checkRange(
 	issues: ValidationIssue[],
 	file: ValidationIssue['file'],
 	path: string,
-	range: { low: string; high: string } | undefined
+	range: { low: string; high: string } | undefined,
+	/** The value the range describes — it has to lie inside it. */
+	value?: string
 ): void {
 	if (!range) return;
 	const low = Number(range.low);
@@ -456,5 +502,19 @@ function checkRange(
 			path,
 			message: `range [${range.low}, ${range.high}] must satisfy 0 < low < high`
 		});
+		return;
+	}
+	// A range that does not contain its own value is a transcription error, and
+	// a bad one: the headline figure and the spread shown beside it would then
+	// describe different things.
+	if (value !== undefined) {
+		const v = Number(value);
+		if (Number.isFinite(v) && (v < low || v > high)) {
+			issues.push({
+				file,
+				path,
+				message: `value ${value} lies outside its own range [${range.low}, ${range.high}]`
+			});
+		}
 	}
 }

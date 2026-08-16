@@ -95,7 +95,7 @@ export function formatValue(
 	// 1,234,570, three off from what the reader had typed, with no `~` (which is
 	// correctly suppressed for exact) to hint that anything had been rounded.
 	// An explicit maxExactSigFigs is a caller ASKING to be capped (the API's
-	// ?sig= parameter), and it wins — the rule below is about the default
+	// ?sigfigs= parameter), and it wins — the rule below is about the default
 	// readability budget, not about overriding a request.
 	const showInFull =
 		opts.maxExactSigFigs === undefined &&
@@ -112,12 +112,21 @@ function isExactLevel(exactness: Exactness): boolean {
 }
 
 /**
- * How many digits a terminating decimal may have before rounding it is the
- * lesser evil. Beyond this a value is the tail of a division that does not
- * terminate (1 kWh in BTU carries 40 digits at the engine's precision), and
- * printing all of it helps nobody.
+ * How many digits an exact value may carry and still be printed whole.
+ *
+ * The line this draws is not "long" versus "short" — it is TYPED versus
+ * COMPUTED. The engine runs at 40 significant digits, so a conversion that does
+ * not terminate (1 kWh in BTU) fills all 40 and needs the readability cap. A
+ * value the reader typed, or an identity conversion of one, carries as many
+ * digits as they wrote — and the magnitude guard already caps that at 10^±30.
+ * 25 sits comfortably between the two populations: no realistic input reaches
+ * it, and no non-terminating result falls below it.
+ *
+ * Set at 15 originally, which left `1234567890123456 kWh to kWh` echoing back
+ * 1,234,570,000,000,000 — the exact defect the rule exists to prevent, one
+ * digit past its edge.
  */
-const MAX_LOSSLESS_SIG_FIGS = 15;
+const MAX_LOSSLESS_SIG_FIGS = 25;
 
 /** Significant digits in a plain decimal string, ignoring sign and leading zeros. */
 function significantDigits(value: string): number {

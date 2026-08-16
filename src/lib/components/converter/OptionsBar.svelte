@@ -47,8 +47,9 @@
 		<InfoPopover label="About heating value basis">
 			<strong style="color:var(--text)">LHV/NCV</strong> (lower / net) excludes the heat of
 			water-vapour condensation; <strong style="color:var(--text)">HHV/GCV</strong> (higher / gross)
-			includes it. They differ by ~5–6% for gas and up to ~10–20% for hydrogen or wet biomass, so
-			every fuel-energy result is labeled with its basis. Default is LHV/NCV.
+			includes it. On this catalog's own figures the gap is ~5–6% for petrol and coal, ~6% for
+			diesel, ~11% for natural gas and methane, and ~18% for hydrogen — so every fuel-energy result
+			is labeled with its basis. Default is LHV/NCV.
 			<a
 				href={resolve('/learn/hhv-vs-lhv')}
 				class="mt-1 block hover:text-[var(--accent)]"

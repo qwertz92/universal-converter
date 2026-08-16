@@ -220,8 +220,15 @@ silently.
   gas bill states is **gross** — precisely the kind of mismatch this product must
   surface rather than hide.)
 - Choosing one default and labeling it, while showing the other where available,
-  is the only honest option: silently picking either basis creates a ~5–6% error
-  for gas and up to ~10–20% for hydrogen/biomass-rich fuels.
+  is the only honest option: silently picking either basis creates an error of
+  ~5–6% for petrol and coal, ~6% for diesel, **~11% for natural gas and
+  methane**, and ~18% for hydrogen. (Corrected in v0.3.5: this rule previously
+  attached the 5–6% figure to gas. That is the liquid-fuel and coal number — the
+  two categories were swapped, understating the gas error by half, in this rule
+  and in the two user-facing places that inherited it. The catalog's own entries
+  had always said otherwise: natural gas 45.745 → 50.678 MJ/kg. `tests/
+  copy-matches-data.test.ts` now recomputes these gaps from the shipped data, so
+  a quoted percentage cannot drift from the numbers it describes again.)
 
 **Rules.**
 1. Default basis = LHV/NCV. The chosen basis appears on every fuel-energy result

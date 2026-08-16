@@ -97,7 +97,7 @@
 			"input": "1 barrel crude oil",
 			"label": "1 barrel crude oil",
 			"category": "fuel",
-			"notes": "Physical barrel of crude → volume, mass and energy. Energy is an ESTIMATE (grade varies); not the same as boe."
+			"notes": "Physical barrel of crude → volume only. No density is recorded for generic crude, so mass and energy report that gap rather than quoting an unsourced figure. Not the same as boe."
 		},
 		{
 			"id": "ex-1-m3-natural-gas",

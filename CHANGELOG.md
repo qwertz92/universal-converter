@@ -3,6 +3,62 @@
 All notable changes to Universal Converter. Versioning follows semver
 (pre-1.0: minor bumps may include behavior changes; they are listed here).
 
+## 0.3.5 — 2026-08-16
+
+A second adversarial pass, told to assume the first round's fixes were wrong.
+It found nineteen more things, including one wrong number sitting on the control
+that governs it.
+
+### Fixed — a wrong number, on the switch that decides it
+
+- **"LHV and HHV differ by ~5–6% for gas" is wrong by a factor of two.** The
+  catalog's own natural-gas entry has always said 45.745 → 50.678 MJ/kg, a gap
+  of **10.8%**; 5–6% is the figure for petrol and coal. The two categories were
+  swapped, in the info popover attached to the basis toggle itself, in
+  `/learn/hhv-vs-lhv`, and in the rulebook clause both inherited — so a gas user
+  was told the choice cost half what it does. A test now recomputes these gaps
+  from the shipped data, because prose was the one place numbers were never
+  checked.
+
+### Fixed — audit trails that did not add up
+
+- **Calculation paths printed products that do not multiply out** whenever the
+  input unit was not the factor's own: `1 t coking coal × 30.24 MJ/kg = 30,240
+MJ` (1 × 30.24 is not 30,240), `1 bbl diesel × 9.905 kWh/L = 5,669 MJ`. The
+  values were right and every one of those lines was an arithmetic claim a
+  reader checking our work would find false — on the surface whose entire job is
+  to be checkable. The converted amount is now shown with the step that produced
+  it named.
+- **A barrel of crude said it had no emission factor.** It has a cited IPCC one;
+  what it has no density for is getting from a barrel to the mass that factor
+  needs. The energy row was fixed in 0.3.4 and the emissions row was not.
+- **The copy button handed out 29 significant digits** for `1 kg lignite`, a
+  figure whose source records a 5.5–21.6 MJ/kg range. Full precision stays on
+  the API, where it ships beside a note explaining what it does not mean.
+- **A cost badged itself "source-based".** The exactness order deliberately
+  ranks a user assumption as _more_ exact than a sourced figure, so the floor
+  logic put a provenance claim on a number resting on a tariff nobody sourced.
+  A cost or delivered-energy row is now badged as the assumption it contains,
+  with the underlying quality named in the explanation.
+
+### Fixed — parsing
+
+- **A ratio of two units was accepted as a price.** `1 L diesel at 0.84 kg/L` —
+  the rulebook's own user-density example — produced a Cost group reading
+  "~0.84 kg": money denominated in kilograms.
+- **`1.500 kWh` was silently read as 1.5.** The mirror-image `1,500` had warned
+  since 0.3.0; the dot form, which is the German thousands separator, did not.
+- `1 kg of coal` lost the grade prompt to the word "of". An efficiency written
+  as `1e5 COP` had its exponent bitten in half and was reported as an unknown
+  material. An exact value of 16+ digits was still being rounded.
+
+### Added — validation that catches what the last round could not
+
+Constructible bad data that used to pass: a CO₂e factor wearing a `kg_co2_per_l`
+unit (the CO₂/CO₂e mislabel this project cannot afford), a fuel citing another
+fuel's emission factor, and a range that does not contain its own value. All
+three are now rejected.
+
 ## 0.3.4 — 2026-08-16
 
 The rest of the adversarial review, plus what looking for it turned up.
