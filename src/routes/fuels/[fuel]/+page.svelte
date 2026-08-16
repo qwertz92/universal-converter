@@ -21,6 +21,26 @@
 		return all.filter((f) => ids.has(f.id) || f.fuel_id === fuel.id);
 	});
 
+	/**
+	 * Close relatives (ADR 0005). Variants such as gas oil (red diesel) sit next
+	 * to their parent with genuinely different numbers, so each is shown with the
+	 * two figures that decide which one you actually want — density and headline
+	 * emission factor — rather than a prose claim about how they differ.
+	 */
+	const related = $derived.by(() => {
+		const bundle = loadDataBundle();
+		const ids = fuel.related_fuels ?? [];
+		return ids
+			.map((id) => bundle.fuels.find((f) => f.id === id))
+			.filter((f) => f !== undefined)
+			.map((f) => {
+				const factor = bundle.emissionFactors.find(
+					(e) => e.fuel_id === f.id && e.pollutant === 'CO2e'
+				);
+				return { fuel: f, density: f.density, factor };
+			});
+	});
+
 	// A representative conversion: 1 m³ for gases, 1 kg for solids, 1 L for
 	// liquids — and 1 kWh for a fuel with no phase and no density at all, which
 	// is grid electricity. Falling through to litres there asked the engine for
@@ -114,6 +134,48 @@
 				{/each}
 			</ul>
 		</div>
+	{/if}
+
+	<!-- Close relatives (ADR 0005): easy to confuse, different numbers -->
+	{#if related.length > 0}
+		<section
+			class="mb-6 rounded-[var(--radius-card)] border p-4 sm:p-5"
+			style="border-color:var(--border);background:var(--surface)"
+			aria-labelledby="related-heading"
+		>
+			<h2
+				id="related-heading"
+				class="mb-1 text-sm font-semibold tracking-wide uppercase"
+				style="color:var(--text)"
+			>
+				Easily confused with
+			</h2>
+			<p class="mb-3 text-sm" style="color:var(--text-muted)">
+				Different products with different numbers. Check you are on the right one.
+			</p>
+			<ul class="space-y-2">
+				{#each related as r (r.fuel.id)}
+					<li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+						<a
+							href={resolve(`/fuels/${r.fuel.id}`)}
+							class="font-medium underline underline-offset-2"
+							style="color:var(--accent)">{r.fuel.names[0]}</a
+						>
+						{#if r.density}
+							<span class="uc-num text-xs" style="color:var(--text-muted)">
+								{r.density.value} kg/m³
+							</span>
+						{/if}
+						{#if r.factor}
+							<span class="uc-num text-xs" style="color:var(--text-muted)">
+								{r.factor.value}
+								{r.factor.unit.replace(/_/g, ' ')}
+							</span>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		</section>
 	{/if}
 
 	<!-- Properties grid -->

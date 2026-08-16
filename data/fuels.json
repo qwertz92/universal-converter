@@ -82,6 +82,62 @@
 			"emission_factor_ids": ["gasoline-co2-desnz", "gasoline-co2e-desnz"],
 			"source_refs": ["uk-desnz-ghg-2025"],
 			"notes": "This entry defaults to DESNZ's 'Petrol (average biofuel blend)' figures, which match real UK forecourt fuel. DESNZ separately lists '100% mineral petrol' (density 741.84 kg/m³, net calorific value (NCV) 44.65 GJ/tonne, gross calorific value (GCV) 47.0 GJ/tonne, 2.33984 kg CO₂e/L). IPCC's 2006 global default for motor gasoline is an NCV of 44.3 MJ/kg and CO₂ of 69,300 kg/TJ. As a US cross-check, the EIA reports 120,214 Btu/gal and 9.46 kg CO₂/gal. These alternative figures are shown for reference only and are never blended into the main value.",
+			"warnings": [],
+			"related_fuels": ["mineral-petrol"]
+		},
+		{
+			"id": "mineral-petrol",
+			"names": ["100% mineral petrol", "mineral petrol"],
+			"aliases": [
+				"petrol (100% mineral)",
+				"100% mineral gasoline",
+				"mineral gasoline",
+				"fossil petrol",
+				"unblended petrol"
+			],
+			"category": "oil",
+			"phase": "liquid",
+			"density": {
+				"value": "741.84",
+				"unit": "kg_per_m3",
+				"reference_conditions": "15 °C (fuel-properties basis)",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Petrol (100% mineral petrol)' density 741.84 kg/m³ (1348 L/tonne)."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "44.65",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Net CV 44.65 GJ/tonne = 44.65 MJ/kg (12.403 kWh/kg). 'Petrol (100% mineral petrol)'."
+				},
+				{
+					"basis": "lhv",
+					"value": "9.201",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Net CV 9.201 kWh/L (100% mineral petrol)."
+				},
+				{
+					"basis": "hhv",
+					"value": "47.0",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Gross CV 47.0 GJ/tonne = 47.0 MJ/kg (13.056 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "9.685",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Gross CV 9.685 kWh/L (100% mineral petrol)."
+				}
+			],
+			"emission_factor_ids": ["mineral-petrol-co2-desnz", "mineral-petrol-co2e-desnz"],
+			"related_fuels": ["gasoline"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 2025 'Petrol (100% mineral petrol)' — petrol with no bioethanol content. The forecourt petrol most people buy is a blend (E5/E10); for that use the 'gasoline' entry, which carries DESNZ's 'Petrol (average biofuel blend)' figures. The two differ by roughly 3% per litre in CO2e, so the choice matters for reporting.",
 			"warnings": []
 		},
 		{
@@ -136,6 +192,106 @@
 			"emission_factor_ids": ["diesel-co2-desnz", "diesel-co2e-desnz"],
 			"source_refs": ["uk-desnz-ghg-2025"],
 			"notes": "Defaults to DESNZ 'Diesel (average biofuel blend)' (UK forecourt-representative). DESNZ also lists '100% mineral diesel' (density 830.565 kg/m³, NCV 43.027 GJ/tonne, 2.66155 kgCO2e/L) and 'Gas oil' (red/off-road diesel, 853.971 kg/m³, NCV 42.569 GJ/tonne, 2.75541 kgCO2e/L). IPCC 2006 Gas/Diesel Oil NCV 43.0 MJ/kg, CO2 74,100 kg/TJ. EIA US cross-check 10.19 kg CO2/gal — never averaged.",
+			"warnings": [],
+			"related_fuels": ["mineral-diesel", "gas-oil"]
+		},
+		{
+			"id": "mineral-diesel",
+			"names": ["100% mineral diesel", "mineral diesel"],
+			"aliases": [
+				"diesel (100% mineral)",
+				"100% mineral derv",
+				"fossil diesel",
+				"unblended diesel",
+				"b0 diesel"
+			],
+			"category": "oil",
+			"phase": "liquid",
+			"density": {
+				"value": "830.565",
+				"unit": "kg_per_m3",
+				"reference_conditions": "15 °C (fuel-properties basis)",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Diesel (100% mineral diesel)' density 830.565 kg/m³ (1204 L/tonne)."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "43.027",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Net CV 43.027 GJ/tonne = 43.027 MJ/kg (11.952 kWh/kg). 'Diesel (100% mineral diesel)'."
+				},
+				{
+					"basis": "lhv",
+					"value": "9.927",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Net CV 9.927 kWh/L (100% mineral diesel)."
+				},
+				{
+					"basis": "hhv",
+					"value": "45.774",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Gross CV 45.774 GJ/tonne = 45.774 MJ/kg (12.715 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "10.561",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Gross CV 10.561 kWh/L (100% mineral diesel)."
+				}
+			],
+			"emission_factor_ids": ["mineral-diesel-co2-desnz", "mineral-diesel-co2e-desnz"],
+			"related_fuels": ["diesel", "gas-oil"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 2025 'Diesel (100% mineral diesel)' — diesel with no biodiesel content. UK forecourt diesel is a blend; for that use the 'diesel' entry ('average biofuel blend'). For off-road/red diesel see 'gas oil'.",
+			"warnings": []
+		},
+		{
+			"id": "gas-oil",
+			"names": ["gas oil", "red diesel"],
+			"aliases": [
+				"off-road diesel",
+				"off road diesel",
+				"non-road diesel",
+				"rebated diesel",
+				"marked gas oil",
+				"tractor diesel",
+				"35 second oil",
+				"35-second oil"
+			],
+			"category": "oil",
+			"phase": "liquid",
+			"density": {
+				"value": "853.971",
+				"unit": "kg_per_m3",
+				"reference_conditions": "15 °C (fuel-properties basis)",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Gas oil' density 853.971 kg/m³ (1171 L/tonne)."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "42.569",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Net CV 42.569 GJ/tonne = 42.569 MJ/kg. 'Gas oil' (UK non-road/red diesel)."
+				},
+				{
+					"basis": "hhv",
+					"value": "45.286",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Gross CV 45.286 GJ/tonne = 45.286 MJ/kg."
+				}
+			],
+			"emission_factor_ids": ["gas-oil-co2-desnz", "gas-oil-co2e-desnz"],
+			"related_fuels": ["diesel", "mineral-diesel", "heating-oil"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 2025 'Gas oil' — the UK term for off-road diesel, dyed red for duty purposes and used in agriculture, construction and static plant. Chemically close to road diesel but NOT the same numbers: 853.971 kg/m³ and 2.75541 kgCO2e/L against road diesel's 832.361 kg/m³ and 2.57082 kgCO2e/L, about 7% more CO2e per litre. Note DESNZ publishes no kWh-per-litre calorific value for this fuel, so per-litre energy is derived from mass via the density above and labeled accordingly.",
 			"warnings": []
 		},
 		{
@@ -186,21 +342,13 @@
 			"notes": "DESNZ has no single 'heating oil' label. This entry uses DESNZ 'Fuel Oil' (heavier industrial/boiler grade). UK DOMESTIC heating oil is usually 'Gas Oil' (see diesel notes) or kerosene-type 'Burning Oil' (see kerosene). IPCC 2006 Residual Fuel Oil NCV 40.4 MJ/kg, CO2 77,400 kg/TJ; Gas/Diesel Oil is the alternative mapping. EIA US: No.2 heating oil ~138,500 Btu/gal.",
 			"warnings": [
 				"'Heating oil' is not one product: this entry models the heavier 'Fuel Oil' grade. UK domestic heating oil is typically kerosene-type burning oil or gas oil (diesel-grade) — pick the matching fuel for a domestic system."
-			]
+			],
+			"related_fuels": ["gas-oil", "burning-oil"]
 		},
 		{
 			"id": "kerosene",
 			"names": ["kerosene", "jet fuel"],
-			"aliases": [
-				"paraffin",
-				"burning oil",
-				"aviation turbine fuel",
-				"jet a-1",
-				"jet a",
-				"kerosin",
-				"avtur",
-				"heating kerosene"
-			],
+			"aliases": ["paraffin", "aviation turbine fuel", "jet a-1", "jet a", "kerosin", "avtur"],
 			"category": "oil",
 			"phase": "liquid",
 			"density": {
@@ -242,10 +390,66 @@
 			],
 			"emission_factor_ids": ["kerosene-co2-desnz", "kerosene-co2e-desnz"],
 			"source_refs": ["uk-desnz-ghg-2025"],
-			"notes": "Modeled on DESNZ 'Aviation Turbine Fuel' (Jet A-1). DESNZ also lists 'Burning Oil' (UK heating kerosene: 802.568 kg/m³, NCV 43.865 GJ/tonne, 2.54016 kgCO2e/L) and 'Aviation Spirit' (avgas). IPCC 2006 Jet Kerosene NCV 44.1 MJ/kg, CO2 71,500 kg/TJ; Other Kerosene NCV 43.8 MJ/kg, CO2 71,900 kg/TJ.",
+			"notes": "Modeled on DESNZ 'Aviation Turbine Fuel' (Jet A-1) — this entry is aviation kerosene. UK heating kerosene ('28 second' burning oil) is a separate entry, 'burning oil', with its own density and factors. DESNZ also lists 'Aviation Spirit' (avgas), not yet carried here. IPCC 2006 Jet Kerosene NCV 44.1 MJ/kg, CO2 71,500 kg/TJ; Other Kerosene NCV 43.8 MJ/kg, CO2 71,900 kg/TJ.",
 			"warnings": [
 				"For high-altitude AVIATION, DESNZ states a 1.7× multiplier should be applied to the CO2 component to account for radiative-forcing (non-CO2 contrail/NOx) effects. The combustion CO2/CO2e factors here do NOT include that multiplier."
-			]
+			],
+			"related_fuels": ["burning-oil"]
+		},
+		{
+			"id": "burning-oil",
+			"names": ["burning oil", "heating kerosene"],
+			"aliases": [
+				"kerosene (burning oil)",
+				"28 second oil",
+				"28-second oil",
+				"premium kerosene",
+				"boiler kerosene"
+			],
+			"category": "oil",
+			"phase": "liquid",
+			"density": {
+				"value": "802.568",
+				"unit": "kg_per_m3",
+				"reference_conditions": "15 °C (fuel-properties basis)",
+				"source_refs": ["uk-desnz-ghg-2025"],
+				"notes": "DESNZ 2025 'Burning Oil' density 802.568 kg/m³ (1246 L/tonne)."
+			},
+			"heating_values": [
+				{
+					"basis": "lhv",
+					"value": "43.865",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Net CV 43.865 GJ/tonne = 43.865 MJ/kg (12.185 kWh/kg). 'Burning Oil'."
+				},
+				{
+					"basis": "lhv",
+					"value": "9.779",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Net CV 9.779 kWh/L (Burning Oil)."
+				},
+				{
+					"basis": "hhv",
+					"value": "46.174",
+					"unit": "mj_per_kg",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Gross CV 46.174 GJ/tonne = 46.174 MJ/kg (12.826 kWh/kg)."
+				},
+				{
+					"basis": "hhv",
+					"value": "10.294",
+					"unit": "kwh_per_l",
+					"source_refs": ["uk-desnz-ghg-2025"],
+					"notes": "DESNZ 2025 Gross CV 10.294 kWh/L (Burning Oil)."
+				}
+			],
+			"emission_factor_ids": ["burning-oil-co2-desnz", "burning-oil-co2e-desnz"],
+			"related_fuels": ["kerosene", "heating-oil"],
+			"source_refs": ["uk-desnz-ghg-2025"],
+			"notes": "DESNZ 2025 'Burning Oil' — the kerosene grade burned in UK domestic heating boilers, sold as '28 second oil'. Distinct from aviation kerosene (the 'kerosene' entry, DESNZ 'Aviation Turbine Fuel') and from the heavier heating oil / gas oil grades. Beware 'home heating oil': in the UK it usually means this fuel, in the US it means No. 2 fuel oil — so the term is deliberately not an alias here.",
+			"warnings": []
 		},
 		{
 			"id": "lpg",

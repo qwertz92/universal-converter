@@ -216,15 +216,24 @@ describe('durations for the power → energy bridge', () => {
 });
 
 describe('words the parser could not place are never dropped silently', () => {
-	it('"1 L red diesel" answers for plain diesel and says that it did', () => {
-		// Red diesel (gas oil) has its own density, calorific value and emission
-		// factor. Answering with road-diesel numbers in silence would be the
+	it('an unrecognised qualifier is reported rather than quietly discarded', () => {
+		// "1 L red diesel" used to land here: it answered with road-diesel numbers
+		// and a note saying "red" was ignored. Red diesel now has its own catalog
+		// entry (ADR 0005), so the note is no longer the right answer for THAT
+		// phrase — but the rule it protects still holds for a qualifier the
+		// catalog genuinely does not carry. Answering in silence would be the
 		// exact failure mode this product exists to prevent.
-		const s = set('1 L red diesel');
+		const s = set('1 L winter-grade diesel');
 		expect(s.input.fuel_id).toBe('diesel');
 		const note = s.assumptions.find((a) => a.kind === 'parser_note');
-		expect(note?.text).toContain('red');
+		expect(note?.text).toContain('winter');
 		expect(note?.text).toContain('plain diesel');
+	});
+
+	it('"1 L red diesel" now resolves to gas oil instead of needing a note', () => {
+		const s = set('1 L red diesel');
+		expect(s.input.fuel_id).toBe('gas-oil');
+		expect(s.assumptions.some((a) => a.kind === 'parser_note')).toBe(false);
 	});
 
 	it('genuine filler between unit and material stays silent', () => {

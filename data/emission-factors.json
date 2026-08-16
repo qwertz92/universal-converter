@@ -49,7 +49,6 @@
 			"source_table_or_page": "Vol.2 Ch.2 Table 2.2, 'Anthracite'",
 			"notes": "IPCC 2006 default CO2 factor 98,300 kg CO2/TJ = 98.3 kg CO2/GJ (net/LHV basis). Applied to the fuel's LHV energy. Direct combustion only."
 		},
-
 		{
 			"id": "gasoline-co2-desnz",
 			"fuel_id": "gasoline",
@@ -79,6 +78,34 @@
 			"notes": "DESNZ 2025 total 2.06916 kgCO2e/L (CO2 2.05523 + CH4 0.00806 + N2O 0.00587). GWP set per DESNZ 2025 methodology (IPCC AR5, 100-yr). Never derived from the CO2 figure — published separately."
 		},
 		{
+			"id": "mineral-petrol-co2-desnz",
+			"fuel_id": "mineral-petrol",
+			"pollutant": "CO2",
+			"metric": "mass_per_volume",
+			"value": "2.32567",
+			"unit": "kg_co2_per_l",
+			"scope": "direct_combustion",
+			"region": "UK",
+			"year": 2025,
+			"source_id": "uk-desnz-ghg-2025",
+			"source_table_or_page": "'Fuels' sheet, 'Petrol (100% mineral petrol)' — CO2 component",
+			"notes": "DESNZ 2025 CO2 component 2.32567 kg CO2/L (of the 2.33984 kgCO2e/L total; CH4 0.0082, N2O 0.00597). Direct combustion."
+		},
+		{
+			"id": "mineral-petrol-co2e-desnz",
+			"fuel_id": "mineral-petrol",
+			"pollutant": "CO2e",
+			"metric": "mass_per_volume",
+			"value": "2.33984",
+			"unit": "kg_co2e_per_l",
+			"scope": "direct_combustion",
+			"region": "UK",
+			"year": 2025,
+			"source_id": "uk-desnz-ghg-2025",
+			"source_table_or_page": "'Fuels' sheet, 'Petrol (100% mineral petrol)' — total kgCO2e/L",
+			"notes": "DESNZ 2025 total 2.33984 kgCO2e/L (CO2 2.32567 + CH4 0.0082 + N2O 0.00597). GWP set per DESNZ 2025 methodology (IPCC AR5, 100-yr)."
+		},
+		{
 			"id": "diesel-co2-desnz",
 			"fuel_id": "diesel",
 			"pollutant": "CO2",
@@ -105,6 +132,62 @@
 			"source_id": "uk-desnz-ghg-2025",
 			"source_table_or_page": "'Fuels' sheet, 'Diesel (average biofuel blend)' — total kgCO2e/L",
 			"notes": "DESNZ 2025 total 2.57082 kgCO2e/L (CO2 2.53763 + CH4 0.00029 + N2O 0.0329). GWP set per DESNZ 2025 methodology (IPCC AR5, 100-yr)."
+		},
+		{
+			"id": "gas-oil-co2-desnz",
+			"fuel_id": "gas-oil",
+			"pollutant": "CO2",
+			"metric": "mass_per_volume",
+			"value": "2.72417",
+			"unit": "kg_co2_per_l",
+			"scope": "direct_combustion",
+			"region": "UK",
+			"year": 2025,
+			"source_id": "uk-desnz-ghg-2025",
+			"source_table_or_page": "'Fuels' sheet, 'Gas oil' — CO2 component",
+			"notes": "DESNZ 2025 CO2 component 2.72417 kg CO2/L (of the 2.75541 kgCO2e/L total; CH4 0.00315, N2O 0.02809). Direct combustion."
+		},
+		{
+			"id": "gas-oil-co2e-desnz",
+			"fuel_id": "gas-oil",
+			"pollutant": "CO2e",
+			"metric": "mass_per_volume",
+			"value": "2.75541",
+			"unit": "kg_co2e_per_l",
+			"scope": "direct_combustion",
+			"region": "UK",
+			"year": 2025,
+			"source_id": "uk-desnz-ghg-2025",
+			"source_table_or_page": "'Fuels' sheet, 'Gas oil' — total kgCO2e/L",
+			"notes": "DESNZ 2025 total 2.75541 kgCO2e/L (CO2 2.72417 + CH4 0.00315 + N2O 0.02809). GWP set per DESNZ 2025 methodology (IPCC AR5, 100-yr)."
+		},
+		{
+			"id": "mineral-diesel-co2-desnz",
+			"fuel_id": "mineral-diesel",
+			"pollutant": "CO2",
+			"metric": "mass_per_volume",
+			"value": "2.62818",
+			"unit": "kg_co2_per_l",
+			"scope": "direct_combustion",
+			"region": "UK",
+			"year": 2025,
+			"source_id": "uk-desnz-ghg-2025",
+			"source_table_or_page": "'Fuels' sheet, 'Diesel (100% mineral diesel)' — CO2 component",
+			"notes": "DESNZ 2025 CO2 component 2.62818 kg CO2/L (of the 2.66155 kgCO2e/L total; CH4 0.00029, N2O 0.03308). Direct combustion."
+		},
+		{
+			"id": "mineral-diesel-co2e-desnz",
+			"fuel_id": "mineral-diesel",
+			"pollutant": "CO2e",
+			"metric": "mass_per_volume",
+			"value": "2.66155",
+			"unit": "kg_co2e_per_l",
+			"scope": "direct_combustion",
+			"region": "UK",
+			"year": 2025,
+			"source_id": "uk-desnz-ghg-2025",
+			"source_table_or_page": "'Fuels' sheet, 'Diesel (100% mineral diesel)' — total kgCO2e/L",
+			"notes": "DESNZ 2025 total 2.66155 kgCO2e/L (CO2 2.62818 + CH4 0.00029 + N2O 0.03308). GWP set per DESNZ 2025 methodology (IPCC AR5, 100-yr)."
 		},
 		{
 			"id": "heating-oil-co2-desnz",
@@ -161,6 +244,34 @@
 			"source_id": "uk-desnz-ghg-2025",
 			"source_table_or_page": "'Fuels' sheet, 'Aviation Turbine Fuel' — total kgCO2e/L",
 			"notes": "DESNZ 2025 'Aviation Turbine Fuel' total 2.54269 kgCO2e/L. Excludes the 1.7× high-altitude radiative-forcing multiplier."
+		},
+		{
+			"id": "burning-oil-co2-desnz",
+			"fuel_id": "burning-oil",
+			"pollutant": "CO2",
+			"metric": "mass_per_volume",
+			"value": "2.52782",
+			"unit": "kg_co2_per_l",
+			"scope": "direct_combustion",
+			"region": "UK",
+			"year": 2025,
+			"source_id": "uk-desnz-ghg-2025",
+			"source_table_or_page": "'Fuels' sheet, 'Burning Oil' — CO2 component",
+			"notes": "DESNZ 2025 CO2 component 2.52782 kg CO2/L (of the 2.54016 kgCO2e/L total; CH4 0.00674, N2O 0.00559). Direct combustion."
+		},
+		{
+			"id": "burning-oil-co2e-desnz",
+			"fuel_id": "burning-oil",
+			"pollutant": "CO2e",
+			"metric": "mass_per_volume",
+			"value": "2.54016",
+			"unit": "kg_co2e_per_l",
+			"scope": "direct_combustion",
+			"region": "UK",
+			"year": 2025,
+			"source_id": "uk-desnz-ghg-2025",
+			"source_table_or_page": "'Fuels' sheet, 'Burning Oil' — total kgCO2e/L",
+			"notes": "DESNZ 2025 total 2.54016 kgCO2e/L. The published components (CO2 2.52782 + CH4 0.00674 + N2O 0.00559) sum to 2.54015 — a 0.00001 discrepancy from DESNZ's own rounding of the component columns. The published total is used verbatim rather than the recomputed sum."
 		},
 		{
 			"id": "lpg-co2-desnz",
@@ -288,7 +399,6 @@
 			"source_table_or_page": "'Fuels' sheet, 'LNG' — total kgCO2e/L",
 			"notes": "DESNZ 2025 'LNG' total 1.17797 kgCO2e/L (per litre of liquefied product). Per kWh (Gross CV) 0.18494 kgCO2e/kWh."
 		},
-
 		{
 			"id": "hard-coal-co2e-desnz",
 			"fuel_id": "hard-coal",
@@ -303,7 +413,6 @@
 			"source_table_or_page": "'Fuels' sheet, 'Coal (industrial)' — total kgCO2e/tonne",
 			"notes": "DESNZ 2025 'Coal (industrial)' total 2395.28994 kgCO2e/tonne = 2.37528994 kg CO2e/kg (CO2 2370.72 + CH4 7.6384 + N2O 16.93154 per tonne). Converted tonne→kg by ÷1000 (exact); original per-tonne figure retained here in notes. Per kWh (Net CV) 0.33944 kgCO2e/kWh."
 		},
-
 		{
 			"id": "wood-logs-co2e-desnz",
 			"fuel_id": "wood-logs",
@@ -454,7 +563,6 @@
 			"source_table_or_page": "'Outside of scopes' sheet, 'Biogas' (col 'kg CO2e of CO2 per unit', net CV basis)",
 			"notes": "DESNZ 2025 'Outside of scopes' biogenic combustion CO2 for Biogas = 1105.6695 kg per tonne = 1.1056695 kg CO2/kg (also 0.19902 kg/kWh). Reported separately, never zeroed. Converted tonne→kg by ÷1000 (exact)."
 		},
-
 		{
 			"id": "electricity-uk-2025-co2e",
 			"pollutant": "CO2e",

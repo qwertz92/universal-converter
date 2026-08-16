@@ -139,6 +139,13 @@ export const fuelSchema = z
 		heating_values: z.array(heatingValueSchema).default([]),
 		emission_factor_ids: z.array(idSchema).default([]),
 		phase: z.enum(['gas', 'liquid', 'solid']).optional(),
+		/**
+		 * Close relatives a reader could easily have meant instead — see ADR 0005.
+		 * Variants like gas oil (red diesel) are separate fuels with genuinely
+		 * different numbers, so each names its neighbours rather than hoping
+		 * nobody picks the wrong one.
+		 */
+		related_fuels: z.array(idSchema).default([]),
 		typical_ranges: z.string().optional(),
 		source_refs: z.array(sourceRefSchema).default([]),
 		notes: z.string().optional(),

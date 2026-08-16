@@ -14,6 +14,11 @@
  *  - every unit whose exactness is NOT exact/standard_definition has >=1 source_ref;
  *  - every fuel heating value is labeled with a basis and cites a source;
  *  - every fuel emission_factor_id resolves; every factor's fuel_id (if set) resolves;
+ *  - no two fuels claim the same name or alias. The registry keeps the FIRST
+ *    registration for a colliding key, so a duplicate would silently answer with
+ *    whichever fuel happens to sit earlier in the file — the exact "quietly wrong
+ *    number" failure this project exists to avoid (see ADR 0005, where variants
+ *    deliberately share vocabulary with their parents);
  *  - CO2 and CO2e factors are never the same entry (metric separation sanity);
  *  - every density / heating value / emission factor value is strictly positive
  *    and every range has low < high (a zero density would flow "Infinity"
@@ -30,6 +35,7 @@ import {
 	unitsFileSchema
 } from './schemas';
 import { rawData } from './load-data';
+import { normalizeLoose } from '$lib/units/aliases';
 
 export interface ValidationIssue {
 	file: 'units' | 'fuels' | 'emission-factors' | 'sources' | 'examples' | 'cross-file';
@@ -85,6 +91,7 @@ export function validateAll(): ValidationReport {
 	const sourceIds = new Set(sources.map((s) => s.id));
 	const unitIds = new Set(units.map((u) => u.id));
 	const factorIds = new Set(factors.map((f) => f.id));
+	const fuelIds = new Set(fuels.map((f) => f.id));
 
 	// 3. Every non-exact unit value carries >=1 source_ref, and every ref resolves.
 	for (const [i, u] of units.entries()) {
@@ -168,10 +175,45 @@ export function validateAll(): ValidationReport {
 				});
 			}
 		}
+		for (const rid of f.related_fuels) {
+			if (rid === f.id) {
+				issues.push({
+					file: 'fuels',
+					path: `fuels[${i}] (${f.id}).related_fuels`,
+					message: `related_fuel '${rid}' points at itself`
+				});
+			} else if (!fuelIds.has(rid)) {
+				issues.push({
+					file: 'cross-file',
+					path: `fuels[${i}] (${f.id}).related_fuels`,
+					message: `related_fuel '${rid}' does not resolve`
+				});
+			}
+		}
+	}
+
+	// 4b. No two fuels may claim the same lookup key. FuelRegistry keeps the first
+	// registration, so a collision resolves by file order — silently returning one
+	// fuel's density and another's emission factors to someone who typed a phrase
+	// both entries claim.
+	const claimedBy = new Map<string, string>();
+	for (const [i, f] of fuels.entries()) {
+		for (const token of [f.id, ...f.names, ...f.aliases]) {
+			const key = normalizeLoose(token);
+			const owner = claimedBy.get(key);
+			if (owner === undefined) {
+				claimedBy.set(key, f.id);
+			} else if (owner !== f.id) {
+				issues.push({
+					file: 'fuels',
+					path: `fuels[${i}] (${f.id})`,
+					message: `'${token}' is already claimed by fuel '${owner}' — one of them would never be reachable`
+				});
+			}
+		}
 	}
 
 	// 5. Emission factors: source resolves, fuel_id (if set) resolves, unit resolves.
-	const fuelIds = new Set(fuels.map((f) => f.id));
 	for (const [i, ef] of factors.entries()) {
 		if (!sourceIds.has(ef.source_id)) {
 			issues.push({

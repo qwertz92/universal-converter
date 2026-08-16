@@ -262,6 +262,12 @@ export interface Fuel {
 	emission_factor_ids?: string[];
 	/** Phase, for fuels where it matters (gas vs LNG — rulebook §D.12). */
 	phase?: 'gas' | 'liquid' | 'solid';
+	/**
+	 * Close relatives a reader could have meant instead (ADR 0005). Variants like
+	 * gas oil (red diesel) are separate entries with different numbers, so each
+	 * one names its neighbours rather than leaving the choice to luck.
+	 */
+	related_fuels?: string[];
 	typical_ranges?: string;
 	source_refs: SourceRef[];
 	notes?: string;

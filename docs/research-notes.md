@@ -710,8 +710,7 @@ copied from the shipped `emission-factors.json` entries, not re-derived):
   Logs = 1436.23 kg per tonne = 1.43623 kg CO2/kg (and 0.35 kg/kWh). This is
   the true stack CO2 that Scope 1 nets to zero for biogenic carbon; reported
   on a SEPARATE line, never folded into the total or silently zeroed.
-  scope_3_upstream is used to route it as a memo item outside the main
-  scopes. Converted tonne→kg by ÷1000 (exact)." Source table/page: `'Outside
+  Converted tonne→kg by ÷1000 (exact)." Source table/page: `'Outside
   of scopes' sheet, 'Wood logs' (col 'kg CO2e of CO2 per unit', net CV
   basis)`.
 - **Wood pellets** (`wood-pellets-biogenic-co2-desnz`): **1.67718 kg CO2/kg**
@@ -737,9 +736,11 @@ copied from the shipped `emission-factors.json` entries, not re-derived):
   Source table/page: `'Outside of scopes' sheet, 'Biogas' (col 'kg CO2e of
   CO2 per unit', net CV basis)`.
 
-All five are `scope: "scope_3_upstream"` (used as the routing value for a
-memo-item line outside the main Scope 1/2/3 columns — see pitfall #1 above)
-and `region: "UK"`, `year: 2025`, `biogenic: true`. This closes the gap noted
+All five are `scope: "outside_of_scopes"` — the value DESNZ's own sheet uses,
+and the honest one: biogenic combustion CO2 is a memo item sitting outside the
+Scope 1/2/3 columns entirely, not an upstream Scope 3 emission. (They shipped as
+`scope_3_upstream` until v0.3.1, which mislabeled them as belonging to a scope.)
+They are `region: "UK"`, `year: 2025`, `biogenic: true`. This closes the gap noted
 in §4.12 ("DESNZ 'Outside of scopes' biogenic CO2 figures: not yet
 extracted") and satisfies the review's provenance-ledger check (P1-D):
 every shipped value now resolves to a research-notes entry.
