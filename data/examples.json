@@ -189,6 +189,13 @@
 			"label": "100 kWh at 3.5 COP",
 			"category": "energy",
 			"notes": "A heat pump delivers more heat than the electricity it draws, because it moves heat rather than making it."
+		},
+		{
+			"id": "ex-german-question",
+			"input": "wie viel kWh hat 1 liter diesel",
+			"label": "wie viel kWh hat 1 L Diesel",
+			"category": "fuel",
+			"notes": "Deutsche Fragen werden verstanden. The catalog already spoke German (erdgas, heizöl, benzin, wasserstoff); the grammar now does too."
 		}
 	]
 }

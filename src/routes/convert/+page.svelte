@@ -13,7 +13,7 @@
 <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
 	<PageHero
 		title="Converter"
-		lede="Type a value and a unit — the unit is always required, never guessed. Add a material (1 L diesel), a target (1 kWh to MJ), a duration (5 kW for 3 h), your price (1000 kWh at 0.32 EUR/kWh) or your appliance's efficiency (100 kWh at 3.5 COP). Results are grouped by kind, each tagged with how exact it is."
+		lede="Type a value and a unit — the unit is always required, never guessed. Add a material (1 L diesel), a target (1 kWh to MJ), a duration (5 kW for 3 h), your price (1000 kWh at 0.32 EUR/kWh) or your appliance's efficiency (100 kWh at 3.5 COP). Plain questions work too, in English or German: “how many kWh in 1 L diesel”, “wie viel kWh hat 1 Liter Diesel”. Results are grouped by kind, each tagged with how exact it is."
 	/>
 
 	<!-- People who arrive here from a shared ?q= link never see the homepage's

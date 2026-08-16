@@ -3,6 +3,28 @@
 All notable changes to Universal Converter. Versioning follows semver
 (pre-1.0: minor bumps may include behavior changes; they are listed here).
 
+## 0.3.9 — 2026-08-16
+
+### Added
+
+- **German questions are answered.** The catalog has spoken German since v0.1 —
+  `erdgas`, `heizöl`, `benzin`, `wasserstoff` and `steinkohle` all resolve — but
+  the grammar did not, so a German sentence hit "Start with a number", the least
+  useful message the tool has, for the phrasing this site's most likely audience
+  actually uses. `wie viel kWh hat 1 Liter Diesel`, `wieviel MJ sind in 5 kWh`,
+  `berechne 5 kWh in MJ` and `was ist 1 Liter Benzin` now work, rewritten into
+  the same shape the English questions already used. English gained the
+  `how much CO₂ does 50 L diesel make` shape at the same time.
+
+### Fixed
+
+- **An unknown material pointed nowhere.** `1 kg of coal dust` reported that
+  "of coal dust" is not a material, with no suggestions at all: the leading
+  "of" defeated the fuzzy matcher. Filler is now dropped from the message and
+  the lookup, and a phrase built on a split key gets that key's grades — so
+  `coal dust` offers the four coals and `Heizöl extra leicht`, the actual German
+  product name, offers the three oil grades.
+
 ## 0.3.8 — 2026-08-16
 
 ### Fixed

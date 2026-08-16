@@ -72,14 +72,28 @@ const FILLER_WORDS = new Set(['of', 'the', 'a', 'an']);
 
 /** Filler that can precede the actual query. */
 const LEADING_FILLER_RE =
-	/^(?:please|convert|calculate|compute|show me|give me|tell me|what(?:'s| is)|whats|how many|how much|is|are)\s+/i;
+	/^(?:please|convert|calculate|compute|show me|give me|tell me|what(?:'s| is)|whats|how many|how much|is|are|bitte|berechne|rechne|umrechnen|wandle|zeig(?:e)? mir|was (?:ist|sind)|wie viel(?:e)?|wieviel(?:e)?)\s+/i;
 /**
  * "how many X in Y" / "how much X is in Y" — rewritten to "Y to X" so the
  * ordinary grammar handles it. When X is not a unit at all ("how much CO2 is in
  * 1 L diesel") the wanted half is simply dropped and the source is converted:
  * loose phrasing should still get an answer, never a manufactured error.
  */
-const ASK_RE = /^how\s+(?:many|much)\s+(.+?)\s+(?:is\s+in|are\s+in|in|is|are|for|of|from)\s+(.+)$/i;
+const ASK_RE =
+	/^how\s+(?:many|much)\s+(.+?)\s+(?:is\s+in|are\s+in|in|is|are|for|of|from|does|do)\s+(.+?)(?:\s+(?:make|produce|emit|contain|have|has|give|release))?\??$/i;
+
+/**
+ * The same question in German — "wie viel kWh hat 1 Liter Diesel",
+ * "wie viele MJ sind in 5 kWh", "wieviel CO2 macht 50 L Diesel".
+ *
+ * The catalog has been half-bilingual since v0.1 (erdgas, heizöl, wasserstoff,
+ * steinkohle, benzin all resolve), but the GRAMMAR was English-only — so a
+ * German sentence hit "Start with a number", the least useful message the tool
+ * has, for a phrasing this audience is likely to use. Rewritten into `Y to X`
+ * exactly like the English form, so one grammar serves both.
+ */
+const ASK_DE_RE =
+	/^wie\s*(?:viel|viele)\s+(.+?)\s+(?:sind\s+in|steckt\s+in|stecken\s+in|ist\s+in|hat|haben|macht|machen|entspricht|in)\s+(.+?)\??$/i;
 
 /**
  * Quantities people plausibly try that this tool deliberately does not cover
@@ -203,6 +217,23 @@ const SPLIT_MATERIALS: Record<string, { reason: string; candidates: string[] }> 
 		}
 	}
 );
+
+/**
+ * Grades to offer for a phrase that is BUILT on a split key — "coal dust",
+ * "brown coal dust", "heizöl extra leicht". Empty when no key appears as a
+ * whole word, so an unrelated phrase gets nothing rather than noise.
+ */
+function splitRelatives(phrase: string, fuels: FuelRegistry): string[] {
+	const words = new Set(normalizeLoose(phrase).split(' '));
+	for (const [key, split] of Object.entries(SPLIT_MATERIALS)) {
+		if (!words.has(key)) continue;
+		const names = split.candidates
+			.map((id) => fuels.get(id)?.names[0])
+			.filter((n): n is string => Boolean(n));
+		if (names.length) return names;
+	}
+	return [];
+}
 
 /** Offer the grades a split-material phrase covers, naming none of them as the default. */
 function splitMaterialError(
@@ -458,14 +489,27 @@ export function parseQuery(text: string, units: UnitRegistry, fuels: FuelRegistr
 				// several entries gets those entries offered, rather than a bare
 				// "unknown material" — and rather than one of them being picked,
 				// which is how "heizöl" used to return residual bunker oil.
-				const split = SPLIT_MATERIALS[normalizeLoose(phrase)];
-				if (split) return err(splitMaterialError(phrase, split, fuels));
+				// Filler is dropped before BOTH the lookup and the message. Keeping
+				// it made `1 kg of coal dust` report '"of coal dust" is not a
+				// material' with no suggestions at all — the leading "of" defeated
+				// the fuzzy matcher that would otherwise have offered the coals.
+				const material = phrase
+					.split(/\s+/)
+					.filter((w) => !FILLER_WORDS.has(w.toLowerCase()))
+					.join(' ');
+				const split = SPLIT_MATERIALS[normalizeLoose(material)];
+				if (split) return err(splitMaterialError(material, split, fuels));
 				// Otherwise the leftover is most likely an unknown fuel phrase.
+				// A phrase BUILT on a split key ("coal dust", "brown coal dust")
+				// still gets that key's grades offered. Splitting "coal" out of the
+				// names cost the fuzzy matcher its substring relatives, so these
+				// queries went from a useful list to none at all.
+				const relatives = splitRelatives(material, fuels);
 				return err({
 					kind: 'unknown_fuel',
-					message: `The unit ${match.unit.symbols[0] ?? match.unit.names[0]} was understood, but "${phrase}" is not a material in the catalog.`,
-					token: phrase,
-					suggestions: fuels.suggest(phrase),
+					message: `The unit ${match.unit.symbols[0] ?? match.unit.names[0]} was understood, but "${material}" is not a material in the catalog.`,
+					token: material,
+					suggestions: fuels.suggest(material).length ? fuels.suggest(material) : relatives,
 					hint: 'Pick a material from the list, or drop it to convert the plain unit.'
 				});
 			}
@@ -788,7 +832,7 @@ function prepare(input: string, units: UnitRegistry): string {
 	// Strip a trailing question mark and stray "?" tokens ("1 kWh = ? MJ").
 	text = text.replace(/\?+/g, ' ').replace(/\s+/g, ' ').trim();
 
-	const ask = text.match(ASK_RE);
+	const ask = text.match(ASK_RE) ?? text.match(ASK_DE_RE);
 	if (ask) {
 		const wanted = ask[1].trim();
 		const source = ask[2].trim();
