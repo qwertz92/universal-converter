@@ -11,9 +11,17 @@
 
 import { describe, expect, it } from 'vitest';
 import { getConverter } from '$lib/index';
+import { gridIntensityOptions } from '$lib/ui/engine';
 import type { ConversionResult, EngineOptions } from '$lib/conversion/types';
 
 const converter = getConverter();
+
+/**
+ * How many region+year grid factors the catalog actually cites. Counted rather
+ * than hardcoded: adding a region (the US landed in v0.3.10) should extend the
+ * illustrative list, not fail the test that guards it.
+ */
+const citedGridFactors = gridIntensityOptions().length;
 
 function emissionsFor(text: string, options?: EngineOptions): ConversionResult | undefined {
 	const out = converter.convertText(text, options);
@@ -60,17 +68,24 @@ describe('electricity + matching region/year → region_year_specific mass', () 
 
 	it('the formula names metric, scope and region/year of the factor applied', () => {
 		const r = emissionsFor('1 kWh electricity', { region: 'UK', year: 2025 });
-		expect(r?.formula).toContain('177 g_co2e_per_kwh');
+		// The amount and the factor, in units a reader can multiply — it used to
+		// read 'electricity amount x 177 g_co2e_per_kwh', a placeholder times a
+		// raw unit id, which is not a calculation anyone can check.
+		expect(r?.formula).toContain('1 kWh ×');
+		expect(r?.formula).toContain('177 gCO2e/kWh');
+		expect(r?.formula).not.toContain('g_co2e_per_kwh');
 		expect(r?.formula).toContain('UK 2025');
 	});
 });
 
 describe('electricity without a matching factor stays context_required', () => {
-	it('no region/year → context_required with all three illustrative examples', () => {
+	it('no region/year → context_required with every illustrative example', () => {
 		const r = emissionsFor('1 kWh electricity');
 		expect(r?.exactness).toBe('context_required');
 		expect(r?.missing).toEqual(expect.arrayContaining(['region', 'year']));
-		expect(r?.illustrative_examples?.length).toBe(3);
+		// Counted from the catalog, not hardcoded: shipping a new region/year
+		// factor should extend this list, not break the test that guards it.
+		expect(r?.illustrative_examples?.length).toBe(citedGridFactors);
 	});
 
 	it('a region/year combination NOT in the catalog (DE 2024) → context_required, nothing invented', () => {
@@ -78,7 +93,9 @@ describe('electricity without a matching factor stays context_required', () => {
 		expect(r?.exactness).toBe('context_required');
 		expect(r?.value).toBeNull();
 		expect(r?.explanation).toContain('DE 2024');
-		expect(r?.illustrative_examples?.length).toBe(3);
+		// Counted from the catalog, not hardcoded: shipping a new region/year
+		// factor should extend this list, not break the test that guards it.
+		expect(r?.illustrative_examples?.length).toBe(citedGridFactors);
 	});
 
 	it('1 kWh electricity, EU-27 2022 → 0.292 kg CO2 (prior-year factor, year-dependence visible)', () => {

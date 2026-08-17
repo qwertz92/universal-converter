@@ -3,6 +3,32 @@
 All notable changes to Universal Converter. Versioning follows semver
 (pre-1.0: minor bumps may include behavior changes; they are listed here).
 
+## 0.3.10 — 2026-08-17
+
+### Added
+
+- **The US grid factor, open since v0.1.** The research ledger carried
+  `~370 gCO2/kWh` as an explicitly _provisional, unverified_ figure, and the
+  no-invented-numbers rule kept it out of the catalog for four releases. Reading
+  the primary source settled it: EPA **eGRID Summary Tables 2023**, Table 1, the
+  bottom "U.S." row gives **767.2 lb CO₂/MWh** and **770.9 lb CO₂e/MWh** total
+  output. Converted with the exact NIST pound that is **347.996066264 gCO₂/kWh**
+  and **349.674358033 gCO₂e/kWh** — so the provisional figure was 22 g/kWh, or
+  6.3%, too high. It was never shipped. That is what the rule is for.
+- Both pollutants ship, because eGRID publishes both for that row and neither is
+  ever derived from the other. The region picker needed no change at all: it
+  reads the catalog.
+
+### Fixed
+
+- **A region publishing both CO₂ and CO₂e only ever showed one of them.** The
+  grid lookup took the first matching factor — which no shipped region had
+  exercised, because the UK carries only CO₂e and the EU only CO₂. The US
+  carries both.
+- **The grid formula was the last uncheckable one.** It read
+  `electricity amount × 177 g_co2e_per_kwh`, the same placeholder-and-raw-id
+  pattern fixed for fuels in v0.3.8. Now: `1 kWh × 177 gCO2e/kWh = ~0.177 kg CO2e`.
+
 ## 0.3.9 — 2026-08-16
 
 ### Added

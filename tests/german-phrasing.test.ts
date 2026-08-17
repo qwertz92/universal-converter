@@ -14,7 +14,7 @@ import { getConverter } from '$lib/index';
 
 const converter = getConverter();
 
-function value(input: string, unitId: string): string | undefined {
+function value(input: string, unitId: string): string | null | undefined {
 	const out = converter.convertText(input);
 	if ('error' in out) throw new Error(`"${input}" failed: ${out.error.message}`);
 	return out.groups.flatMap((g) => g.results).find((r) => r.unit_id === unitId)?.value;

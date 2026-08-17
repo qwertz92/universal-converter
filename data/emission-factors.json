@@ -660,6 +660,34 @@
 			"source_id": "eea-electricity-intensity",
 			"source_table_or_page": "EEA 'GHG emission intensity of electricity generation in Europe' indicator",
 			"notes": "ILLUSTRATIVE region+year example, NOT a default. EEA EU-27 2022 average 292 gCO2/kWh, recorded verbatim in docs/research-notes.md §4.13 alongside the 2023 value ('down from 292 gCO2/kWh in 2022, a 17% drop'). Shipping both years makes the year-dependence of grid intensity visible instead of merely asserted. CO2 metric (generation intensity)."
+		},
+		{
+			"id": "electricity-us-2023-co2",
+			"pollutant": "CO2",
+			"metric": "mass_per_energy",
+			"value": "347.996066264",
+			"unit": "g_co2_per_kwh",
+			"scope": "scope_2",
+			"region": "US",
+			"year": 2023,
+			"uncertainty": "Total output (generation-only, location-based) US national average. Excludes transmission and distribution losses, and it is an ANNUAL AVERAGE — eGRID publishes a separate, much higher non-baseload rate (CO2 1,372.5 lb/MWh) for marginal/incremental load, which this figure is not.",
+			"source_id": "epa-egrid-2023",
+			"source_table_or_page": "Table 1 \"Subregion Output Emission Rates (eGRID2023)\", bottom \"U.S.\" row (identical in Table 3)",
+			"notes": "ILLUSTRATIVE region+year example, NOT a global default (rulebook C.6). eGRID2023 publishes the U.S. total output rate as 767.2 lb/MWh. DERIVED to g/kWh (not a verbatim eGRID cell): 767.2 x 0.45359237 kg/lb = 347.996066264 kg/MWh, and 1 MWh = 1000 kWh so kg/MWh is g/kWh exactly. The pound is exact by definition (NIST), so this rescale introduces no uncertainty of its own. eGRID also publishes CH4 0.057 and N2O 0.008 lb/MWh for this row; they are carried inside the CO2e figure, not as separate entries."
+		},
+		{
+			"id": "electricity-us-2023-co2e",
+			"pollutant": "CO2e",
+			"metric": "mass_per_energy",
+			"value": "349.674358033",
+			"unit": "g_co2e_per_kwh",
+			"scope": "scope_2",
+			"region": "US",
+			"year": 2023,
+			"uncertainty": "Total output (generation-only, location-based) US national average. Excludes transmission and distribution losses, and it is an ANNUAL AVERAGE — eGRID publishes a separate, much higher non-baseload rate (CO2 1,372.5 lb/MWh) for marginal/incremental load, which this figure is not.",
+			"source_id": "epa-egrid-2023",
+			"source_table_or_page": "Table 1 \"Subregion Output Emission Rates (eGRID2023)\", bottom \"U.S.\" row (identical in Table 3)",
+			"notes": "ILLUSTRATIVE region+year example, NOT a global default (rulebook C.6). eGRID2023 publishes the U.S. total output rate as 770.9 lb/MWh. DERIVED to g/kWh (not a verbatim eGRID cell): 770.9 x 0.45359237 kg/lb = 349.674358033 kg/MWh, and 1 MWh = 1000 kWh so kg/MWh is g/kWh exactly. The pound is exact by definition (NIST), so this rescale introduces no uncertainty of its own. Both CO2 and CO2e are published for this row, so both ship — neither is derived from the other."
 		}
 	]
 }

@@ -530,6 +530,26 @@ session).
   verified to the primary eGRID2023 Rev.2 table in this pass) is **~370
   gCO2/kWh** for 2023 US national average — treat as provisional pending
   direct XLSX extraction.
+- **US national average — RESOLVED 2026-08-17, replacing the provisional figure**
+  above. The primary source was fetched and read directly: EPA **eGRID Summary
+  Tables 2023** (Rev. 2, created 03/27/2025), Table 1 "Subregion Output Emission
+  Rates (eGRID2023)", bottom **"U.S."** row — identical in Table 3. Verbatim,
+  **total output emission rates in lb/MWh**:
+  - CO2 **767.2** · CH4 **0.057** · N2O **0.008** · CO2e **770.9**
+  - Annual NOx 0.5 · Ozone Season NOx 0.5 · SO2 0.359 · Grid Gross Loss **4.2%**
+  - Non-baseload (marginal), same row: CO2 **1,372.5** · CH4 **0.102** ·
+    N2O **0.014** · CO2e **1,379.2** · SO2 0.684
+  - Resource mix (Table 2, U.S. row): net generation 4,190,970,937 MWh; coal
+    16.1%, gas 43.2%, nuclear 18.5%, hydro 5.7%, wind 10.0%, solar 3.9%.
+  - Source: `epa-egrid-2023`,
+    https://www.epa.gov/system/files/documents/2025-06/summary_tables_rev2.pdf
+  - **The ~370 gCO2/kWh figure recorded above was wrong.** 767.2 lb/MWh x
+    0.45359237 kg/lb = 347.996066264 kg/MWh = 347.996066264 g/kWh, so the
+    provisional number was 22 g/kWh (6.3%) high. It was never shipped, which is
+    exactly what the no-invented-numbers rule is for.
+  - Shipped as `electricity-us-2023-co2` (347.996066264 g/kWh) and
+    `electricity-us-2023-co2e` (770.9 x 0.45359237 = 349.674358033 g/kWh), both
+    marked DERIVED from the lb/MWh cells via the exact NIST pound.
 - **All three figures above must be labeled with region AND year in the UI,
   never presented as "the" electricity emissions factor** (this is a direct,
   explicit requirement of spec §9.6/§13.4).

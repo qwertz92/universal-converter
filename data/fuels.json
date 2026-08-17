@@ -1194,7 +1194,9 @@
 			"emission_factor_ids": [
 				"electricity-uk-2025-co2e",
 				"electricity-eu27-2023-co2",
-				"electricity-eu27-2022-co2"
+				"electricity-eu27-2022-co2",
+				"electricity-us-2023-co2",
+				"electricity-us-2023-co2e"
 			],
 			"source_refs": ["uk-desnz-ghg-2025", "eea-electricity-intensity"],
 			"notes": "Grid electricity is not a combustible material: it has no density or heating value, so mass and volume conversions simply do not apply (unlike a genuine data gap, which we mark 'not available'). '1 kWh of electricity' converts as pure energy (into kWh, MJ, BTU, etc., using exact SI conversions). We do not show a CO₂e figure until you choose a region and year, because grid carbon intensity depends on the country, the year, and even the time of day. The region/year figures shown (UK 2025, EU-27 2023, EU-27 2022) are illustrative examples, not global defaults — both EU years are shown together on purpose, to make clear how much grid intensity changes from year to year.",

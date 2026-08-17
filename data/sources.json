@@ -116,6 +116,18 @@
 			"type": "international-organization",
 			"reliability": "Medium — good EU-aggregate cross-check for electricity carbon intensity. EU-27 2023 value 242 gCO2/kWh (down from 292 in 2022). The exact 2024 figure was not extractable from the fetched page; the 2023 figure is used with an explicit year caveat.",
 			"notes": "Used only for the illustrative, region+year-labeled EU electricity example — never as a default factor."
+		},
+		{
+			"id": "epa-egrid-2023",
+			"title": "eGRID Summary Tables 2023",
+			"publisher": "US EPA — Emissions & Generation Resource Integrated Database (eGRID)",
+			"url": "https://www.epa.gov/system/files/documents/2025-06/summary_tables_rev2.pdf",
+			"retrieved_at": "2026-08-17",
+			"publication_year": 2025,
+			"license": "US federal government work — public domain, freely reusable",
+			"type": "government",
+			"reliability": "High — eGRID is the authoritative US inventory of power-plant emissions and generation, compiled from EPA CAMD, EIA and other federal reporting. This is the primary summary document (Rev. 2, created 03/27/2025, produced with eGRID R production model 1.0.2).",
+			"notes": "Table 1 (Subregion Output Emission Rates) and Table 3 (State Output Emission Rates) both carry an identical bottom \"U.S.\" row; the national figures used here are taken from it. Rates are published in lb/MWh; this catalog stores g/kWh, converted with the exact NIST pound (0.45359237 kg) — see the factor notes for the arithmetic."
 		}
 	]
 }
