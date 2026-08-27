@@ -27,7 +27,16 @@ universal-converter.org). The authoritative product spec is
 - Deployment target: Cloudflare Pages/Workers via `@sveltejs/adapter-cloudflare`.
   Server code must stick to Web-standard APIs (no Node-only APIs).
 - Package manager: npm (Bun is not installed on this machine).
+- Lint is Prettier + ESLint + oxlint. oxlint hosts the vendored `anti-slop`
+  plugin (`tools/oxlint/anti-slop/`) and nothing else — its own rule categories
+  are off, because ESLint owns general lint here. `oxlint.config.ts` says which
+  rules are on and why `no-runtime-typeof` is not; `tools/oxlint/README.md`
+  records the upstream commit and how to re-sync.
 - `npm run dev` / `npm run build` / `npm test` / `npm run check` / `npm run lint`
+- All four gates must pass before a push. A warning from any of them is a
+  finding: fix it, restructure so it cannot arise, or suppress it inline with a
+  written reason naming the rule. Never widen an ignore, lower a severity, add a
+  cast or delete a rule to turn a gate green.
 
 ## Conventions
 
