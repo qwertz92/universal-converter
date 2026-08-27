@@ -5,11 +5,17 @@
 
 import { describe, expect, it } from 'vitest';
 import { handleConvertRequest } from '$lib/api/convert-endpoint';
-import type { ConversionResultSet } from '$lib/conversion/types';
 
+/**
+ * Narrows to the 200 body rather than asserting it: every case below expects a
+ * success, so an unexpected error response should name itself here.
+ */
 function body(query: string) {
 	const res = handleConvertRequest(new URL(`https://example.org/api/convert${query}`));
-	return { status: res.status, body: res.body as { result: ConversionResultSet } };
+	if (!('result' in res.body)) {
+		throw new Error(`expected a success body for "${query}", got ${JSON.stringify(res.body)}`);
+	}
+	return { status: res.status, body: res.body };
 }
 
 describe('GET /api/convert with a target', () => {
