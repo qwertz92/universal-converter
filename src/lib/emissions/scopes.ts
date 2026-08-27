@@ -6,7 +6,7 @@
 
 import type { Pollutant, Scope } from '$lib/conversion/types';
 
-export const SCOPE_LABEL: Record<Scope, string> = {
+export const SCOPE_LABEL = {
 	direct_combustion: 'direct combustion',
 	scope_1: 'Scope 1 (direct)',
 	scope_2: 'Scope 2 (purchased energy)',
@@ -18,17 +18,17 @@ export const SCOPE_LABEL: Record<Scope, string> = {
 	well_to_wheel: 'well-to-wheel (lifecycle)',
 	outside_of_scopes: 'outside the scopes (biogenic, reported separately)',
 	unknown_or_mixed: 'unknown / mixed boundary'
-};
+} satisfies Record<Scope, string>;
 
 /** Display labels use typeset subscripts, matching the site's prose (CO₂, not
  *  CO2). The machine-readable keys stay ASCII — those are data, not copy. */
-export const POLLUTANT_LABEL: Record<Pollutant, string> = {
+export const POLLUTANT_LABEL = {
 	CO2: 'CO₂',
 	CH4: 'CH₄',
 	N2O: 'N₂O',
 	CO2e: 'CO₂e',
 	biogenic_CO2: 'biogenic CO₂'
-};
+} satisfies Record<Pollutant, string>;
 
 /** Whether a pollutant is a CO2e-family metric (kept separate from CO2 family). */
 export function isCo2eMetric(p: Pollutant): boolean {

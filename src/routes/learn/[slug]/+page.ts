@@ -14,7 +14,7 @@ export function load({ params }: { params: { slug: string } }) {
 	if (!topic) throw error(404, `Unknown learn topic: ${params.slug}`);
 	return {
 		topic,
-		body: LEARN_BODIES[topic.slug] ?? '',
+		body: LEARN_BODIES.get(topic.slug) ?? '',
 		sources: resolveSources(topic.sources)
 	};
 }

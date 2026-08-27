@@ -1,8 +1,16 @@
 <script lang="ts">
 	/** Site header: brand, primary nav, theme toggle, responsive menu. */
-	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import ThemeToggle from './ThemeToggle.svelte';
+
+	/**
+	 * The current path, for the active-link marking. Passed in rather than read
+	 * from `$app/state` here: that state only exists inside a request, so reading
+	 * it in this component made the header unrenderable anywhere else — the
+	 * accessibility tests had to replace the whole SvelteKit module to render it.
+	 * The root layout hands it over, and it stays reactive across navigation.
+	 */
+	let { pathname }: { pathname: string } = $props();
 
 	const links = [
 		{ href: '/convert', label: 'Convert' },
@@ -27,8 +35,7 @@
 	const menuId = `uc-nav-${uid}`;
 
 	function isActive(href: string): boolean {
-		const p = page.url.pathname;
-		return p === href || p.startsWith(href + '/');
+		return pathname === href || pathname.startsWith(href + '/');
 	}
 
 	function onHeaderKeydown(e: KeyboardEvent) {

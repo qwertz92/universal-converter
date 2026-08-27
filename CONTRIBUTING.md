@@ -61,7 +61,7 @@ npm run dev
 Gates, all of which must pass:
 
 ```bash
-npm run lint     # Prettier + ESLint
+npm run lint     # Prettier + ESLint + oxlint (anti-slop)
 npm run check    # wrangler types + svelte-check
 npm test         # Vitest
 npm run build    # Cloudflare adapter build
@@ -76,6 +76,13 @@ Conventions:
 - Larger architectural decisions get an ADR in `docs/adr/`.
 - Behaviour changes come with a test that would fail without them. Do not
   weaken an existing test to make a change pass.
+- A lint, type-check or compiler warning is a finding. Fix it, restructure so
+  it cannot arise, or suppress it inline with a written reason naming the rule.
+  Never widen an ignore, lower a severity, add a cast or delete a rule to make
+  a gate green. `npm run lint` covers oxlint's vendored `anti-slop` rules; which
+  ones are on, and why `no-runtime-typeof` is not, is written in
+  `oxlint.config.ts`, and `tools/oxlint/README.md` says where the plugin came
+  from and how to re-sync it.
 
 ## Licence
 

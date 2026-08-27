@@ -1,6 +1,7 @@
 <script lang="ts">
 	import './layout.css';
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import Header from '$lib/components/layout/Header.svelte';
 	import Footer from '$lib/components/layout/Footer.svelte';
 	import { theme } from '$lib/ui/theme.svelte';
@@ -20,7 +21,7 @@
 </a>
 
 <div class="flex min-h-dvh flex-col">
-	<Header />
+	<Header pathname={page.url.pathname} />
 	<!-- tabindex="-1" is what makes the skip link above actually skip: without it
 	     <main> is not focusable, so several browsers scroll to it but leave focus
 	     in the header — the next Tab walks back into the nav the user just asked

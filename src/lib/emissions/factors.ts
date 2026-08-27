@@ -142,18 +142,24 @@ export function factorInputKind(factor: EmissionFactor): FactorInputKind | undef
 	return specForUnit(factor.unit)?.inputKind;
 }
 
+/**
+ * Labels for the factor unit ids the catalog ships. A Map, not an object: `unit`
+ * arrives as an arbitrary string from the data files, so the lookup is by
+ * definition partial and `get` returns the `undefined` the fallback below needs.
+ */
+const FACTOR_UNIT_LABELS = new Map<string, string>([
+	['kg_co2_per_l', 'kgCO2/L'],
+	['kg_co2_per_m3', 'kgCO2/m³'],
+	['kg_co2_per_kg', 'kgCO2/kg'],
+	['kg_co2_per_gj', 'kgCO2/GJ'],
+	['kg_co2e_per_l', 'kgCO2e/L'],
+	['kg_co2e_per_m3', 'kgCO2e/m³'],
+	['kg_co2e_per_kg', 'kgCO2e/kg'],
+	['g_co2_per_kwh', 'gCO2/kWh'],
+	['g_co2e_per_kwh', 'gCO2e/kWh']
+]);
+
 /** Human-readable label for a factor's unit id (e.g. "g_co2e_per_kwh" → "gCO2e/kWh"). */
 export function factorUnitLabel(unit: string): string {
-	const map: Record<string, string> = {
-		kg_co2_per_l: 'kgCO2/L',
-		kg_co2_per_m3: 'kgCO2/m³',
-		kg_co2_per_kg: 'kgCO2/kg',
-		kg_co2_per_gj: 'kgCO2/GJ',
-		kg_co2e_per_l: 'kgCO2e/L',
-		kg_co2e_per_m3: 'kgCO2e/m³',
-		kg_co2e_per_kg: 'kgCO2e/kg',
-		g_co2_per_kwh: 'gCO2/kWh',
-		g_co2e_per_kwh: 'gCO2e/kWh'
-	};
-	return map[unit] ?? unit;
+	return FACTOR_UNIT_LABELS.get(unit) ?? unit;
 }

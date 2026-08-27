@@ -6,18 +6,41 @@
 
 import { describe, expect, it } from 'vitest';
 import { handleConvertRequest, API_VERSION } from '$lib/api/convert-endpoint';
-import type { ConversionResultSet } from '$lib/conversion/types';
+import type {
+	ConvertErrorBody,
+	ConvertSuccessBody,
+	EndpointResult
+} from '$lib/api/convert-endpoint';
 import { APP_VERSION } from '$lib/version';
 
 function req(query: string) {
 	return handleConvertRequest(new URL(`https://example.org/api/convert${query}`));
 }
 
+/**
+ * The 200 body. Narrows rather than asserts, so a test that provokes an error
+ * response by accident says so, instead of failing later on a missing property.
+ */
+function successBody(res: EndpointResult): ConvertSuccessBody {
+	if (!('result' in res.body)) {
+		throw new Error(`expected a success body, got ${JSON.stringify(res.body)}`);
+	}
+	return res.body;
+}
+
+/** The 400 body, for the same reason in the other direction. */
+function errorBody(res: EndpointResult): ConvertErrorBody {
+	if (!('error' in res.body)) {
+		throw new Error(`expected an error body, got ${JSON.stringify(res.body)}`);
+	}
+	return res.body;
+}
+
 describe('GET /api/convert — success shape', () => {
 	it('?q=1 kWh → 200 with a JSON-round-trippable ConversionResultSet', () => {
 		const res = req('?q=1+kWh');
 		expect(res.status).toBe(200);
-		const body = res.body as { api_version: string; result: ConversionResultSet };
+		const body = successBody(res);
 		expect(body.api_version).toBe(API_VERSION);
 		const energy = body.result.groups.find((g) => g.key === 'energy');
 		const mj = energy?.results.find((r) => r.unit_id === 'megajoule');
@@ -31,7 +54,7 @@ describe('GET /api/convert — success shape', () => {
 	it('?q=1 L diesel → sourced fuel pipeline results with source_refs', () => {
 		const res = req('?q=1+L+diesel');
 		expect(res.status).toBe(200);
-		const body = res.body as { result: ConversionResultSet };
+		const body = successBody(res);
 		const mass = body.result.groups.find((g) => g.key === 'mass');
 		expect(mass?.results.some((r) => r.exactness === 'source_based')).toBe(true);
 		expect(body.result.source_refs.length).toBeGreaterThan(0);
@@ -40,7 +63,7 @@ describe('GET /api/convert — success shape', () => {
 	it('electricity + region/year flows through to a region_year_specific mass', () => {
 		const res = req('?q=1+kWh+electricity&region=UK&year=2025');
 		expect(res.status).toBe(200);
-		const body = res.body as { result: ConversionResultSet };
+		const body = successBody(res);
 		const emissions = body.result.groups
 			.flatMap((g) => g.results)
 			.find((r) => r.category === 'emissions');
@@ -49,11 +72,11 @@ describe('GET /api/convert — success shape', () => {
 	});
 
 	it('?basis=hhv is honoured (diesel energy differs from LHV default)', () => {
-		const lhv = req('?q=1+L+diesel') as { body: { result: ConversionResultSet } };
-		const hhv = req('?q=1+L+diesel&basis=hhv') as { body: { result: ConversionResultSet } };
-		const first = (r: { result: ConversionResultSet }) =>
-			r.result.groups.find((g) => g.key === 'energy')?.results[0]?.raw;
-		expect(first(lhv.body as never)).not.toBe(first(hhv.body as never));
+		const lhv = successBody(req('?q=1+L+diesel'));
+		const hhv = successBody(req('?q=1+L+diesel&basis=hhv'));
+		const firstEnergy = (body: ConvertSuccessBody) =>
+			body.result.groups.find((g) => g.key === 'energy')?.results[0]?.raw;
+		expect(firstEnergy(lhv)).not.toBe(firstEnergy(hhv));
 	});
 
 	it('200 responses carry CORS, cache and version headers', () => {
@@ -68,7 +91,7 @@ describe('GET /api/convert — error handling', () => {
 	it('missing q → 400 missing_query with usage help, no-store', () => {
 		const res = req('');
 		expect(res.status).toBe(400);
-		const body = res.body as { error: { kind: string; message: string } };
+		const body = errorBody(res);
 		expect(body.error.kind).toBe('missing_query');
 		expect(body.error.message).toContain('/api/convert?q=');
 		expect(res.headers['cache-control']).toBe('no-store');
@@ -77,7 +100,7 @@ describe('GET /api/convert — error handling', () => {
 	it('unknown unit → 400 with the parser error passed through', () => {
 		const res = req('?q=1+flurbs');
 		expect(res.status).toBe(400);
-		const body = res.body as { error: { kind: string } };
+		const body = errorBody(res);
 		expect(body.error.kind).toBe('unknown_unit');
 	});
 
@@ -99,7 +122,7 @@ describe('GET /api/convert — error handling', () => {
 	it('an unmatched region/year is NOT an HTTP error — it is a context_required result', () => {
 		const res = req('?q=1+kWh+electricity&region=Atlantis&year=2020');
 		expect(res.status).toBe(200);
-		const body = res.body as { result: ConversionResultSet };
+		const body = successBody(res);
 		const emissions = body.result.groups
 			.flatMap((g) => g.results)
 			.find((r) => r.category === 'emissions');

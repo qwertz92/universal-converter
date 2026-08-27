@@ -4,8 +4,15 @@
  * here is a definitional constant from those documents. Rendered via {@html} from
  * this trusted in-repo source (not user input).
  */
-export const LEARN_BODIES: Record<string, string> = {
-	'what-is-energy': `<p>Energy is the capacity to do work. Lifting a weight, heating a room, driving a motor, powering a laptop — physically these are all the same quantity being moved around and transformed. Because it is <em>one</em> quantity, it can be expressed in many interchangeable units: joules, watt-hours, calories, British thermal units, and larger industrial units built on top of those.</p>
+/**
+ * A Map, not an object: the lookup key is a route slug — an arbitrary string — so
+ * `get` returning `undefined` is what the loader's fallback needs. The bodies are
+ * written as an object literal and handed to the Map so the long HTML blobs stay
+ * readable, rather than being wrapped in tuple brackets one by one.
+ */
+export const LEARN_BODIES = new Map<string, string>(
+	Object.entries({
+		'what-is-energy': `<p>Energy is the capacity to do work. Lifting a weight, heating a room, driving a motor, powering a laptop — physically these are all the same quantity being moved around and transformed. Because it is <em>one</em> quantity, it can be expressed in many interchangeable units: joules, watt-hours, calories, British thermal units, and larger industrial units built on top of those.</p>
 <h2>One quantity, many units</h2>
 <p>The SI unit of energy is the <strong>joule</strong> (J). Every other energy unit is defined against it by a fixed factor. A watt-hour is exactly <code>3600 J</code>; a kilowatt-hour is exactly <code>3.6 MJ</code>. These are not measurements or approximations — they are <em>definitions</em>, so converting between them is <strong>exact</strong>. See <a href="/learn/joule-vs-wh">joule vs watt-hour</a> for why that particular identity is exact rather than merely close.</p>
 <p>Because the conversions are definitional, the tool marks pure energy-unit conversions as <em>exact</em>. No source is needed beyond the definition itself, and no material assumption enters the calculation. You can move a value freely between <a href="/units/joule">joule</a>, <a href="/units/kilowatt_hour">kilowatt-hour</a>, <a href="/units/megajoule">megajoule</a> and the rest without losing anything.</p>
@@ -15,7 +22,7 @@ export const LEARN_BODIES: Record<string, string> = {
 <h2>What the tool does with this</h2>
 <p>Every result carries an <em>exactness</em> label so you always know which kind of answer you are looking at: an exact unit identity, a value fixed by convention, a sourced estimate, or a figure that needs more context before it can be computed at all. When a number comes from data rather than a definition, its provenance is one click away on the <a href="/sources">sources</a> panel. The goal is never to hide uncertainty behind a confident-looking number — an energy converter that conceals its assumptions is worse than useless.</p>`,
 
-	'kwh-vs-kw': `<p>The single most common mistake in energy arithmetic is treating power as if it were energy — reading <code>1 kW</code> as though it meant <code>1 kWh</code>. They are different physical quantities, and the tool will not silently convert one to the other.</p>
+		'kwh-vs-kw': `<p>The single most common mistake in energy arithmetic is treating power as if it were energy — reading <code>1 kW</code> as though it meant <code>1 kWh</code>. They are different physical quantities, and the tool will not silently convert one to the other.</p>
 <h2>Power is a rate; energy is an amount</h2>
 <p><strong>Power</strong> (watts, kilowatts, megawatts) is a <em>rate</em> — how fast energy is delivered or consumed at an instant. <strong>Energy</strong> (joules, watt-hours, kilowatt-hours) is an <em>amount</em> — the total moved over some span of time. A 2 kW heater running for 3 hours consumes 6 kWh; the same heater tells you nothing about total energy until you also say <em>for how long</em>.</p>
 <p>The relationship is simply energy = power × time (<code>E = P · t</code>). Given any two of the three you can find the third, but you genuinely need two. See <a href="/learn/joule-vs-wh">joule vs watt-hour</a> for how the energy side of that equation is built.</p>
@@ -25,7 +32,7 @@ export const LEARN_BODIES: Record<string, string> = {
 <h2>Defining "year" for time arithmetic</h2>
 <p>Time arithmetic hides an ambiguity: how long is a "year"? Silently using 365, 365.25 or 360 days would make results irreproducible. The tool fixes the <strong>Julian year</strong> = <code>365.25 days</code> = <code>31,557,600 s</code> and labels it, so a conversion like average power over a year is documented and repeatable. An hour is likewise exactly <code>3600 s</code>. These time definitions are exact; it is only the crossing between power and energy that needs your duration.</p>`,
 
-	'joule-vs-wh': `<p>The joule and the watt-hour both measure <a href="/learn/what-is-energy">energy</a> — they are the same physical quantity in two different units. Converting between them is one of the cleanest, most exact conversions the tool performs.</p>
+		'joule-vs-wh': `<p>The joule and the watt-hour both measure <a href="/learn/what-is-energy">energy</a> — they are the same physical quantity in two different units. Converting between them is one of the cleanest, most exact conversions the tool performs.</p>
 <h2>The exact identity</h2>
 <p>A watt is one joule per second. An hour is exactly <code>3600 seconds</code>. So a watt-hour — one watt sustained for one hour — is exactly:</p>
 <ul>
@@ -39,7 +46,7 @@ export const LEARN_BODIES: Record<string, string> = {
 <h2>Practical consequences</h2>
 <p>Because the factor is exact, you can round-trip freely: convert <a href="/units/kilowatt_hour">kWh</a> to <a href="/units/joule">joules</a> to <a href="/units/megajoule">megajoules</a> and back with no drift. This is also why an electricity meter reading in kWh maps cleanly onto scientific energy units — the units differ, the energy does not. Just remember that a kilowatt-<em>hour</em> is energy, while a kilowatt is power; if you find yourself trying to convert a plain kilowatt into a kilowatt-hour, see <a href="/learn/kwh-vs-kw">kW vs kWh</a>, because that step needs a duration and is not a unit conversion at all.</p>`,
 
-	'btu-and-mmbtu': `<p>The British thermal unit (BTU) is an energy unit rooted in the heat needed to warm water. It is small and old-fashioned by SI standards, but it remains deeply embedded in US energy and natural-gas markets, so the tool supports it and its common multiples.</p>
+		'btu-and-mmbtu': `<p>The British thermal unit (BTU) is an energy unit rooted in the heat needed to warm water. It is small and old-fashioned by SI standards, but it remains deeply embedded in US energy and natural-gas markets, so the tool supports it and its common multiples.</p>
 <h2>The definitions the tool uses</h2>
 <p>There is more than one BTU in circulation, differing slightly in how the underlying calorie is defined. The tool fixes the <strong>International Table (IT) BTU</strong>:</p>
 <ul>
@@ -54,7 +61,7 @@ export const LEARN_BODIES: Record<string, string> = {
 <h2>Bigger multiples</h2>
 <p>Built on the IT BTU are the larger units used in gas billing and national energy statistics: the <a href="/learn/what-is-a-therm">therm</a> (100,000 BTU), the MMBTU (a million BTU, = 10 therms), and the quad (<code>10^15 BTU_IT</code>) used for whole-country energy budgets. Because all of these share the same BTU definition, converting among them is exact and consistent.</p>`,
 
-	'what-is-a-therm': `<p>The therm is a unit of energy you will meet mainly on natural-gas bills. It exists for convenience in billing, not because it corresponds to anything fundamental in physics — it is a convention layered on top of the <a href="/learn/btu-and-mmbtu">British thermal unit</a>.</p>
+		'what-is-a-therm': `<p>The therm is a unit of energy you will meet mainly on natural-gas bills. It exists for convenience in billing, not because it corresponds to anything fundamental in physics — it is a convention layered on top of the <a href="/learn/btu-and-mmbtu">British thermal unit</a>.</p>
 <h2>The definition</h2>
 <p>The tool uses the <strong>US therm</strong>, defined as:</p>
 <ul>
@@ -68,7 +75,7 @@ export const LEARN_BODIES: Record<string, string> = {
 <h2>Why a therm is not the same as "a therm of gas"</h2>
 <p>A therm is an amount of <em>energy</em>. Your gas meter, however, measures <em>volume</em> (cubic metres or cubic feet), and the supplier multiplies that volume by a calorific value to arrive at the energy you are billed for. So converting the gas volume on your meter into therms is not the exact operation that converting therms to BTU is — it depends on the gas composition and on reference conditions, and it can never reproduce your bill exactly. See <a href="/learn/natural-gas-m3-to-kwh">natural gas: m³ to kWh</a> for why that volume-to-energy step is always an estimate, and <a href="/units/therm">the therm unit page</a> for the exact energy-unit conversions.</p>`,
 
-	'what-is-a-barrel': `<p>The oil barrel is a <strong>volume</strong> unit — nothing more. It is a common source of confusion precisely because people slide from "a barrel of oil" (a volume) to "the energy in a barrel of oil" (a completely different, estimated quantity). The tool keeps these strictly apart.</p>
+		'what-is-a-barrel': `<p>The oil barrel is a <strong>volume</strong> unit — nothing more. It is a common source of confusion precisely because people slide from "a barrel of oil" (a volume) to "the energy in a barrel of oil" (a completely different, estimated quantity). The tool keeps these strictly apart.</p>
 <h2>The exact definition</h2>
 <p>The oil barrel is defined as exactly:</p>
 <ul>
@@ -87,7 +94,7 @@ export const LEARN_BODIES: Record<string, string> = {
 <p>A barrel is a container size; how much <em>energy</em> that volume holds depends on what is in it. The energy content of one physical barrel of crude oil is a <em>separate, estimated</em> quantity that varies with the crude grade — it is not baked into the volume definition. A light, high-value crude and a heavy one occupy the same 42-gallon barrel but carry different amounts of energy, and this tool records a calorific value for generic crude (IPCC, 42.3 MJ/kg with a 40.1–44.8 range) but no DENSITY for it. Without a density there is no way from a barrel to the kilograms that value is stated per, so a physical barrel reports exactly that gap instead of quoting an energy figure nobody can trace.</p>
 <p>Do not confuse the volume "barrel" with the energy-equivalence unit "barrel of oil equivalent" (boe): they live in different dimensions. The barrel is a volume; the boe is a fixed energy convention. See <a href="/learn/barrel-vs-boe">barrel vs boe</a> for that distinction, which is one of the classic pitfalls in energy reporting, and <a href="/sources">sources</a> for the provenance behind every figure this tool does quote.</p>`,
 
-	'barrel-vs-boe': `<p>"Barrel" and "barrel of oil equivalent" (boe) sound almost identical, but they are fundamentally different kinds of quantity. Treating one as the other is a well-known error in oil-and-gas reporting, and the tool is built to prevent it.</p>
+		'barrel-vs-boe': `<p>"Barrel" and "barrel of oil equivalent" (boe) sound almost identical, but they are fundamentally different kinds of quantity. Treating one as the other is a well-known error in oil-and-gas reporting, and the tool is built to prevent it.</p>
 <h2>Two different dimensions</h2>
 <ul>
 <li>A <strong><a href="/learn/what-is-a-barrel">barrel</a></strong> is a unit of <em>volume</em>: exactly <code>42 US gallons = 158.987294928 L</code>. It measures how much space a liquid occupies.</li>
@@ -104,7 +111,7 @@ export const LEARN_BODIES: Record<string, string> = {
 <p>Critically, the <em>actual</em> energy content of one physical barrel of crude oil is <strong>not</strong> the same as boe. It depends on the crude's grade and API gravity, and working it out needs a density — which this catalog does not have for crude oil, because no primary source for one was found. So a barrel of crude answers <em>not available</em> for mass and energy rather than borrowing the boe number or quoting a range nobody published. The fixed <code>~6.1 GJ</code> boe convention remains what it always was: a definition, not a measurement of any particular oil.</p>
 <p>So the tool never presents a specific crude's energy as exactly "boe", and never presents boe as the measured energy of the particular oil in question. For the family of oil-equivalent energy conventions (boe, toe, tce) and how they relate, see <a href="/learn/toe-and-oil-equivalents">toe and oil-equivalent units</a>.</p>`,
 
-	'toe-and-oil-equivalents': `<p>Energy statistics often express everything "in oil terms" or "in coal terms" so that gas, electricity, coal and oil can be added up on one scale. The units that do this — <strong>toe</strong>, <strong>tce</strong> and <strong>boe</strong> — are energy-equivalence conventions. They are exact by definition, but they are <em>not</em> properties of any real barrel, tonne of oil, or tonne of coal.</p>
+		'toe-and-oil-equivalents': `<p>Energy statistics often express everything "in oil terms" or "in coal terms" so that gas, electricity, coal and oil can be added up on one scale. The units that do this — <strong>toe</strong>, <strong>tce</strong> and <strong>boe</strong> — are energy-equivalence conventions. They are exact by definition, but they are <em>not</em> properties of any real barrel, tonne of oil, or tonne of coal.</p>
 <h2>The definitions</h2>
 <ul>
 <li><strong>toe</strong> (tonne of oil equivalent): <code>1 toe = 41.868 GJ</code> — the IEA/OECD convention.</li>
@@ -117,7 +124,7 @@ export const LEARN_BODIES: Record<string, string> = {
 <h2>Equivalence units versus real fuel</h2>
 <p>Because these are conventions, the tool treats them very differently from the energy content of a <em>physical</em> fuel. Converting <a href="/units/toe">toe</a>, <a href="/units/tce">tce</a> or <a href="/units/boe">boe</a> to <a href="/units/gigajoule">gigajoules</a> is exact. But asking how much energy is in an actual tonne of a specific coal, or an actual barrel of a specific crude, is a sourced estimate that varies with grade and moisture — a different question with a different, hedged answer. The tool never presents the energy-equivalence convention as if it were a measurement of the real fuel, and always labels which convention a result uses.</p>`,
 
-	'hhv-vs-lhv': `<p>Almost every fuel-energy figure comes in two flavours that differ by several percent, and confusing them is one of the most consequential errors in this domain. The two flavours are the <strong>higher heating value</strong> and the <strong>lower heating value</strong>.</p>
+		'hhv-vs-lhv': `<p>Almost every fuel-energy figure comes in two flavours that differ by several percent, and confusing them is one of the most consequential errors in this domain. The two flavours are the <strong>higher heating value</strong> and the <strong>lower heating value</strong>.</p>
 <h2>The two bases</h2>
 <ul>
 <li><strong>Higher / gross heating value</strong> — HHV, also GCV; in German, <em>Brennwert</em>. It <em>includes</em> the latent heat released when the water vapour produced by combustion condenses back to liquid.</li>
@@ -140,7 +147,7 @@ export const LEARN_BODIES: Record<string, string> = {
 <h2>Why it matters for bills</h2>
 <p>Conventions clash in the real world. UK gas billing and DESNZ/DEFRA guidance default to the <em>gross</em> (GCV/HHV) basis, so the energy on a UK gas bill is gross even though many emission factors are published per gigajoule on a net basis. That kind of mismatch is exactly what the tool surfaces rather than hides. See <a href="/learn/natural-gas-m3-to-kwh">natural gas: m³ to kWh</a> and <a href="/learn/why-fuel-conversions-are-approximate">why fuel conversions are approximate</a> for how basis interacts with the rest of the fuel calculation.</p>`,
 
-	'natural-gas-m3-to-kwh': `<p>"How many kilowatt-hours are in a cubic metre of natural gas?" feels like it should have one clean answer. It does not — and the tool will never present it as an exact identity. Two independent problems make it fundamentally an estimate.</p>
+		'natural-gas-m3-to-kwh': `<p>"How many kilowatt-hours are in a cubic metre of natural gas?" feels like it should have one clean answer. It does not — and the tool will never present it as an exact identity. Two independent problems make it fundamentally an estimate.</p>
 <h2>Problem one: composition varies</h2>
 <p>Natural gas is a mixture, and its makeup — the methane fraction, heavier hydrocarbons, and inert gases like CO₂ and nitrogen — varies by field, by network, and over time. Since the energy content follows the composition, the calorific value moves across a band. For typical pipeline gas that band sits roughly in the <code>~10–11 kWh/m³</code> range (roughly, per the data), but no single figure is correct for all gas. This is the core reason a cubic metre of gas has no exact energy value.</p>
 <h2>Problem two: volume needs reference conditions</h2>
@@ -155,7 +162,7 @@ export const LEARN_BODIES: Record<string, string> = {
 <p>Your supplier does not use a generic figure. They multiply your metered volume by the local calorific value (the <em>Brennwert</em>) and by a <em>Zustandszahl</em> (a state/correction factor) that maps your operating-condition cubic metres to reference-condition energy. The tool knows neither your local Brennwert nor your meter's Zustandszahl.</p>
 <p>So every gas volume-to-energy result carries a mandatory warning: it uses a single displayed volumetric-energy assumption at a stated reference condition and on a labeled <a href="/learn/hhv-vs-lhv">heating-value basis</a>, and it <strong>cannot reproduce your gas bill</strong>. Use it to build intuition, never for a billing dispute. The result is marked <em>source based</em>, never exact — closely related to the <a href="/learn/what-is-a-therm">therm</a>, which is the energy unit these gas bills are often expressed in.</p>`,
 
-	'co2-vs-co2e': `<p>Two greenhouse-gas metrics look nearly identical on the page but mean different things: <strong>CO₂</strong> and <strong>CO₂e</strong>. The tool treats them as separate quantities with <em>no</em> conversion path between them, and this is one of its firmest rules.</p>
+		'co2-vs-co2e': `<p>Two greenhouse-gas metrics look nearly identical on the page but mean different things: <strong>CO₂</strong> and <strong>CO₂e</strong>. The tool treats them as separate quantities with <em>no</em> conversion path between them, and this is one of its firmest rules.</p>
 <h2>What each one means</h2>
 <ul>
 <li><strong>CO₂</strong> is carbon dioxide only — the mass of that one gas.</li>
@@ -173,7 +180,7 @@ export const LEARN_BODIES: Record<string, string> = {
 </ul>
 <p>For grid electricity, the emission factor also depends on where and when the power was made; see <a href="/learn/electricity-emissions-region-year">why electricity emissions depend on region and year</a>.</p>`,
 
-	'why-fuel-conversions-are-approximate': `<p>When the tool converts between energy <em>units</em>, the answer is exact. When it tells you the energy or emissions of an actual <em>fuel</em>, the answer is a sourced estimate. This is not sloppiness — it reflects the fact that fuels are real materials whose properties genuinely vary.</p>
+		'why-fuel-conversions-are-approximate': `<p>When the tool converts between energy <em>units</em>, the answer is exact. When it tells you the energy or emissions of an actual <em>fuel</em>, the answer is a sourced estimate. This is not sloppiness — it reflects the fact that fuels are real materials whose properties genuinely vary.</p>
 <h2>Three properties that vary</h2>
 <p>Every fuel calculation rests on one or more material properties, none of which is a natural constant:</p>
 <ul>
@@ -191,7 +198,7 @@ export const LEARN_BODIES: Record<string, string> = {
 <h2>What the tool gives you instead</h2>
 <p>For these fuels the tool provides a <strong>well-sourced representative value with its assumptions on display</strong> — not a measurement of the specific fuel in your tank, pipe or pile. Concretely, that means it prefers ranges over false precision (showing <code>~A–B</code> where a property genuinely spans a range), caps significant figures so an estimate never looks more certain than it is, marks estimates with a leading <code>~</code>, and never silently averages two sources that disagree — it shows the chosen source's value with provenance, or the range across sources, with the divergence visible. Every non-exact factor resolves to a citation on the <a href="/sources">sources</a> panel. The point is honesty about spread, not the illusion of a single perfect number.</p>`,
 
-	'electricity-emissions-region-year': `<p>Ask "how much CO₂e does a kilowatt-hour of electricity cause?" and there is no single correct answer. Unlike a fuel with a physical carbon content, grid electricity's emissions depend on <em>how the power was generated</em> — which changes with place and time.</p>
+		'electricity-emissions-region-year': `<p>Ask "how much CO₂e does a kilowatt-hour of electricity cause?" and there is no single correct answer. Unlike a fuel with a physical carbon content, grid electricity's emissions depend on <em>how the power was generated</em> — which changes with place and time.</p>
 <h2>Three things the answer depends on</h2>
 <ul>
 <li><strong>Region.</strong> A kWh from a hydro- or nuclear-heavy grid carries a fraction of the emissions of a kWh from a coal-heavy grid. There is no global factor.</li>
@@ -210,7 +217,7 @@ export const LEARN_BODIES: Record<string, string> = {
 <h2>No default — only cited combinations</h2>
 <p>The tool never assumes a country for you, and that does not change as the catalog grows: without a region and year, a kWh → CO₂e query stays <em>context required</em>, because baking in a single national number would invite exactly the false-precision error the tool exists to avoid. What grows instead is the <strong>picker</strong> — it lists every region/year combination that has a cited factor, and only those combinations return a real <em>region- and year-specific</em> result. Today that means <strong>UK 2025</strong> (CO₂e, DESNZ) and <strong>EU-27 2023</strong> and <strong>EU-27 2022</strong> (CO₂, EEA) — two EU years shown side by side precisely so the year-dependence of grid intensity is visible, not just claimed. Ask for a region or year the catalog has no source for, and it still says so plainly rather than estimating one. For the deeper distinction between the metrics involved here, see <a href="/learn/co2-vs-co2e">CO₂ vs CO₂e</a>.</p>`,
 
-	'food-calories': `<p>The word "calorie" hides a thousandfold ambiguity that regularly turns up in nutrition, cooking and casual science. Getting it wrong is not a rounding error — it is a factor-1000 mistake.</p>
+		'food-calories': `<p>The word "calorie" hides a thousandfold ambiguity that regularly turns up in nutrition, cooking and casual science. Getting it wrong is not a rounding error — it is a factor-1000 mistake.</p>
 <h2>Big-C Calorie versus small-c calorie</h2>
 <ul>
 <li>The dietary <strong>"Calorie"</strong> (capital C), the one on food labels, is actually a <em>kilocalorie</em>: <code>1 Cal = 1 kcal = 4186.8 J</code>.</li>
@@ -227,4 +234,5 @@ export const LEARN_BODIES: Record<string, string> = {
 <p>These are treated as a <em>standard definition</em> — exact by convention. (There is also a slightly different <em>thermochemical</em> calorie of <code>4.184 J</code>, about 0.07% smaller; the tool uses the IT calorie consistently and labels it, so it stays coherent with the <a href="/learn/btu-and-mmbtu">IT BTU</a> and the therm rather than mixing incompatible factors.)</p>
 <h2>How the tool prevents the mistake</h2>
 <p>Any nutritional token — "food calorie", "Calorie" (capital C), "dietary calorie", "nutritional calorie" — is aliased to <a href="/units/kilocalorie">kcal</a>. The parser records that an alias was used and the interface gently confirms the interpretation ("interpreting 'Calorie' as kcal"), so you are never silently handed a result that is off by three orders of magnitude. Under the hood a calorie is still just a unit of <a href="/learn/what-is-energy">energy</a> like the joule or watt-hour — the only trap is the capital letter, and the tool defuses it by asking rather than guessing.</p>`
-};
+	})
+);

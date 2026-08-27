@@ -17,7 +17,7 @@ export interface ExactnessMeta {
 	glyph: string;
 }
 
-export const EXACTNESS_META: Record<Exactness, ExactnessMeta> = {
+export const EXACTNESS_META = {
 	exact: {
 		label: 'exact',
 		description: 'Follows from an SI or definitional identity — no material assumption.',
@@ -70,7 +70,7 @@ export const EXACTNESS_META: Record<Exactness, ExactnessMeta> = {
 		},
 		glyph: '×'
 	}
-};
+} satisfies Record<Exactness, ExactnessMeta>;
 
 /** The legend order used on the methodology page and popovers. */
 export const EXACTNESS_LEGEND_ORDER: Exactness[] = [

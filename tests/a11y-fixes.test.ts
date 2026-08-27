@@ -11,7 +11,7 @@
  */
 
 import { readFileSync } from 'node:fs';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { createRawSnippet } from 'svelte';
 import { render } from 'svelte/server';
 import type { ConversionResult, ResultGroup } from '$lib/conversion/types';
@@ -21,12 +21,6 @@ import ResultGroupCard from '$lib/components/results/ResultGroupCard.svelte';
 import WarningsNote from '$lib/components/results/WarningsNote.svelte';
 import { NO_HIGHLIGHT, nextHighlight } from '$lib/components/search/Combobox.svelte';
 import { readStored, theme, writeStored, type ThemeStorage } from '$lib/ui/theme.svelte';
-
-// Header reads SvelteKit's request-scoped page state, which does not exist
-// outside a request; the nav's active link is not what is under test here.
-vi.mock('$app/state', () => ({
-	page: { url: new URL('https://universal-converter.org/convert') }
-}));
 
 /** Every `aria-controls` value in a rendered fragment, in document order. */
 function ariaControls(html: string): string[] {
@@ -64,7 +58,8 @@ describe('aria-expanded without aria-controls', () => {
 	// they expand, so a screen-reader user was told a state and not a target.
 
 	it("the header's menu button names the nav it opens", () => {
-		const html = render(Header).body;
+		// The path is a prop, so this needs no stand-in for SvelteKit's page state.
+		const html = render(Header, { props: { pathname: '/convert' } }).body;
 		expect(ariaControls(html)).toHaveLength(1);
 	});
 

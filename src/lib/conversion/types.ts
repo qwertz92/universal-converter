@@ -112,7 +112,7 @@ export const EXACTNESS_LEVELS: readonly Exactness[] = [
  * non-numeric terminal states (`context_required`, `unsupported`) are handled
  * separately by the engine's guards, not blended into numeric chains.
  */
-export const EXACTNESS_ORDER: Record<Exactness, number> = {
+export const EXACTNESS_ORDER = {
 	exact: 0,
 	standard_definition: 1,
 	user_assumption: 2,
@@ -121,7 +121,7 @@ export const EXACTNESS_ORDER: Record<Exactness, number> = {
 	estimated: 5,
 	context_required: 6,
 	unsupported: 7
-};
+} satisfies Record<Exactness, number>;
 
 /* ------------------------------------------------------------------ *
  * Units & quantities

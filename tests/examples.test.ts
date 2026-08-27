@@ -17,7 +17,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { getConverter, loadExamples } from '$lib/index';
-import type { ConversionResultSet } from '$lib/conversion/types';
+import type { ConversionResultSet, ParseError } from '$lib/conversion/types';
 
 const converter = getConverter();
 
@@ -44,7 +44,14 @@ const SPEC_8_2_INPUTS = [
 	'1 kg wood pellets'
 ];
 
-function isParseFailure(out: ConversionResultSet | { error: { kind: string } }): boolean {
+/**
+ * A type predicate, not a boolean: the callers below read `out.error` or
+ * `out.groups` straight after asking, and the narrowing is what lets them do
+ * that without asserting a shape nobody checked.
+ */
+function isParseFailure(
+	out: ConversionResultSet | { error: ParseError }
+): out is { error: ParseError } {
 	return 'error' in out;
 }
 
@@ -64,13 +71,11 @@ describe('quick examples parse cleanly (spec §8.2, §23)', () => {
 			const out = converter.convertText(input);
 			if (isParseFailure(out)) {
 				throw new Error(
-					`example "${input}" failed to parse: ${(out as { error: { kind: string; message: string } }).error.kind} — ${
-						(out as { error: { message: string } }).error.message
-					}`
+					`example "${input}" failed to parse: ${out.error.kind} — ${out.error.message}`
 				);
 			}
 			// A successful parse yields at least one result group.
-			expect((out as ConversionResultSet).groups.length).toBeGreaterThan(0);
+			expect(out.groups.length).toBeGreaterThan(0);
 		}
 	);
 });

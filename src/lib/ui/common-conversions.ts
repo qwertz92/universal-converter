@@ -9,33 +9,36 @@ import { combineExactness } from '$lib/conversion/precision';
 import { formatValue } from '$lib/formatting/numbers';
 import type { Unit, Dimension, Exactness } from '$lib/conversion/types';
 
-/** Preferred target unit ids per dimension (shown if present in the catalog). */
-const TARGETS: Partial<Record<Dimension, string[]>> = {
-	energy: [
-		'joule',
-		'kilojoule',
-		'megajoule',
-		'gigajoule',
-		'kilowatt_hour',
-		'megawatt_hour',
-		'btu',
-		'mmbtu',
-		'therm',
-		'toe'
+/**
+ * Preferred target unit ids per dimension (shown if present in the catalog).
+ * A Map, not an object: the table covers five of the catalog's dimensions on
+ * purpose, so a lookup for any other one has to come back `undefined` — which is
+ * the empty-table branch in `commonConversions` below.
+ */
+const TARGETS = new Map<Dimension, string[]>([
+	[
+		'energy',
+		[
+			'joule',
+			'kilojoule',
+			'megajoule',
+			'gigajoule',
+			'kilowatt_hour',
+			'megawatt_hour',
+			'btu',
+			'mmbtu',
+			'therm',
+			'toe'
+		]
 	],
-	power: ['watt', 'kilowatt', 'megawatt', 'gigawatt'],
-	mass: ['gram', 'kilogram', 'tonne', 'pound', 'short_ton', 'long_ton'],
-	volume: [
-		'milliliter',
-		'liter',
-		'cubic_meter',
-		'us_gallon',
-		'imperial_gallon',
-		'barrel',
-		'cubic_foot'
+	['power', ['watt', 'kilowatt', 'megawatt', 'gigawatt']],
+	['mass', ['gram', 'kilogram', 'tonne', 'pound', 'short_ton', 'long_ton']],
+	[
+		'volume',
+		['milliliter', 'liter', 'cubic_meter', 'us_gallon', 'imperial_gallon', 'barrel', 'cubic_foot']
 	],
-	time: ['second', 'minute', 'hour', 'day', 'year']
-};
+	['time', ['second', 'minute', 'hour', 'day', 'year']]
+]);
 
 export interface CommonConversion {
 	targetId: string;
@@ -50,7 +53,7 @@ export interface CommonConversion {
  * `all` is the full unit list (from the data bundle).
  */
 export function commonConversions(unit: Unit, all: Unit[]): CommonConversion[] {
-	const targetIds = TARGETS[unit.dimension];
+	const targetIds = TARGETS.get(unit.dimension);
 	if (!targetIds) return [];
 	const byId = new Map(all.map((u) => [u.id, u]));
 	const out: CommonConversion[] = [];

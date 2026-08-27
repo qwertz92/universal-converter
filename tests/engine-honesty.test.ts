@@ -77,13 +77,15 @@ describe('an exact value is never quietly rounded', () => {
 		expect(r?.value).toBe('1,234,567');
 	});
 
+	// `as const` keeps each row's literal types, so `exactness` arrives as an
+	// Exactness rather than a widened string that has to be forced through.
 	it.each([
 		['1234567', 'exact', '1,234,567'],
 		['3600000', 'exact', '3,600,000'],
 		['0.45359237', 'exact', '0.45359237'],
 		['1234567.891', 'standard_definition', '1,234,567.891']
-	])('formatValue(%s, %s) keeps every digit', (value, exactness, expected) => {
-		expect(formatValue(value, exactness as never)).toBe(expected);
+	] as const)('formatValue(%s, %s) keeps every digit', (value, exactness, expected) => {
+		expect(formatValue(value, exactness)).toBe(expected);
 	});
 
 	it('still rounds a value with more precision than anyone needs', () => {

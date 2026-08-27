@@ -170,8 +170,8 @@
 
 	let rootEl = $state<HTMLDivElement | null>(null);
 	function onFocusOut(e: FocusEvent) {
-		const next = e.relatedTarget as Node | null;
-		if (next && rootEl?.contains(next)) return;
+		const next = e.relatedTarget;
+		if (next instanceof Node && rootEl?.contains(next)) return;
 		open = false;
 		// Same reason as Escape: tabbing away abandons the highlight.
 		active = NO_HIGHLIGHT;

@@ -15,7 +15,7 @@ import {
 	type Warning
 } from './types';
 
-const GROUP_TITLES: Record<ResultGroupKey, string> = {
+const GROUP_TITLES = {
 	energy: 'Energy',
 	power: 'Power',
 	mass: 'Mass',
@@ -31,7 +31,7 @@ const GROUP_TITLES: Record<ResultGroupKey, string> = {
 	warnings: 'Warnings',
 	sources: 'Sources',
 	formula: 'Formula / Calculation Path'
-};
+} satisfies Record<ResultGroupKey, string>;
 
 /** Accumulates results and builds the ordered ConversionResultSet. */
 export class ResultSetBuilder {
