@@ -14,3 +14,7 @@ worker-configuration.d.ts
 
 # Agent worktrees — a second checkout of this repo, already formatted on its own.
 .claude/worktrees/
+
+# Vendored third-party oxlint plugin — kept verbatim so re-syncing upstream is a
+# plain diff. See tools/oxlint/README.md.
+tools/oxlint/anti-slop/
