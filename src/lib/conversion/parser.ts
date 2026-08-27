@@ -954,7 +954,18 @@ export function normalizeNumber(raw: string): string {
 /** Like `normalizeNumber`, but also returns a warning note for the one
  *  genuinely ambiguous shape (single comma, exactly 3 trailing digits,
  *  nonzero integer part) where we keep the thousands-separator reading. */
-export function normalizeNumberWithWarning(raw: string): { value: string; warning?: string } {
+export interface NormalizedNumber {
+	/** The number in a form Decimal can read: sign, digits, at most one dot. */
+	value: string;
+	/**
+	 * Present only where the raw text was genuinely ambiguous between a decimal
+	 * point and a thousands separator, saying which reading was taken. Absent
+	 * means the reading was not a judgement call, not that no separator appeared.
+	 */
+	warning?: string;
+}
+
+export function normalizeNumberWithWarning(raw: string): NormalizedNumber {
 	let s = raw.replace(/\s+/g, '');
 	// ".5" / ",5" → "0.5" / "0,5" so downstream logic always sees an integer part.
 	s = s.replace(/^([+-]?)([.,])/, '$10$2');

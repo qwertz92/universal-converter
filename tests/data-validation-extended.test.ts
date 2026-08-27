@@ -286,18 +286,22 @@ describe('§13.5 emission-factor metric agrees with its unit', () => {
 	// is what the engine actually keys off. Three electricity factors said
 	// "intensity_per_energy" while every other per-energy factor said
 	// "mass_per_energy", and nothing noticed until a reader compared them.
-	const EXPECTED: Record<string, string> = {
-		gj: 'mass_per_energy',
-		kwh: 'mass_per_energy',
-		kg: 'mass_per_mass',
-		l: 'mass_per_volume',
-		m3: 'mass_per_volume'
-	};
+	// A Map, not an object: the denominator comes out of a regex over the factor's
+	// unit id, so it is an arbitrary string and the lookup is deliberately partial
+	// — an unhandled denominator has to surface as `undefined`, which is what the
+	// first expectation below asserts against.
+	const EXPECTED = new Map<string, string>([
+		['gj', 'mass_per_energy'],
+		['kwh', 'mass_per_energy'],
+		['kg', 'mass_per_mass'],
+		['l', 'mass_per_volume'],
+		['m3', 'mass_per_volume']
+	]);
 
 	it('every factor declares the metric its unit implies', () => {
 		for (const ef of emissionFactors) {
 			const denominator = /_per_([a-z0-9]+)$/.exec(ef.unit)?.[1];
-			const expected = denominator ? EXPECTED[denominator] : undefined;
+			const expected = denominator ? EXPECTED.get(denominator) : undefined;
 			expect(expected, `factor ${ef.id}: unhandled unit denominator in '${ef.unit}'`).toBeDefined();
 			expect(ef.metric, `factor ${ef.id} (${ef.unit})`).toBe(expected);
 		}

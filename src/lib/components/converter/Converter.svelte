@@ -16,6 +16,7 @@
 	import type {
 		ConversionResult,
 		ConversionResultSet,
+		EngineOptions,
 		ParseError,
 		HeatingBasis,
 		Fuel
@@ -78,7 +79,7 @@
 	);
 
 	/** Decode the `grid` selection into engine options ({} when unset/invalid). */
-	function gridParts(g: string): { region?: string; year?: number } {
+	function gridParts(g: string): Pick<EngineOptions, 'region' | 'year'> {
 		if (!g) return {};
 		const sep = g.lastIndexOf('|');
 		if (sep <= 0) return {};

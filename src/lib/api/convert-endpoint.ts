@@ -34,11 +34,11 @@ export interface EndpointResult {
 	headers: Record<string, string>;
 }
 
-const BASE_HEADERS: Record<string, string> = {
+const BASE_HEADERS = {
 	'content-type': 'application/json; charset=utf-8',
 	'access-control-allow-origin': '*',
 	'x-api-version': API_VERSION
-};
+} satisfies Record<string, string>;
 
 function ok(body: unknown): EndpointResult {
 	return {

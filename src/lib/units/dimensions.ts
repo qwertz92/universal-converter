@@ -12,13 +12,13 @@ import {
 } from '$lib/conversion/types';
 
 /** Canonical base-unit id per base dimension (to_base_factor === "1"). */
-export const BASE_UNIT_ID: Record<BaseDimension, string> = {
+export const BASE_UNIT_ID = {
 	energy: 'joule',
 	power: 'watt',
 	mass: 'kilogram',
 	volume: 'cubic_meter',
 	time: 'second'
-};
+} satisfies Record<BaseDimension, string>;
 
 export function isBaseDimension(d: Dimension): d is BaseDimension {
 	return (BASE_DIMENSIONS as readonly string[]).includes(d);

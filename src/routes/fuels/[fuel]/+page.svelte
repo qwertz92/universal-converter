@@ -86,14 +86,16 @@
 		return `${d.value} ${unit}${d.range ? ` (${d.range.low}–${d.range.high})` : ''}`;
 	}
 
-	const hvUnitLabel: Record<string, string> = {
-		mj_per_kg: 'MJ/kg',
-		kwh_per_kg: 'kWh/kg',
-		mj_per_l: 'MJ/L',
-		kwh_per_l: 'kWh/L',
-		mj_per_m3: 'MJ/m³',
-		kwh_per_m3: 'kWh/m³'
-	};
+	// A Map, not an object: `hv.unit` is an arbitrary string from the data files,
+	// so the lookup is partial and `get` returns the `undefined` the fallback needs.
+	const hvUnitLabel = new Map<string, string>([
+		['mj_per_kg', 'MJ/kg'],
+		['kwh_per_kg', 'kWh/kg'],
+		['mj_per_l', 'MJ/L'],
+		['kwh_per_l', 'kWh/L'],
+		['mj_per_m3', 'MJ/m³'],
+		['kwh_per_m3', 'kWh/m³']
+	]);
 
 	const lhvValues = $derived((fuel.heating_values ?? []).filter((h) => h.basis === 'lhv'));
 	const hhvValues = $derived((fuel.heating_values ?? []).filter((h) => h.basis === 'hhv'));
@@ -246,7 +248,7 @@
 									{#each grp.items as hv, i (hv.unit + i)}
 										<li class="flex items-baseline justify-between gap-2 text-sm">
 											<span class="uc-num font-medium"
-												>{hv.value} {hvUnitLabel[hv.unit] ?? hv.unit}</span
+												>{hv.value} {hvUnitLabel.get(hv.unit) ?? hv.unit}</span
 											>
 											<SourceRefs refs={hv.source_refs} compact />
 										</li>

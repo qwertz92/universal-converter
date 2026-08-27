@@ -38,7 +38,7 @@ export function unitById(id: string): Unit | undefined {
 }
 
 /** Human-readable dimension label for grouping (index pages, comboboxes). */
-export const DIMENSION_LABEL: Record<Dimension, string> = {
+export const DIMENSION_LABEL = {
 	energy: 'Energy',
 	power: 'Power',
 	mass: 'Mass',
@@ -50,7 +50,7 @@ export const DIMENSION_LABEL: Record<Dimension, string> = {
 	energy_density_volume: 'Energy density (per volume)',
 	emission_intensity: 'Emission intensity',
 	mass_density: 'Density (mass per volume)'
-};
+} satisfies Record<Dimension, string>;
 
 /** Order dimensions are shown in on index pages. */
 export const DIMENSION_ORDER: Dimension[] = [

@@ -122,24 +122,36 @@ function expectTraceable(value: string, where: string, ownNotes: string): void {
  * 0.01 kWh/L (natural gas) or absent (LNG). Recorded in research-notes' 2026-08-16
  * addendum; recomputed here so the shipped digits are checked, not just present.
  */
-const DERIVED: Record<string, { inputs: [string, string]; why: string }> = {
-	'natural-gas:lhv:kwh_per_m3': {
-		inputs: ['0.802', '12.707'],
-		why: 'DESNZ density 0.802 kg/m³ × Net CV 12.707 kWh/kg'
-	},
-	'natural-gas:hhv:kwh_per_m3': {
-		inputs: ['0.802', '14.077'],
-		why: 'DESNZ density 0.802 kg/m³ × Gross CV 14.077 kWh/kg'
-	},
-	'lng:lhv:kwh_per_l': {
-		inputs: ['0.452489', '12.707'],
-		why: 'DESNZ LNG density 0.452489 kg/L × Net CV 12.707 kWh/kg'
-	},
-	'lng:hhv:kwh_per_l': {
-		inputs: ['0.452489', '14.077'],
-		why: 'DESNZ LNG density 0.452489 kg/L × Gross CV 14.077 kWh/kg'
-	}
-};
+const DERIVED = new Map<string, { inputs: [string, string]; why: string }>([
+	[
+		'natural-gas:lhv:kwh_per_m3',
+		{
+			inputs: ['0.802', '12.707'],
+			why: 'DESNZ density 0.802 kg/m³ × Net CV 12.707 kWh/kg'
+		}
+	],
+	[
+		'natural-gas:hhv:kwh_per_m3',
+		{
+			inputs: ['0.802', '14.077'],
+			why: 'DESNZ density 0.802 kg/m³ × Gross CV 14.077 kWh/kg'
+		}
+	],
+	[
+		'lng:lhv:kwh_per_l',
+		{
+			inputs: ['0.452489', '12.707'],
+			why: 'DESNZ LNG density 0.452489 kg/L × Net CV 12.707 kWh/kg'
+		}
+	],
+	[
+		'lng:hhv:kwh_per_l',
+		{
+			inputs: ['0.452489', '14.077'],
+			why: 'DESNZ LNG density 0.452489 kg/L × Gross CV 14.077 kWh/kg'
+		}
+	]
+]);
 
 const hvKey = (fuelId: string, basis: string, unit: string) => `${fuelId}:${basis}:${unit}`;
 
@@ -176,7 +188,7 @@ describe('every shipped fuel value traces to the research ledger', () => {
 			for (const hv of fuel.heating_values ?? []) {
 				const where = `fuels.${fuel.id}.heating_values[${hv.basis}/${hv.unit}]`;
 				const notes = `${hv.notes ?? ''} ${fuel.notes ?? ''}`;
-				const derivation = DERIVED[hvKey(fuel.id, hv.basis, hv.unit)];
+				const derivation = DERIVED.get(hvKey(fuel.id, hv.basis, hv.unit));
 				if (derivation) {
 					const [a, b] = derivation.inputs;
 					expect(trace(a), `${where}: derivation input ${a} is not recorded`).toBeDefined();
@@ -202,7 +214,7 @@ describe('every shipped fuel value traces to the research ledger', () => {
 			}
 		}
 		expect(recorded).toBeGreaterThan(50);
-		expect(derived).toBe(Object.keys(DERIVED).length);
+		expect(derived).toBe(DERIVED.size);
 	});
 
 	it('nothing calls itself DERIVED without being recomputed here', () => {
@@ -211,7 +223,7 @@ describe('every shipped fuel value traces to the research ledger', () => {
 				.filter((hv) => (hv.notes ?? '').includes('DERIVED'))
 				.map((hv) => hvKey(f.id, hv.basis, hv.unit))
 		);
-		expect(claimed.sort()).toEqual(Object.keys(DERIVED).sort());
+		expect(claimed.sort()).toEqual([...DERIVED.keys()].sort());
 	});
 });
 

@@ -19,12 +19,24 @@
 
 	const ORIGIN = 'https://universal-converter.org';
 
+	/**
+	 * One schema.org BreadcrumbList entry. Named rather than written inline at the
+	 * build site below, so the optional `item` is documented once: it is absent
+	 * exactly for the current page, which has no URL of its own to point at.
+	 */
+	type BreadcrumbListItem = {
+		'@type': string;
+		position: number;
+		name: string;
+		item?: string;
+	};
+
 	// BreadcrumbList JSON-LD (schema.org). The current-page item legitimately
 	// has no `item` URL — per Google/schema.org's own documented example, the
 	// last ListItem may omit it for that reason.
 	const jsonLd = $derived.by(() => {
 		const itemListElement = items.map((item, i) => {
-			const entry: { '@type': string; position: number; name: string; item?: string } = {
+			const entry: BreadcrumbListItem = {
 				'@type': 'ListItem',
 				position: i + 1,
 				name: item.label

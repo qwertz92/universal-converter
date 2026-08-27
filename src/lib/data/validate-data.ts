@@ -45,6 +45,7 @@ import {
 } from './schemas';
 import { rawData } from './load-data';
 import { normalizeLoose, normalizeSymbol } from '$lib/units/aliases';
+import type { Pollutant } from '$lib/conversion/types';
 
 export interface ValidationIssue {
 	file: 'units' | 'fuels' | 'emission-factors' | 'sources' | 'examples' | 'cross-file';
@@ -74,37 +75,44 @@ const NON_SOURCED_EXACTNESS = new Set(['exact', 'standard_definition']);
  * which is exactly why they need naming here: without an entry they could only
  * ever borrow a CO2 unit, and one did — a CH4 factor rendered as "kg CO2".
  */
-const POLLUTANT_NUMERATOR: Record<string, string> = {
-	CO2: 'co2',
-	CO2e: 'co2e',
-	biogenic_CO2: 'co2'
-};
+const POLLUTANT_NUMERATOR = new Map<Pollutant, string>([
+	['CO2', 'co2'],
+	['CO2e', 'co2e'],
+	['biogenic_CO2', 'co2']
+]);
 
-const METRIC_BY_DENOMINATOR: Record<string, string> = {
-	j: 'mass_per_energy',
-	kj: 'mass_per_energy',
-	mj: 'mass_per_energy',
-	gj: 'mass_per_energy',
-	tj: 'mass_per_energy',
-	wh: 'mass_per_energy',
-	kwh: 'mass_per_energy',
-	mwh: 'mass_per_energy',
-	gwh: 'mass_per_energy',
-	btu: 'mass_per_energy',
-	mmbtu: 'mass_per_energy',
-	therm: 'mass_per_energy',
-	g: 'mass_per_mass',
-	kg: 'mass_per_mass',
-	t: 'mass_per_mass',
-	tonne: 'mass_per_mass',
-	lb: 'mass_per_mass',
-	ml: 'mass_per_volume',
-	l: 'mass_per_volume',
-	cm3: 'mass_per_volume',
-	m3: 'mass_per_volume',
-	ft3: 'mass_per_volume',
-	gal: 'mass_per_volume'
-};
+/**
+ * Maps, not objects: both are looked up with a value pulled out of a factor at
+ * runtime — a regex capture for the denominator, the schema's pollutant enum for
+ * the numerator — and both are deliberately partial. `get` returning `undefined`
+ * is the "no numerator/metric is defined for this" branch each caller reports on,
+ * so the partiality is now in the type instead of only in the comment above.
+ */
+const METRIC_BY_DENOMINATOR = new Map<string, string>([
+	['j', 'mass_per_energy'],
+	['kj', 'mass_per_energy'],
+	['mj', 'mass_per_energy'],
+	['gj', 'mass_per_energy'],
+	['tj', 'mass_per_energy'],
+	['wh', 'mass_per_energy'],
+	['kwh', 'mass_per_energy'],
+	['mwh', 'mass_per_energy'],
+	['gwh', 'mass_per_energy'],
+	['btu', 'mass_per_energy'],
+	['mmbtu', 'mass_per_energy'],
+	['therm', 'mass_per_energy'],
+	['g', 'mass_per_mass'],
+	['kg', 'mass_per_mass'],
+	['t', 'mass_per_mass'],
+	['tonne', 'mass_per_mass'],
+	['lb', 'mass_per_mass'],
+	['ml', 'mass_per_volume'],
+	['l', 'mass_per_volume'],
+	['cm3', 'mass_per_volume'],
+	['m3', 'mass_per_volume'],
+	['ft3', 'mass_per_volume'],
+	['gal', 'mass_per_volume']
+]);
 
 /** Validate every data file and their cross-references; collect all issues. */
 export function validateAll(): ValidationReport {
@@ -381,7 +389,7 @@ export function validateAll(): ValidationReport {
 		// the unit id's denominator. They must agree, or the label above a number
 		// describes a different calculation than the one the engine performs.
 		const denominator = /_per_([a-z0-9]+)$/.exec(ef.unit)?.[1];
-		const expected = denominator ? METRIC_BY_DENOMINATOR[denominator] : undefined;
+		const expected = denominator ? METRIC_BY_DENOMINATOR.get(denominator) : undefined;
 		if (!expected) {
 			issues.push({
 				file: 'emission-factors',
@@ -406,7 +414,7 @@ export function validateAll(): ValidationReport {
 		// there is no `*_ch4_*` unit, so a CH4 factor could only ever wear a CO2
 		// one — and did, undetected, rendering as "~2.06 kg CO2".
 		const numerator = /^(?:kg|g|t)_([a-z0-9]+)_per_/.exec(ef.unit)?.[1];
-		const expectedNumerator = POLLUTANT_NUMERATOR[ef.pollutant];
+		const expectedNumerator = POLLUTANT_NUMERATOR.get(ef.pollutant);
 		if (numerator) {
 			if (!expectedNumerator) {
 				issues.push({

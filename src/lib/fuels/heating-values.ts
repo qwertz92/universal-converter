@@ -123,14 +123,20 @@ export function basisLabel(basis: HeatingBasis): string {
 	return basis === 'lhv' ? 'LHV/NCV' : 'HHV/GCV';
 }
 
+/**
+ * Labels for the heating-value unit ids the catalog ships. A Map, not an object:
+ * `unit` arrives as an arbitrary string from the data files, so the lookup is
+ * partial and `get` returns the `undefined` the fallback below needs.
+ */
+const HV_UNIT_LABELS = new Map<string, string>([
+	['mj_per_kg', 'MJ/kg'],
+	['kwh_per_kg', 'kWh/kg'],
+	['mj_per_l', 'MJ/L'],
+	['kwh_per_l', 'kWh/L'],
+	['mj_per_m3', 'MJ/m³'],
+	['kwh_per_m3', 'kWh/m³']
+]);
+
 function displayHvUnit(unit: string): string {
-	const map: Record<string, string> = {
-		mj_per_kg: 'MJ/kg',
-		kwh_per_kg: 'kWh/kg',
-		mj_per_l: 'MJ/L',
-		kwh_per_l: 'kWh/L',
-		mj_per_m3: 'MJ/m³',
-		kwh_per_m3: 'kWh/m³'
-	};
-	return map[unit] ?? unit;
+	return HV_UNIT_LABELS.get(unit) ?? unit;
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
 	/** A titled card grouping conversion result rows (rulebook §C.8). */
 	import type { ResultGroup, ConversionResult } from '$lib/conversion/types';
-	import { GROUP_META } from '$lib/ui/groups';
+	import { groupMeta } from '$lib/ui/groups';
 	import ResultRow from './ResultRow.svelte';
 
 	let {
@@ -12,7 +12,7 @@
 		contextControl?: import('svelte').Snippet<[ConversionResult]>;
 	} = $props();
 
-	const meta = $derived(GROUP_META[group.key] ?? { title: group.title });
+	const meta = $derived(groupMeta(group.key));
 	// A group needs a header hint when it produced no number for at least one
 	// row. "context required" takes priority (some row is a well-defined
 	// prompt for more input); a group that is value-less for another reason

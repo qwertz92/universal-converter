@@ -10,7 +10,7 @@ export interface GroupMeta {
 	blurb?: string;
 }
 
-export const GROUP_META: Record<ResultGroupKey, GroupMeta> = {
+export const GROUP_META = {
 	energy: { title: 'Energy', blurb: 'Same energy expressed in other units.' },
 	power: { title: 'Power', blurb: 'Rate of energy — not energy itself.' },
 	mass: { title: 'Mass' },
@@ -38,4 +38,15 @@ export const GROUP_META: Record<ResultGroupKey, GroupMeta> = {
 	warnings: { title: 'Warnings' },
 	sources: { title: 'Sources' },
 	formula: { title: 'Calculation path' }
-};
+} satisfies Record<ResultGroupKey, GroupMeta>;
+
+/**
+ * The display metadata for one group. Read through this rather than indexing
+ * GROUP_META directly: `satisfies` keeps each entry's own literal shape, so an
+ * entry that carries no blurb has no `blurb` property at all to read. The named
+ * return type is what makes `meta.blurb` mean "absent here" instead of "not a
+ * field". The key type covers every entry, so this is total.
+ */
+export function groupMeta(key: ResultGroupKey): GroupMeta {
+	return GROUP_META[key];
+}
