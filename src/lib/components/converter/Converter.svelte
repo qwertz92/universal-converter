@@ -23,7 +23,7 @@
 	} from '$lib/conversion/types';
 	import { engine, allUnits, allFuels, gridIntensityOptions } from '$lib/ui/engine';
 	import { debounce, searchFuels } from '$lib/ui/search';
-	import { buildQueryString, readUrlState } from '$lib/ui/query-state';
+	import { buildQueryString, readUrlState, type ConverterUrlState } from '$lib/ui/query-state';
 	import { exportFilename, resultSetToCsv, resultSetToJson } from '$lib/ui/export';
 	import {
 		clearRecent,
@@ -56,10 +56,8 @@
 	// ---- state ----------------------------------------------------------------
 	// One-time seed from the URL. Only read searchParams in the browser: during
 	// prerender the page has no request URL and accessing it throws (SSG).
-	const initial = untrack(() =>
-		syncUrl && browser
-			? readUrlState(page.url, gridIntensityOptions())
-			: { q: '', basis: 'lhv' as HeatingBasis }
+	const initial: ConverterUrlState = untrack(() =>
+		syncUrl && browser ? readUrlState(page.url, gridIntensityOptions()) : { q: '', basis: 'lhv' }
 	);
 	let queryText = $state(initial.q);
 	let basis = $state<HeatingBasis>(initial.basis);

@@ -21,11 +21,11 @@ export const BASE_UNIT_ID = {
 } satisfies Record<BaseDimension, string>;
 
 export function isBaseDimension(d: Dimension): d is BaseDimension {
-	return (BASE_DIMENSIONS as readonly string[]).includes(d);
+	return BASE_DIMENSIONS.some((base) => base === d);
 }
 
 export function isPseudoDimension(d: Dimension): boolean {
-	return (PSEUDO_DIMENSIONS as readonly string[]).includes(d);
+	return PSEUDO_DIMENSIONS.some((pseudo) => pseudo === d);
 }
 
 /**

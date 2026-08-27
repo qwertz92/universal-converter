@@ -177,8 +177,8 @@
 	}
 
 	function onFocusOut(e: FocusEvent): void {
-		const next = e.relatedTarget as Node | null;
-		if (next && rootEl?.contains(next)) return;
+		const next = e.relatedTarget;
+		if (next instanceof Node && rootEl?.contains(next)) return;
 		open = false;
 		active = -1;
 	}
@@ -186,8 +186,8 @@
 	/** "/" focuses the converter from anywhere on the page. */
 	function onWindowKeydown(e: KeyboardEvent): void {
 		if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
-		const el = e.target as HTMLElement | null;
-		const tag = el?.tagName?.toLowerCase();
+		const el = e.target instanceof HTMLElement ? e.target : null;
+		const tag = el?.tagName.toLowerCase();
 		if (tag === 'input' || tag === 'textarea' || tag === 'select' || el?.isContentEditable) return;
 		e.preventDefault();
 		inputEl?.focus();

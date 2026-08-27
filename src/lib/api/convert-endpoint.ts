@@ -16,7 +16,7 @@
  */
 
 import { getConverter } from '$lib/index';
-import type { EngineOptions, HeatingBasis } from '$lib/conversion/types';
+import type { EngineOptions } from '$lib/conversion/types';
 import { APP_VERSION } from '$lib/version';
 
 /** Bumped when the response shape changes; mirrors the app version line. */
@@ -97,7 +97,7 @@ export function handleConvertRequest(url: URL): EndpointResult {
 				message: `Invalid basis "${basisRaw}" — use "lhv" (default) or "hhv".`
 			});
 		}
-		options.basis = basisRaw as HeatingBasis;
+		options.basis = basisRaw;
 	}
 
 	const region = url.searchParams.get('region');

@@ -26,8 +26,8 @@
 	let triggerEl = $state<HTMLButtonElement | null>(null);
 
 	function onFocusOut(e: FocusEvent) {
-		const next = e.relatedTarget as Node | null;
-		if (next && rootEl?.contains(next)) return;
+		const next = e.relatedTarget;
+		if (next instanceof Node && rootEl?.contains(next)) return;
 		open = false;
 	}
 

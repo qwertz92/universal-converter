@@ -10,13 +10,7 @@
  */
 
 import { z } from 'zod';
-import {
-	BASE_DIMENSIONS,
-	EXACTNESS_LEVELS,
-	PSEUDO_DIMENSIONS,
-	type Dimension,
-	type Exactness
-} from '$lib/conversion/types';
+import { BASE_DIMENSIONS, EXACTNESS_LEVELS, PSEUDO_DIMENSIONS } from '$lib/conversion/types';
 
 /* ------------------------------------------------------------------ *
  * Shared primitives
@@ -41,9 +35,9 @@ const decimalString = z.union([z.number(), z.string()]).transform((v, ctx) => {
 	return s;
 });
 
-const allDimensions = [...BASE_DIMENSIONS, ...PSEUDO_DIMENSIONS] as [Dimension, ...Dimension[]];
+const allDimensions = [...BASE_DIMENSIONS, ...PSEUDO_DIMENSIONS];
 const dimensionSchema = z.enum(allDimensions);
-const exactnessSchema = z.enum(EXACTNESS_LEVELS as [Exactness, ...Exactness[]]);
+const exactnessSchema = z.enum(EXACTNESS_LEVELS);
 const heatingBasisSchema = z.enum(['lhv', 'hhv']);
 const sourceRefSchema = idSchema;
 

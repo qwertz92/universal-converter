@@ -28,11 +28,11 @@ import {
  * Throws a descriptive error if any file fails its schema (fail loud).
  */
 export function loadDataBundle(): DataBundle {
-	const units = unitsFileSchema.parse(unitsJson).units as Unit[];
-	const fuels = fuelsFileSchema.parse(fuelsJson).fuels as Fuel[];
-	const emissionFactors = emissionFactorsFileSchema.parse(emissionFactorsJson)
-		.emission_factors as EmissionFactor[];
-	const sources = sourcesFileSchema.parse(sourcesJson).sources as Source[];
+	const units: Unit[] = unitsFileSchema.parse(unitsJson).units;
+	const fuels: Fuel[] = fuelsFileSchema.parse(fuelsJson).fuels;
+	const emissionFactors: EmissionFactor[] =
+		emissionFactorsFileSchema.parse(emissionFactorsJson).emission_factors;
+	const sources: Source[] = sourcesFileSchema.parse(sourcesJson).sources;
 
 	return { units, fuels, emissionFactors, sources };
 }
