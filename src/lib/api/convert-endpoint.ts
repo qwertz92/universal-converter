@@ -16,7 +16,7 @@
  */
 
 import { getConverter } from '$lib/index';
-import type { EngineOptions } from '$lib/conversion/types';
+import type { ConversionResultSet, EngineOptions, ParseError } from '$lib/conversion/types';
 import { APP_VERSION } from '$lib/version';
 
 /** Bumped when the response shape changes; mirrors the app version line. */
@@ -28,9 +28,35 @@ const EXACTNESS_NOTE =
 	'non-exact results carry source_refs. Treat `value` as display text; `raw` is the ' +
 	'full-precision decimal string. This API is a draft and may change before 1.0.';
 
+/** The body of a 200 response: the result, plus how to read it. */
+export interface ConvertSuccessBody {
+	api_version: string;
+	exactness_note: string;
+	result: ConversionResultSet;
+}
+
+/**
+ * A request this handler rejected before the engine ever saw it. The other half
+ * of the 400s are `ParseError`s, which come back from the converter and are
+ * passed through verbatim — the two are told apart by `kind`.
+ */
+export interface RequestError {
+	kind: 'missing_query' | 'invalid_parameter';
+	message: string;
+}
+
+/** The body of a 400 response. */
+export interface ConvertErrorBody {
+	api_version: string;
+	error: RequestError | ParseError;
+}
+
+/** Either response body. `result` on one, `error` on the other, tells them apart. */
+export type ConvertResponseBody = ConvertSuccessBody | ConvertErrorBody;
+
 export interface EndpointResult {
 	status: number;
-	body: unknown;
+	body: ConvertResponseBody;
 	headers: Record<string, string>;
 }
 
@@ -40,7 +66,7 @@ const BASE_HEADERS = {
 	'x-api-version': API_VERSION
 } satisfies Record<string, string>;
 
-function ok(body: unknown): EndpointResult {
+function ok(body: ConvertSuccessBody): EndpointResult {
 	return {
 		status: 200,
 		body,
@@ -67,7 +93,7 @@ function ok(body: unknown): EndpointResult {
 	};
 }
 
-function badRequest(error: unknown): EndpointResult {
+function badRequest(error: RequestError | ParseError): EndpointResult {
 	return {
 		status: 400,
 		body: { api_version: API_VERSION, error },

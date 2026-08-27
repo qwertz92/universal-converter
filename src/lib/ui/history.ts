@@ -35,7 +35,16 @@ const MAX_SAVED = 50;
 /** Refuse to persist anything longer than a legal query (parser guard is 200). */
 const MAX_LENGTH = 200;
 
-function readJson(store: HistoryStore | undefined, key: string): unknown {
+/**
+ * A value that came back out of `JSON.parse`. Browser storage is editable by the
+ * user and was written by older versions of this module, so what is read is only
+ * known to be *valid JSON* — this type says exactly that and no more. It is not
+ * `unknown`: every shape the readers below accept is reached by narrowing it,
+ * with no assertion anywhere.
+ */
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
+function readJson(store: HistoryStore | undefined, key: string): JsonValue | undefined {
 	if (!store) return undefined;
 	try {
 		const raw = store.getItem(key);
@@ -45,7 +54,11 @@ function readJson(store: HistoryStore | undefined, key: string): unknown {
 	}
 }
 
-function write(store: HistoryStore | undefined, key: string, value: unknown): void {
+/**
+ * `value` is the two shapes this module owns, not any JSON: the only things that
+ * may be written back are a recent list and a saved list.
+ */
+function write(store: HistoryStore | undefined, key: string, value: string[] | SavedEntry[]): void {
 	if (!store) return;
 	try {
 		store.setItem(key, JSON.stringify(value));
@@ -140,12 +153,11 @@ export function readSaved(store: HistoryStore | undefined): SavedEntry[] {
 			if (q) out.push({ query: q });
 			continue;
 		}
-		if (!item || typeof item !== 'object') continue;
-		const record = item as Record<string, unknown>;
-		if (typeof record.query !== 'string') continue;
-		const q = usableQuery(record.query);
+		if (item === null || typeof item !== 'object' || Array.isArray(item)) continue;
+		if (typeof item.query !== 'string') continue;
+		const q = usableQuery(item.query);
 		if (!q) continue;
-		const label = typeof record.label === 'string' ? record.label.trim().slice(0, 60) : undefined;
+		const label = typeof item.label === 'string' ? item.label.trim().slice(0, 60) : undefined;
 		out.push(label ? { query: q, label } : { query: q });
 	}
 	return dedupe(out, (e) => e.query).slice(0, MAX_SAVED);
