@@ -127,7 +127,7 @@
 		<div class="ml-auto flex shrink-0 items-center gap-1.5">
 			<ExactnessBadge exactness={result.exactness} />
 			{#if hasValue}
-				<CopyButton text={copyValue} label="Copy value" iconOnly />
+				<CopyButton text={copyValue} label="Copy {result.value} {result.unit_label}" iconOnly />
 			{/if}
 			{#if hasDetail}
 				<!-- The visible word never changes ("Details"), only the chevron and
@@ -142,7 +142,6 @@
 					onclick={() => (expanded = !expanded)}
 					aria-expanded={expanded}
 					aria-controls={detailId}
-					aria-label={expanded ? 'Hide details' : 'Show details'}
 				>
 					<svg
 						width="13"
@@ -155,7 +154,13 @@
 					>
 						<path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
 					</svg>
-					<span class="hidden sm:inline">Details</span>
+					<!-- The name stays "Details for <value>" in every state; aria-expanded
+					     carries open/closed. A label that flipped to "Hide details"
+					     was read as "Hide details, expanded" — the state twice. The
+					     value makes each row's button distinguishable by name. -->
+					<span class="sr-only sm:not-sr-only">Details</span><span class="sr-only"
+						>{` for ${result.value ?? 'this row'} ${result.unit_label}`}</span
+					>
 				</button>
 			{:else if reserveDetail}
 				<span

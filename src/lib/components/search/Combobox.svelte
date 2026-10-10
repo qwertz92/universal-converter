@@ -24,17 +24,20 @@
 	 * left in the caller's filtered list. Without it, typing "kWh" and pressing
 	 * Enter or tabbing on committed nothing, and the form it sat in stayed
 	 * disabled with no explanation. Several partial matches are never guessed
-	 * between.
+	 * between. `exactOnly` drops the only-option-left fallback: leaving a field
+	 * is not a decision, so a half-typed "hydro" must not become "hydrogen"
+	 * just because the user clicked somewhere else.
 	 */
 	export function typedMatch<T extends { label: string; hint?: string }>(
 		options: readonly T[],
-		query: string
+		query: string,
+		{ exactOnly = false }: { exactOnly?: boolean } = {}
 	): T | undefined {
 		const q = query.trim().toLowerCase();
 		if (!q) return undefined;
 		const exact = options.filter((o) => o.label.toLowerCase() === q || o.hint?.toLowerCase() === q);
 		if (exact.length === 1) return exact[0];
-		if (exact.length === 0 && options.length === 1) return options[0];
+		if (!exactOnly && exact.length === 0 && options.length === 1) return options[0];
 		return undefined;
 	}
 </script>
@@ -197,10 +200,10 @@
 	function onFocusOut(e: FocusEvent) {
 		const next = e.relatedTarget;
 		if (next instanceof Node && rootEl?.contains(next)) return;
-		// Leaving the field with a text that names one option is the same as
-		// picking it — but only when nothing is committed yet.
+		// Leaving the field with a text that exactly names one option is the
+		// same as picking it — but only when nothing is committed yet.
 		if (!value) {
-			const match = typedMatch(flat, query);
+			const match = typedMatch(flat, query, { exactOnly: true });
 			if (match) choose(match);
 		}
 		open = false;

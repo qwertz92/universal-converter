@@ -59,13 +59,39 @@
 		'shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-sm transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]';
 </script>
 
+{#snippet moreButton()}
+	<button
+		type="button"
+		class="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-sm font-medium whitespace-nowrap hover:underline"
+		style="color:var(--accent)"
+		aria-expanded={showAll}
+		aria-controls={moreId}
+		onclick={() => (showAll = !showAll)}
+	>
+		{showAll ? 'Fewer examples' : `More examples (${rest.length})`}
+		<svg
+			width="12"
+			height="12"
+			viewBox="0 0 24 24"
+			fill="none"
+			aria-hidden="true"
+			class="transition-transform"
+			style={showAll ? 'transform:rotate(180deg)' : ''}
+		>
+			<path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+		</svg>
+	</button>
+{/snippet}
+
 <!-- One root element: the parent spaces its children with space-y, which a
      second sibling root would have doubled. -->
 <div>
 	<!-- On a phone the featured chips scroll sideways in one line instead of
-	     wrapping to six, which kept every result below the fold. -->
+	     wrapping to six, which kept every result below the fold. The 4px of
+	     vertical padding (cancelled by the negative margin) keeps the focus
+	     ring inside the scroller, which would otherwise clip it. -->
 	<div
-		class="-mx-4 flex flex-nowrap items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+		class="-mx-4 -my-1 flex flex-nowrap items-center gap-2 overflow-x-auto px-4 py-1 sm:mx-0 sm:my-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:py-0"
 		style="scrollbar-width:none"
 	>
 		<span class="shrink-0 text-xs font-medium" style="color:var(--text-faint)">Try:</span>
@@ -80,31 +106,14 @@
 			</button>
 		{/each}
 		{#if rest.length > 0}
-			<!-- Last item on its line, so its label change cannot move another chip. -->
-			<button
-				type="button"
-				class="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-sm font-medium whitespace-nowrap hover:underline"
-				style="color:var(--accent)"
-				aria-expanded={showAll}
-				aria-controls={moreId}
-				onclick={() => (showAll = !showAll)}
-			>
-				{showAll ? 'Fewer examples' : `More examples (${rest.length})`}
-				<svg
-					width="12"
-					height="12"
-					viewBox="0 0 24 24"
-					fill="none"
-					aria-hidden="true"
-					class="transition-transform"
-					style={showAll ? 'transform:rotate(180deg)' : ''}
-				>
-					<path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-				</svg>
-			</button>
+			<!-- Last item on its line, so its label change cannot move another chip.
+			     Desktop only: at the end of the phone's sideways strip it sat
+			     off-screen with nothing hinting it was there. -->
+			<span class="hidden sm:inline-flex">{@render moreButton()}</span>
 		{/if}
 	</div>
 	{#if rest.length > 0}
+		<div class="mt-1 sm:hidden">{@render moreButton()}</div>
 		<div id={moreId} class="mt-2 flex flex-wrap items-center gap-2" hidden={!showAll}>
 			{#each rest as ex (ex.input)}
 				<button

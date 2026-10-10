@@ -60,7 +60,8 @@
 
 {#if iconOnly}
 	<!-- Fixed square: the icon swap cannot change its size. The confirmation is
-	     announced through the polite live region inside it. -->
+	     announced by a live region NEXT to the button — a button's children are
+	     presentational, so one inside it may never be read. -->
 	<button
 		type="button"
 		onclick={doCopy}
@@ -72,8 +73,8 @@
 		title={copied ? copiedLabel : `${label} to clipboard`}
 	>
 		{#if copied}{@render checkIcon()}{:else}{@render copyIcon()}{/if}
-		<span class="sr-only" aria-live="polite">{copied ? copiedLabel : ''}</span>
 	</button>
+	<span class="sr-only" aria-live="polite">{copied ? copiedLabel : ''}</span>
 {:else}
 	<button
 		type="button"

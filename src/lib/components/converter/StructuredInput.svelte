@@ -118,7 +118,7 @@
 		<button
 			type="submit"
 			disabled={!canSubmit}
-			title={canSubmit ? undefined : 'Choose a unit first'}
+			title={canSubmit ? undefined : !value.trim() ? 'Enter a value first' : 'Choose a unit first'}
 			class="h-[42px] w-full rounded-lg px-4 text-sm font-semibold transition-opacity sm:w-auto"
 			style="background:var(--accent);color:var(--accent-contrast)"
 			class:opacity-40={!canSubmit}

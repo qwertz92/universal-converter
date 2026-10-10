@@ -24,8 +24,16 @@ describe('typedMatch', () => {
 		expect(typedMatch(opts, 'Kilowatt')?.id).toBe('kilowatt');
 	});
 
-	it('commits the only remaining option of a filtered list', () => {
+	it('commits the only remaining option of a filtered list on Enter', () => {
 		expect(typedMatch([opts[1]], 'mega')?.id).toBe('megawatt_hour');
+	});
+
+	it('does not commit a partial text just because the user left the field', () => {
+		// Typing "hydro" in the fuel prompt and clicking back into the main query
+		// committed "hydrogen", rewrote the query and ran a conversion while the
+		// user was only moving to edit something else.
+		expect(typedMatch([opts[1]], 'mega', { exactOnly: true })).toBeUndefined();
+		expect(typedMatch(opts, 'MWh', { exactOnly: true })?.id).toBe('megawatt_hour');
 	});
 
 	it('does not guess between several partial matches', () => {
