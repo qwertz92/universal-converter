@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import Seo from '$lib/components/layout/Seo.svelte';
 	import PageHero from '$lib/components/layout/PageHero.svelte';
@@ -9,6 +10,12 @@
 
 	const units = allUnits();
 	let query = $state('');
+
+	// `?q=` pre-fills the search box (the 404 page links here with a mistyped
+	// slug). Read after mount: a prerendered page has no query string to read.
+	onMount(() => {
+		query = new URLSearchParams(location.search).get('q') ?? '';
+	});
 
 	const filtered = $derived(searchUnits(units, query, 999));
 
@@ -66,9 +73,27 @@
 		{#if grouped.length === 0}
 			<p class="text-sm" style="color:var(--text-faint)">No units match “{query}”.</p>
 		{:else}
+			<!-- Jump links: 73 units over 11 dimensions is a long scroll on a phone. On a
+			     phone the chips form one sideways-scrolling strip (eleven wrapped chips
+			     were five rows, 230px, before the first unit); from sm up they wrap. Each
+			     chip is 40px tall to be tappable. -->
+			<nav
+				aria-label="Jump to a dimension"
+				class="-mx-4 -mt-2 mb-8 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+			>
+				{#each grouped as g (g.dimension)}
+					<a
+						href="#dim-{g.dimension}"
+						class="inline-flex min-h-10 shrink-0 items-center rounded-lg border px-3 text-xs font-medium whitespace-nowrap transition-colors hover:border-[var(--accent)]"
+						style="border-color:var(--border);background:var(--surface);color:var(--text-muted)"
+						>{g.label}</a
+					>
+				{/each}
+			</nav>
+
 			<div class="space-y-8">
 				{#each grouped as g (g.dimension)}
-					<section>
+					<section id="dim-{g.dimension}" class="scroll-mt-20">
 						<h2
 							class="mb-3 text-sm font-semibold tracking-wide uppercase"
 							style="color:var(--text-muted)"
@@ -76,16 +101,19 @@
 							{g.label}
 							<span class="font-normal" style="color:var(--text-faint)">· {g.units.length}</span>
 						</h2>
-						<div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+						<div class="grid grid-cols-2 gap-2 lg:grid-cols-3">
 							{#each g.units as u (u.id)}
 								<a
 									href={resolve(`/units/${u.id}`)}
-									class="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 transition-colors hover:border-[var(--accent)]"
+									class="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border px-3 py-2.5 transition-colors hover:border-[var(--accent)] sm:flex-nowrap sm:justify-between sm:gap-3"
 									style="border-color:var(--border);background:var(--surface)"
 								>
-									<span class="min-w-0">
-										<span class="block truncate text-sm font-medium" style="color:var(--text)"
-											>{u.names[0]}</span
+									<!-- contents on a phone: name, symbol and badge become siblings so the badge
+									     can share the symbol's line; from sm up this is the left block again. -->
+									<span class="contents sm:block sm:min-w-0">
+										<span
+											class="block w-full text-sm leading-snug font-medium break-words sm:w-auto sm:truncate"
+											style="color:var(--text)">{u.names[0]}</span
 										>
 										<span class="uc-num block text-xs" style="color:var(--text-faint)"
 											>{u.symbols[0]}</span

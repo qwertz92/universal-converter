@@ -161,10 +161,15 @@
 										class="hover:text-[var(--accent)]"
 										style="color:var(--text-muted)">{c.label}</a
 									>
+									<!-- The five-column row is ~354px wide and a phone card gives ~300px, which
+									     clipped the exactness badge. Below sm the badge sits under the name. -->
+									<div class="mt-1 sm:hidden">
+										<ExactnessBadge exactness={c.exactness} size="xs" showGlyph={false} />
+									</div>
 								</td>
 								<td class="uc-num py-2 pr-3 text-right font-medium">{c.value}</td>
 								<td class="py-2 pl-1 text-xs" style="color:var(--text-faint)">{c.symbol}</td>
-								<td class="py-2 pl-3 text-right">
+								<td class="hidden py-2 pl-3 text-right sm:table-cell">
 									<ExactnessBadge exactness={c.exactness} size="xs" showGlyph={false} />
 								</td>
 							</tr>

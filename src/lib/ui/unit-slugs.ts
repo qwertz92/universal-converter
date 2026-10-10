@@ -57,3 +57,59 @@ export function buildUnitSlugAliases(units: Unit[]): Map<string, string> {
 	}
 	return aliases;
 }
+
+/**
+ * Everything that gets a prerendered redirect page under /units/: the
+ * symbol aliases above plus the hyphenated spelling of every multi-word id
+ * ("kilowatt-hour" → kilowatt_hour). People type and share the hyphenated form
+ * far more often than the underscore one, and a static host has no runtime to
+ * normalise it with — each accepted spelling needs its own prerendered file.
+ *
+ * Case variants ("kWh") are deliberately NOT enumerated here: a prerendered
+ * `/units/kWh` and `/units/kwh` are the same file on a case-insensitive
+ * filesystem (Windows, macOS), so the second would overwrite the first.
+ * `resolveUnitSlug` handles case at runtime instead.
+ */
+export function buildUnitSlugRedirects(units: Unit[]): Map<string, string> {
+	const unitIds = new Set(units.map((u) => u.id));
+	const redirects = buildUnitSlugAliases(units);
+
+	const claimants = new Map<string, Set<string>>();
+	for (const unit of units) {
+		if (!unit.id.includes('_')) continue;
+		const slug = unit.id.replace(/_/g, '-');
+		if (unitIds.has(slug) || redirects.has(slug) || !SLUG_SAFE.test(slug)) continue;
+		let owners = claimants.get(slug);
+		if (!owners) {
+			owners = new Set();
+			claimants.set(slug, owners);
+		}
+		owners.add(unit.id);
+	}
+	for (const [slug, owners] of claimants) {
+		if (owners.size === 1) redirects.set(slug, [...owners][0]);
+	}
+	return redirects;
+}
+
+/**
+ * Map a typed slug to a canonical unit id, tolerating case, spaces and
+ * hyphen/underscore mix-ups ("kWh", "Kilowatt-Hour", "kilowatt hour"). Returns
+ * undefined when nothing matches — no fuzzy guessing, a wrong unit is worse
+ * than a 404. `redirects` is the map from {@link buildUnitSlugRedirects} (or the
+ * plain alias map).
+ */
+export function resolveUnitSlug(
+	slug: string,
+	unitIds: ReadonlySet<string>,
+	redirects: ReadonlyMap<string, string>
+): string | undefined {
+	const lower = slug.trim().toLowerCase();
+	if (lower === '') return undefined;
+	for (const candidate of [slug, lower, lower.replace(/[-\s]+/g, '_')]) {
+		if (unitIds.has(candidate)) return candidate;
+		const target = redirects.get(candidate);
+		if (target) return target;
+	}
+	return undefined;
+}
