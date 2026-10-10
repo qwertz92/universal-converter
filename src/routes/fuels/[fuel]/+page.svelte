@@ -12,7 +12,7 @@
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
-	const { fuel, sources, learn } = $derived(data);
+	const { fuel, learn } = $derived(data);
 
 	/**
 	 * `loadDataBundle()` re-parses and re-validates ~120 KB of JSON through Zod on
@@ -99,6 +99,36 @@
 
 	const lhvValues = $derived((fuel.heating_values ?? []).filter((h) => h.basis === 'lhv'));
 	const hhvValues = $derived((fuel.heating_values ?? []).filter((h) => h.basis === 'hhv'));
+
+	/**
+	 * When every heating-value row cites the same source set (all but hydrogen),
+	 * the source is printed once under the card instead of once per row: six
+	 * identical, truncated publisher names buried the figures. When the rows
+	 * disagree, each row keeps its own source so no figure loses its provenance.
+	 */
+	const hvSourceKey = (refs: string[] | undefined) => [...(refs ?? [])].sort().join('|');
+	const hvSharedRefs = $derived.by<string[] | null>(() => {
+		const all = fuel.heating_values ?? [];
+		if (all.length === 0) return null;
+		const key = hvSourceKey(all[0].source_refs);
+		return all.every((h) => hvSourceKey(h.source_refs) === key) ? (all[0].source_refs ?? []) : null;
+	});
+
+	/**
+	 * Every source this page cites, in first-use order: the fuel's own refs plus
+	 * those of its density, heating values and emission factors. The page-level
+	 * "Sources" list used to show only `fuel.source_refs`, which omits e.g. the
+	 * NIST WebBook that backs one hydrogen heating value.
+	 */
+	const allSourceRefs = $derived.by<string[]>(() => {
+		const ids = [
+			...(fuel.source_refs ?? []),
+			...(fuel.density?.source_refs ?? []),
+			...(fuel.heating_values ?? []).flatMap((h) => h.source_refs ?? []),
+			...factors.map((f) => f.source_id)
+		];
+		return [...new Set(ids)];
+	});
 </script>
 
 <Seo
@@ -199,9 +229,11 @@
 
 	<!-- Properties grid -->
 	<div class="grid gap-4 sm:grid-cols-2">
+		<!-- `[&_.truncate]:whitespace-normal` on these cards: SourceRefs ellipsises a long publisher
+		     name; here the card is wide enough to show it whole by wrapping instead. -->
 		<!-- Density -->
 		<section
-			class="min-w-0 rounded-[var(--radius-card)] border p-5"
+			class="min-w-0 rounded-[var(--radius-card)] border p-5 [&_.truncate]:whitespace-normal"
 			style="border-color:var(--border);background:var(--surface)"
 		>
 			<h2
@@ -225,7 +257,7 @@
 
 		<!-- Heating values -->
 		<section
-			class="min-w-0 rounded-[var(--radius-card)] border p-5"
+			class="min-w-0 rounded-[var(--radius-card)] border p-5 [&_.truncate]:whitespace-normal"
 			style="border-color:var(--border);background:var(--surface)"
 		>
 			<h2
@@ -246,11 +278,13 @@
 								</div>
 								<ul class="space-y-1">
 									{#each grp.items as hv, i (hv.unit + i)}
-										<li class="flex items-baseline justify-between gap-2 text-sm">
-											<span class="uc-num font-medium"
+										<li class="text-sm">
+											<span class="uc-num font-medium whitespace-nowrap"
 												>{hv.value} {hvUnitLabel.get(hv.unit) ?? hv.unit}</span
 											>
-											<SourceRefs refs={hv.source_refs} compact />
+											{#if hvSharedRefs === null}
+												<div class="mt-0.5"><SourceRefs refs={hv.source_refs} compact /></div>
+											{/if}
 										</li>
 									{/each}
 								</ul>
@@ -261,6 +295,12 @@
 						<p class="text-xs" style="color:var(--text-faint)">
 							HHV/GCV not available — not derived from LHV.
 						</p>
+					{/if}
+					{#if hvSharedRefs !== null}
+						<div class="border-t pt-2 text-xs" style="border-color:var(--border)">
+							<span style="color:var(--text-faint)">Source for all values above</span>
+							<div class="mt-0.5"><SourceRefs refs={hvSharedRefs} compact /></div>
+						</div>
 					{/if}
 				</div>
 			{/if}
@@ -281,7 +321,24 @@
 				derived.
 			</p>
 		{:else}
-			<div class="overflow-x-auto">
+			<!-- Below md the five columns need ~590px and the card gives ~300px, which
+			     cut off the Source column behind a sideways scroll. A stacked list shows
+			     the same five facts with nothing hidden. -->
+			<ul class="md:hidden [&_.truncate]:whitespace-normal">
+				{#each factors as f (f.id)}
+					<li class="border-t py-3 first:border-t-0 first:pt-0" style="border-color:var(--border)">
+						<div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+							<span class="text-sm font-medium">{POLLUTANT_LABEL[f.pollutant]}</span>
+							<span class="uc-num text-sm whitespace-nowrap">{f.value} {unitLabel(f.unit)}</span>
+						</div>
+						<div class="mt-0.5 text-xs" style="color:var(--text-muted)">
+							{SCOPE_LABEL[f.scope]} · {f.region ?? 'general'}{f.year ? ` · ${f.year}` : ''}
+						</div>
+						<div class="mt-1"><SourceRefs refs={[f.source_id]} compact /></div>
+					</li>
+				{/each}
+			</ul>
+			<div class="hidden overflow-x-auto md:block">
 				<table class="w-full text-sm">
 					<thead>
 						<tr style="color:var(--text-faint)">
@@ -322,33 +379,60 @@
 
 	<!-- Live representative conversion -->
 	{#if sample}
-		<section class="mt-8">
-			<div class="mb-3 flex items-baseline justify-between gap-3">
-				<h2 class="text-sm font-semibold tracking-wide uppercase" style="color:var(--text-muted)">
-					Worked example
-				</h2>
-				<a
-					href={resolve(`/convert?q=${encodeURIComponent(sampleQuery)}`)}
-					class="text-sm font-medium hover:underline"
-					style="color:var(--accent)"
+		<!-- Collapsed by default: the full result set repeats the density, heating
+		     values and emission factors above in a third form and ran to ~2800px on
+		     a phone. Opening it is the reader's choice, so nothing shifts on its own. -->
+		<details
+			class="group mt-8 rounded-[var(--radius-card)] border"
+			style="border-color:var(--border);background:var(--surface)"
+		>
+			<summary
+				class="flex min-h-12 cursor-pointer list-none items-center gap-2 px-4 py-2 text-sm font-semibold [&::-webkit-details-marker]:hidden"
+			>
+				<svg
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					aria-hidden="true"
+					class="shrink-0 transition-transform group-open:rotate-90"
+					style="color:var(--text-faint)"
 				>
-					Open in converter →
-				</a>
+					<path
+						d="M9 6l6 6-6 6"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+				<span>Worked example: {sampleQuery} converted to every unit</span>
+			</summary>
+			<div class="px-4 pb-4">
+				<div class="mb-3">
+					<a
+						href={resolve(`/convert?q=${encodeURIComponent(sampleQuery)}`)}
+						class="inline-flex min-h-10 items-center text-sm font-medium hover:underline"
+						style="color:var(--accent)"
+					>
+						Open in converter →
+					</a>
+				</div>
+				<ResultSet resultSet={sample} />
 			</div>
-			<ResultSet resultSet={sample} />
-		</section>
+		</details>
 	{/if}
 
 	<!-- Sources + learn -->
-	{#if sources.length > 0}
-		<section class="mt-8">
+	{#if allSourceRefs.length > 0}
+		<section class="mt-8 [&_.truncate]:whitespace-normal">
 			<h2
 				class="mb-2 text-sm font-semibold tracking-wide uppercase"
 				style="color:var(--text-muted)"
 			>
 				Sources
 			</h2>
-			<SourceRefs refs={fuel.source_refs} />
+			<SourceRefs refs={allSourceRefs} />
 		</section>
 	{/if}
 

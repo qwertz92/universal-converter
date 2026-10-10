@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import Seo from '$lib/components/layout/Seo.svelte';
 	import PageHero from '$lib/components/layout/PageHero.svelte';
@@ -8,6 +9,12 @@
 
 	const fuels = allFuels();
 	let query = $state('');
+
+	// `?q=` pre-fills the search box (the 404 page links here with a mistyped
+	// slug). Read after mount: a prerendered page has no query string to read.
+	onMount(() => {
+		query = new URLSearchParams(location.search).get('q') ?? '';
+	});
 
 	const filtered = $derived(searchFuels(fuels, query, 999));
 
