@@ -39,7 +39,7 @@
 </script>
 
 <div
-	class="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-lg border px-4 py-3"
+	class="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg border px-3 py-2.5 sm:px-4 sm:py-3"
 	style="border-color:var(--border);background:var(--surface)"
 >
 	<div class="flex items-center gap-2">
