@@ -34,9 +34,11 @@
 </script>
 
 <footer class="mt-20 border-t" style="border-color:var(--border)">
-	<div class="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-		<div class="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
-			<div class="max-w-xs">
+	<div class="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+		<!-- Two link columns side by side on a phone: one column of three stacked
+		     groups made the footer 900px tall. The brand blurb spans both. -->
+		<div class="grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-[1.4fr_1fr_1fr_1fr] md:gap-10">
+			<div class="col-span-2 max-w-xs md:col-span-1">
 				<div class="mb-2 font-semibold tracking-tight">Universal Converter</div>
 				<p class="text-sm leading-relaxed" style="color:var(--text-muted)">
 					A transparent converter for units, energy, fuels and emissions. Every non-exact result is
@@ -46,17 +48,17 @@
 			{#each cols as col (col.title)}
 				<div>
 					<div
-						class="mb-3 text-xs font-semibold tracking-wide uppercase"
+						class="mb-1 text-xs font-semibold tracking-wide uppercase md:mb-3"
 						style="color:var(--text-faint)"
 					>
 						{col.title}
 					</div>
-					<ul class="space-y-2">
+					<ul class="md:space-y-2">
 						{#each col.links as link (link.href + link.label)}
 							<li>
 								<a
 									href={resolve(link.href)}
-									class="text-sm transition-colors hover:text-[var(--accent)]"
+									class="block py-2.5 text-sm transition-colors hover:text-[var(--accent)] md:inline md:py-0"
 									style="color:var(--text-muted)">{link.label}</a
 								>
 							</li>

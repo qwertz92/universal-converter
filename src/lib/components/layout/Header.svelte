@@ -26,6 +26,22 @@
 
 	let menuOpen = $state(false);
 	let menuButtonEl = $state<HTMLButtonElement | null>(null);
+	let menuPanelEl = $state<HTMLElement | null>(null);
+	let headerEl = $state<HTMLElement | null>(null);
+
+	// Opening the menu moves focus to its first link: without it a keyboard or
+	// screen-reader user stays on the toggle with no sign that anything appeared.
+	// Esc (below) is the way back to the toggle.
+	$effect(() => {
+		if (menuOpen) menuPanelEl?.querySelector('a')?.focus();
+	});
+
+	// Tap-outside closes the menu. `pointerdown` rather than `click`: iOS Safari
+	// does not deliver `click` to a non-interactive element such as page text, so
+	// a click listener would never see a tap on plain content.
+	function onWindowPointerdown(e: PointerEvent) {
+		if (menuOpen && e.target instanceof Node && !headerEl?.contains(e.target)) menuOpen = false;
+	}
 
 	// The panel the toggle claims to expand. Derived per instance rather than
 	// written as a literal so it stays unique even if a page ever mounts a second
@@ -47,9 +63,10 @@
 	}
 </script>
 
-<svelte:window onkeydown={onHeaderKeydown} />
+<svelte:window onkeydown={onHeaderKeydown} onpointerdown={onWindowPointerdown} />
 
 <header
+	bind:this={headerEl}
 	class="sticky top-0 z-40 border-b backdrop-blur"
 	style="border-color:var(--border);background-color:color-mix(in srgb, var(--bg) 88%, transparent)"
 >
@@ -73,7 +90,7 @@
 			<span class="text-[0.98rem] whitespace-nowrap">Universal Converter</span>
 		</a>
 
-		<nav class="ml-auto hidden items-center gap-1 md:flex" aria-label="Primary">
+		<nav class="ml-auto hidden items-center gap-1 lg:flex" aria-label="Primary">
 			{#each links as link (link.href)}
 				<a
 					href={resolve(link.href)}
@@ -88,12 +105,12 @@
 			{/each}
 		</nav>
 
-		<div class="ml-auto flex items-center gap-2 md:ml-2">
+		<div class="ml-auto flex items-center gap-2 lg:ml-2">
 			<ThemeToggle />
 			<button
 				type="button"
 				bind:this={menuButtonEl}
-				class="inline-flex h-10 w-10 items-center justify-center rounded-lg border md:hidden"
+				class="inline-flex h-10 w-10 items-center justify-center rounded-lg border lg:hidden"
 				style="border-color:var(--border)"
 				aria-label="Toggle navigation menu"
 				aria-expanded={menuOpen}
@@ -124,7 +141,8 @@
 	{#if menuOpen}
 		<nav
 			id={menuId}
-			class="absolute top-full right-0 left-0 z-40 border-t px-4 pb-3 shadow-lg md:hidden"
+			bind:this={menuPanelEl}
+			class="absolute top-full right-0 left-0 z-40 border-t px-4 pb-3 shadow-lg lg:hidden"
 			style="border-color:var(--border);background:var(--bg)"
 			aria-label="Primary mobile"
 		>

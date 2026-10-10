@@ -46,13 +46,16 @@
 	<button
 		type="button"
 		bind:this={triggerEl}
-		class="inline-flex h-5 w-5 items-center justify-center rounded-full border text-[0.7rem] font-semibold"
+		class="relative inline-flex h-5 w-5 items-center justify-center rounded-full border text-[0.7rem] font-semibold after:absolute after:-inset-[11px] after:content-['']"
 		style="border-color:var(--border);color:var(--text-faint)"
 		aria-label={label}
 		aria-expanded={open}
 		aria-controls={panelId}
 		onclick={() => (open = !open)}
 	>
+		<!-- The visible circle stays 20px. The ::after box (class list above) grows the
+		     tappable area to 40px without moving anything; it is measured from the
+		     padding edge, hence 11px per side rather than 10. -->
 		i
 	</button>
 	{#if open}
