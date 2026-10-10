@@ -22,6 +22,33 @@
 	{#if sources.length === 0}
 		<p class="text-sm" style="color:var(--text-faint)">No sources loaded.</p>
 	{:else}
+		<!-- Eleven sources are a long scroll on a phone. This index jumps to a card;
+		     the card ids below are unchanged because other pages link to
+		     /sources#<id>. -->
+		<nav
+			aria-label="On this page"
+			class="mb-8 rounded-[var(--radius-card)] border p-4"
+			style="border-color:var(--border);background:var(--surface)"
+		>
+			<h2
+				class="mb-1 text-sm font-semibold tracking-wide uppercase"
+				style="color:var(--text-muted)"
+			>
+				On this page
+			</h2>
+			<ul class="sm:columns-2 sm:gap-6">
+				{#each sources as s (s.id)}
+					<li class="break-inside-avoid">
+						<a
+							href="#{s.id}"
+							class="flex min-h-10 items-center text-sm leading-snug hover:text-[var(--accent)] sm:min-h-9"
+							style="color:var(--text-muted)">{s.title}</a
+						>
+					</li>
+				{/each}
+			</ul>
+		</nav>
+
 		<div class="space-y-3">
 			{#each sources as s (s.id)}
 				<article
@@ -41,9 +68,9 @@
 						{/if}
 					</div>
 
-					<dl class="mt-3 grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
+					<dl class="mt-3 grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
 						{#if s.publisher}
-							<div class="flex gap-2">
+							<div class="col-span-2 flex gap-2 sm:col-span-1">
 								<dt style="color:var(--text-faint)">Publisher</dt>
 								<dd class="font-medium">{s.publisher}</dd>
 							</div>
@@ -54,16 +81,17 @@
 								<dd class="uc-num font-medium">{s.publication_year}</dd>
 							</div>
 						{/if}
-						{#if s.license}
-							<div class="flex gap-2">
-								<dt style="color:var(--text-faint)">License</dt>
-								<dd class="font-medium">{s.license}</dd>
-							</div>
-						{/if}
 						{#if s.retrieved_at}
 							<div class="flex gap-2">
 								<dt style="color:var(--text-faint)">Retrieved</dt>
 								<dd class="uc-num font-medium">{s.retrieved_at}</dd>
+							</div>
+						{/if}
+						{#if s.license}
+							<!-- Licence text can run to a full sentence (IPCC): full width, not a half column. -->
+							<div class="col-span-2 flex gap-2">
+								<dt style="color:var(--text-faint)">License</dt>
+								<dd class="font-medium">{s.license}</dd>
 							</div>
 						{/if}
 					</dl>
@@ -78,18 +106,44 @@
 						</p>
 					{/if}
 					{#if s.notes}
-						<p class="mt-1.5 text-sm leading-snug break-words" style="color:var(--text-faint)">
-							{s.notes}
-						</p>
+						<!-- Collapsed: the notes quote URLs and publication details that triple the
+						     card's height on a phone. Nothing is dropped, it is one tap away. -->
+						<details class="group mt-2">
+							<summary
+								class="inline-flex min-h-10 cursor-pointer list-none items-center gap-1.5 text-sm font-medium [&::-webkit-details-marker]:hidden"
+								style="color:var(--text-muted)"
+							>
+								<svg
+									width="12"
+									height="12"
+									viewBox="0 0 24 24"
+									fill="none"
+									aria-hidden="true"
+									class="shrink-0 transition-transform group-open:rotate-90"
+								>
+									<path
+										d="M9 6l6 6-6 6"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									/>
+								</svg>
+								Notes
+							</summary>
+							<p class="text-sm leading-snug break-words" style="color:var(--text-faint)">
+								{s.notes}
+							</p>
+						</details>
 					{/if}
 
-					<div class="mt-3 flex items-center gap-4 text-sm">
+					<div class="mt-1 flex items-center gap-4 text-sm">
 						{#if s.url}
 							<a
 								href={s.url}
 								target="_blank"
 								rel="external noopener noreferrer"
-								class="inline-flex items-center gap-1 font-medium hover:underline"
+								class="inline-flex min-h-10 items-center gap-1 font-medium hover:underline"
 								style="color:var(--accent)"
 							>
 								Visit source
@@ -104,7 +158,12 @@
 								</svg>
 							</a>
 						{/if}
-						<code class="text-xs" style="color:var(--text-faint)">#{s.id}</code>
+						<a
+							href="#{s.id}"
+							class="inline-flex min-h-10 items-center text-xs hover:text-[var(--accent)]"
+							style="color:var(--text-faint)"
+							aria-label="Link to {s.title}">Permalink</a
+						>
 					</div>
 				</article>
 			{/each}
