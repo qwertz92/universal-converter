@@ -49,12 +49,14 @@
 		</div>
 		{#if answer}
 			<div class="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+				<!-- The requested answer is the largest text in the result area: it is
+				     what was asked, and everything below is supporting context. -->
 				<div class="text-lg font-semibold sm:text-xl" style="color:var(--text)">
 					<span class="uc-num">{input.value}</span>
 					<span style="color:var(--text-muted)">{input.unit_label}</span>
 					{#if input.fuel_label}<span style="color:var(--accent)"> {input.fuel_label}</span>{/if}
 					<span class="mx-1.5" style="color:var(--text-faint)">=</span>
-					<span class="uc-num">{answer.value}</span>
+					<span class="uc-num text-2xl font-bold tracking-tight sm:text-3xl">{answer.value}</span>
 					<span style="color:var(--text-muted)">{answer.unit_label}</span>
 				</div>
 				<ExactnessBadge exactness={answer.exactness} />

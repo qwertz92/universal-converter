@@ -5,6 +5,7 @@
 	import { groupMeta } from '$lib/ui/groups';
 	import { basisSections } from '$lib/ui/basis-sections';
 	import ResultRow from './ResultRow.svelte';
+	import { rowHasDetail } from '$lib/ui/result-row';
 
 	let {
 		group,
@@ -32,6 +33,7 @@
 	// 356.6 MJ (LHV) and 379.1 MJ (HHV) can never be read as one list of
 	// equivalent figures (rulebook §C.1).
 	const sections = $derived(basisSections(group.results));
+	const reserveDetail = $derived(group.results.some(rowHasDetail));
 	// One "What is this?" per card is enough; repeating it per heading is noise.
 	const firstBasisSection = $derived(sections.findIndex((x) => x.basis !== undefined));
 
@@ -94,7 +96,7 @@
 		<div class="divide-y" style="border-color:var(--border)">
 			{#each section.rows as result, i (result.unit_id + result.category + i)}
 				<div style="border-color:var(--border)" class="py-0.5">
-					<ResultRow {result} {contextControl} />
+					<ResultRow {result} {contextControl} {reserveDetail} />
 				</div>
 			{/each}
 		</div>

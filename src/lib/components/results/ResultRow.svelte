@@ -12,14 +12,19 @@
 	import ExactnessBadge from '$lib/components/badges/ExactnessBadge.svelte';
 	import CopyButton from './CopyButton.svelte';
 	import SourceRefs from './SourceRefs.svelte';
+	import { rowHasDetail } from '$lib/ui/result-row';
 
 	let {
 		result,
 		/** Optional slot: a control to render for a context_required row (e.g. basis toggle). */
-		contextControl
+		contextControl,
+		/** Keep the Details button's slot even without details, so a group's
+		 *  badges and copy buttons stay in one column. */
+		reserveDetail = false
 	}: {
 		result: ConversionResult;
 		contextControl?: import('svelte').Snippet<[ConversionResult]>;
+		reserveDetail?: boolean;
 	} = $props();
 
 	// Per-instance id: every result set renders a stack of these rows, so a
@@ -32,17 +37,7 @@
 	let expanded = $state(false);
 
 	const hasValue = $derived(result.value !== null);
-	// Value-less rows already show their explanation inline — the disclosure is
-	// only worth rendering when it adds something beyond that.
-	const hasDetail = $derived(
-		Boolean(
-			result.formula ||
-			result.assumptions.length ||
-			result.warnings.length ||
-			result.source_refs.length ||
-			(hasValue && result.explanation)
-		)
-	);
+	const hasDetail = $derived(rowHasDetail(result));
 
 	/**
 	 * Plain value for copy: no `~` marker, no thousands separators — and no more
@@ -162,6 +157,14 @@
 					</svg>
 					<span class="hidden sm:inline">Details</span>
 				</button>
+			{:else if reserveDetail}
+				<span
+					aria-hidden="true"
+					class="invisible inline-flex h-9 min-w-9 items-center justify-center gap-1 rounded-md border px-2 text-xs font-medium sm:h-8"
+				>
+					<svg width="13" height="13" viewBox="0 0 24 24" fill="none"></svg>
+					<span class="hidden sm:inline">Details</span>
+				</span>
 			{/if}
 		</div>
 	</div>
