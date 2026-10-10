@@ -11,7 +11,7 @@
 import { describe, expect, it } from 'vitest';
 import { getConverter } from '$lib/index';
 import { loadDataBundle } from '$lib/data/load-data';
-import { gridIntensityOptions } from '$lib/ui/engine';
+import { gridIntensityOptions, gridPickerOptions } from '$lib/ui/engine';
 import type { ConversionResult } from '$lib/conversion/types';
 
 const converter = getConverter();
@@ -82,6 +82,22 @@ describe('a US query is answered', () => {
 		const us = gridIntensityOptions().filter((o) => o.region === 'US');
 		expect(us.length).toBeGreaterThan(0);
 		expect(us.every((o) => o.year === 2023)).toBe(true);
+	});
+
+	it('is ONE picker option, naming both metrics', () => {
+		// The picker listed US 2023 twice — once per metric — under the same
+		// `US|2023` value and the same each-key. Svelte refused the duplicate key
+		// in dev, which took /convert down on hydration; in production the two
+		// options shared one value, so the second could never be the selection.
+		// A region/year is what the engine takes; it returns both metrics.
+		const opts = gridPickerOptions();
+		expect(new Set(opts.map((o) => o.value)).size).toBe(opts.length);
+		const us = opts.filter((o) => o.value === 'US|2023');
+		expect(us).toHaveLength(1);
+		expect(us[0].label).toMatch(/CO2 ~348 gCO2\/kWh/);
+		expect(us[0].label).toMatch(/CO2e ~350 gCO2e\/kWh/);
+		// Rounded the way a grid result is shown, not at catalog precision.
+		expect(us[0].label).not.toContain('347.996066264');
 	});
 
 	it('electricity cites both new factors', () => {

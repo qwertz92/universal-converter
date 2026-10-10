@@ -11,6 +11,7 @@
 
 import { getConverter, loadDataBundle } from '$lib';
 import { factorInputKind } from '$lib/emissions/factors';
+import { formatValue } from '$lib/formatting/numbers';
 import type { Converter, DataBundle, Fuel, Source, Unit, Dimension } from '$lib/conversion/types';
 
 let _bundle: DataBundle | undefined;
@@ -119,6 +120,43 @@ export function gridIntensityOptions(): GridIntensityOption[] {
 		});
 	}
 	return out.sort((a, b2) => a.region.localeCompare(b2.region) || b2.year - a.year);
+}
+
+/** One entry of the grid region/year picker. */
+export interface GridPickerOption {
+	/** `${region}|${year}` — what the converter state and the URL carry. */
+	value: string;
+	label: string;
+}
+
+function gridUnitLabel(unit: string): string {
+	return unit.replace(/^g_(co2e?)_per_kwh$/, (_, p: string) =>
+		p === 'co2e' ? 'gCO2e/kWh' : 'gCO2/kWh'
+	);
+}
+
+/**
+ * The picker's options: one per region/year, because a region/year is what
+ * the engine takes and it answers with every metric cited for it. One option
+ * per FACTOR listed US 2023 twice under the same value — a duplicate each-key
+ * that crashed /convert in dev, and in production an option that could never
+ * be selected. Each metric keeps its own figure in the label, so CO2 and CO2e
+ * stay visibly distinct (§D.6), rounded the way a grid result is shown.
+ */
+export function gridPickerOptions(): GridPickerOption[] {
+	const byKey = new Map<string, { region: string; year: number; parts: string[] }>();
+	for (const o of gridIntensityOptions()) {
+		const key = `${o.region}|${o.year}`;
+		const entry = byKey.get(key) ?? { region: o.region, year: o.year, parts: [] };
+		entry.parts.push(
+			`${o.pollutant} ${formatValue(o.value, 'region_year_specific')} ${gridUnitLabel(o.unit)}`
+		);
+		byKey.set(key, entry);
+	}
+	return [...byKey].map(([value, e]) => ({
+		value,
+		label: `${e.region} ${e.year} · ${e.parts.join(' / ')}`
+	}));
 }
 
 /* ------------------------------------------------------------------ *
