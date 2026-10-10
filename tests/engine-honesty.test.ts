@@ -261,3 +261,35 @@ describe('the emissions path is checkable too', () => {
 		expect(row?.formula).not.toContain('kg_co2_per_l');
 	});
 });
+
+describe('every heating-value figure names its basis on the row itself', () => {
+	// `10 L diesel` listed 356.6 MJ and 379.1 MJ one under the other. The basis
+	// lived only in each row's assumptions, behind "Show details" in the UI and
+	// nowhere at all in the CSV — two different numbers for the same quantity
+	// with nothing on screen to tell them apart.
+	it('labels both LHV and HHV energy rows', () => {
+		const energy = rows('10 L diesel').filter((r) => r.category === 'energy' && r.raw !== null);
+		expect(energy.length).toBeGreaterThan(0);
+		expect(energy.every((r) => r.basis === 'lhv' || r.basis === 'hhv')).toBe(true);
+		expect(new Set(energy.map((r) => r.basis))).toEqual(new Set(['lhv', 'hhv']));
+	});
+
+	it('labels the energy-density rows with the basis they were computed on', () => {
+		const density = rows('10 L diesel', { basis: 'hhv' }).filter(
+			(r) => r.category === 'energy_density'
+		);
+		expect(density.length).toBeGreaterThan(0);
+		expect(density.every((r) => r.basis === 'hhv')).toBe(true);
+	});
+
+	it('labels the "not available" row with the basis that is missing', () => {
+		const missing = rows('1 kg lignite', { basis: 'hhv' }).find(
+			(r) => r.category === 'energy' && r.value === null
+		);
+		expect(missing?.basis).toBe('hhv');
+	});
+
+	it('leaves pure unit conversions unlabeled — they have no basis', () => {
+		expect(rows('1 kWh').every((r) => r.basis === undefined)).toBe(true);
+	});
+});

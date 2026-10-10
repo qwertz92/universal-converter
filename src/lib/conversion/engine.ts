@@ -1175,6 +1175,7 @@ export function createConverter(data: DataBundle): Converter {
 								`${basisLabel(basis)}${isPrimary ? '' : ' — secondary'}`
 							)
 						: undefined,
+				basis,
 				assumptions: [a],
 				warnings: isPrimary
 					? []
@@ -1617,6 +1618,7 @@ export function createConverter(data: DataBundle): Converter {
 			category,
 			exactness: 'source_based',
 			explanation: `${basisLabel(basis)} energy density of ${fuel.names[0]}.`,
+			basis,
 			assumptions: [],
 			warnings: [],
 			source_refs: refs
@@ -1683,6 +1685,7 @@ export function createConverter(data: DataBundle): Converter {
 			exactness: 'context_required',
 			explanation: `Not available: ${fuel.names[0]} has no ${basisLabel(basis)} value in the data set, so the ${basisLabel(other)} figure above is the only one there is. The two are never derived from each other — the gap depends on the fuel's hydrogen and moisture content.`,
 			missing: ['heating_value'],
+			basis,
 			assumptions: [],
 			warnings: [],
 			source_refs: []

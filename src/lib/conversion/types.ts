@@ -348,6 +348,13 @@ export interface ConversionResult {
 	formula?: string;
 	/** Optional low/high display range for estimates (rulebook §C.7 rule 2). */
 	range?: { low: string; high: string };
+	/**
+	 * The heating-value basis a fuel-energy figure is on (rulebook §C.1). Set on
+	 * every row computed from a calorific value — and on the row saying a basis
+	 * is missing — so two figures for the same quantity can be told apart
+	 * without opening the assumptions. Absent on rows that have no basis.
+	 */
+	basis?: HeatingBasis;
 	assumptions: Assumption[];
 	warnings: Warning[];
 	source_refs: SourceRef[];

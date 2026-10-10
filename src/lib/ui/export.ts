@@ -35,6 +35,7 @@ export function resultSetToCsv(rs: ConversionResultSet): string {
 			'range_low',
 			'range_high',
 			'exactness',
+			'basis',
 			'source_refs',
 			'note'
 		].join(',')
@@ -51,6 +52,7 @@ export function resultSetToCsv(rs: ConversionResultSet): string {
 					csvField(r.range?.low ?? ''),
 					csvField(r.range?.high ?? ''),
 					csvField(r.exactness),
+					csvField(r.basis ?? ''),
 					csvField(r.source_refs.join(' ')),
 					csvField(r.value === null ? (r.explanation ?? '') : '')
 				].join(',')

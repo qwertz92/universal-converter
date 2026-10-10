@@ -19,7 +19,7 @@ describe('resultSetToCsv', () => {
 
 	it('starts with the header row and has one row per value result', () => {
 		expect(lines[0]).toBe(
-			'group,unit,value_display,value_raw,range_low,range_high,exactness,source_refs,note'
+			'group,unit,value_display,value_raw,range_low,range_high,exactness,basis,source_refs,note'
 		);
 		expect(lines.length).toBeGreaterThan(5);
 	});
@@ -29,7 +29,16 @@ describe('resultSetToCsv', () => {
 		const massRow = lines.slice(1).find((l) => l.startsWith('Mass,kg,'));
 		expect(massRow).toContain('source_based');
 		expect(massRow).toContain('uk-desnz-ghg-2025');
-		expect(dataRows.every((r) => r.length >= 9)).toBe(true);
+		expect(dataRows.every((r) => r.length >= 10)).toBe(true);
+	});
+
+	it('says which heating-value basis each energy row is on', () => {
+		// Without the column, the CSV for 1 L diesel held two different MJ rows
+		// with nothing to tell the LHV figure from the HHV one.
+		const mj = lines.slice(1).filter((l) => l.startsWith('Energy,MJ,'));
+		expect(mj.length).toBe(2);
+		expect(mj.some((l) => l.includes(',lhv,'))).toBe(true);
+		expect(mj.some((l) => l.includes(',hhv,'))).toBe(true);
 	});
 
 	it('excludes the meta pseudo-groups', () => {

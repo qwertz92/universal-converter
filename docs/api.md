@@ -56,6 +56,10 @@ Each `ConversionResult` carries:
   [source register](sources.md));
 - optional `formula`, `range`, `missing`, `explanation`,
   `illustrative_examples`;
+- optional `basis` — `lhv` or `hhv` on every row computed from a calorific
+  value (fuel energy, energy density) and on the row saying a basis is missing.
+  A fuel query returns both bases where the data has both, so two `MJ` rows
+  with different values are expected; `basis` tells them apart.
 - `is_target: true` on the single row the query explicitly asked for. That row
   is also floated to the front of its group. A target **highlights** an answer —
   it never removes the other groups, so a client that wants only one number
