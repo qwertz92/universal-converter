@@ -22,6 +22,15 @@ clearly disturbing; P3 minor or rare; P4 not noticeable.
   LHV/HHV toggle and grid picker take ~140px of that. Moving or collapsing it is
   a design choice (it changes the results it sits above). Effort: ~1 h.
 
+- **Lowercase symbol slugs pick the mega/tera prefix.** (2026-10-10)
+  `/units/mw`, `/units/mwh`, `/units/mj` (and `pj`, `tj`, `tw`) are prerendered
+  redirects to megawatt, megawatt-hour, megajoule…, built by lowercasing each
+  primary symbol in `buildUnitSlugAliases` (`src/lib/ui/unit-slugs.ts`). A
+  reader who meant milli lands 10^9 off; the catalog has no milliwatt or
+  millijoule to compete. Dropping aliases whose symbol has an upper-case SI
+  prefix removes the risk but also those short URLs — a product decision.
+  Effort: ~30 min.
+
 ## P4
 
 - **Rows in two-column result cards alternate between 48 and 64px** at about

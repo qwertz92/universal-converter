@@ -137,7 +137,7 @@
 	     the message changes. It says why Convert is disabled instead of leaving
 	     the reader to guess — a `title` tooltip never shows on a phone. -->
 	<p
-		class="min-h-[2lh] text-xs sm:col-span-4"
+		class="line-clamp-2 min-h-[2lh] text-xs break-words sm:col-span-4"
 		style="color:{unitPending ? 'var(--warn-fg)' : 'var(--text-faint)'}"
 		aria-live="polite"
 	>
