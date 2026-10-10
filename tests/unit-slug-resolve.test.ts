@@ -9,31 +9,44 @@
 
 import { describe, expect, it } from 'vitest';
 import { loadDataBundle } from '$lib/index';
-import { buildUnitSlugAliases, buildUnitSlugRedirects, resolveUnitSlug } from '$lib/ui/unit-slugs';
+import {
+	buildExactSymbolMap,
+	buildUnitSlugAliases,
+	buildUnitSlugRedirects,
+	resolveUnitSlug
+} from '$lib/ui/unit-slugs';
 import type { Unit } from '$lib/conversion/types';
 
 const { units } = loadDataBundle();
 const ids = new Set(units.map((u) => u.id));
 const aliases = buildUnitSlugAliases(units);
 const redirects = buildUnitSlugRedirects(units);
+const symbols = buildExactSymbolMap(units);
 
 describe('resolveUnitSlug on the real catalog', () => {
 	it.each([
 		['kilowatt_hour', 'kilowatt_hour'],
 		['kwh', 'kilowatt_hour'],
 		['kWh', 'kilowatt_hour'],
-		['KWH', 'kilowatt_hour'],
+		['Mg', 'tonne'],
 		['kilowatt-hour', 'kilowatt_hour'],
 		['Kilowatt-Hour', 'kilowatt_hour'],
 		['kilowatt hour', 'kilowatt_hour'],
 		['KILOWATT_HOUR', 'kilowatt_hour']
 	])('%s → %s', (slug, expected) => {
-		expect(resolveUnitSlug(slug, ids, aliases)).toBe(expected);
+		expect(resolveUnitSlug(slug, ids, aliases, symbols)).toBe(expected);
+	});
+
+	// Case is meaning in a unit symbol: m is milli, M is mega. Folding case
+	// sent /units/Mg (a tonne) to milligram and /units/mW to megawatt — 10^9
+	// off, behind a silent redirect. A symbol resolves only as written.
+	it.each(['mW', 'mWh', 'ML', 'mJ', 'KWH'])('%s names no unit as written → undefined', (slug) => {
+		expect(resolveUnitSlug(slug, ids, aliases, symbols)).toBeUndefined();
 	});
 
 	it('returns undefined for a slug that names no unit, instead of guessing', () => {
-		expect(resolveUnitSlug('kilowatt-hours-per-moon', ids, aliases)).toBeUndefined();
-		expect(resolveUnitSlug('', ids, aliases)).toBeUndefined();
+		expect(resolveUnitSlug('kilowatt-hours-per-moon', ids, aliases, symbols)).toBeUndefined();
+		expect(resolveUnitSlug('', ids, aliases, symbols)).toBeUndefined();
 	});
 });
 

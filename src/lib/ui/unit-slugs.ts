@@ -93,23 +93,54 @@ export function buildUnitSlugRedirects(units: Unit[]): Map<string, string> {
 }
 
 /**
- * Map a typed slug to a canonical unit id, tolerating case, spaces and
- * hyphen/underscore mix-ups ("kWh", "Kilowatt-Hour", "kilowatt hour"). Returns
- * undefined when nothing matches — no fuzzy guessing, a wrong unit is worse
- * than a 404. `redirects` is the map from {@link buildUnitSlugRedirects} (or the
- * plain alias map).
+ * Every symbol and alias, exactly as written, to the one unit it names. A
+ * string two units share is left out — it names neither.
+ */
+export function buildExactSymbolMap(units: Unit[]): Map<string, string> {
+	const owners = new Map<string, Set<string>>();
+	for (const unit of units) {
+		for (const s of [...unit.symbols, ...unit.aliases]) {
+			let set = owners.get(s);
+			if (!set) {
+				set = new Set();
+				owners.set(s, set);
+			}
+			set.add(unit.id);
+		}
+	}
+	const out = new Map<string, string>();
+	for (const [s, set] of owners) if (set.size === 1) out.set(s, [...set][0]);
+	return out;
+}
+
+/**
+ * Map a typed slug to a canonical unit id. No fuzzy guessing — a wrong unit is
+ * worse than a 404 — and no case folding of symbols, because case is meaning
+ * there: m is milli, M is mega. Folding sent /units/Mg (a tonne) to milligram
+ * and /units/mW to megawatt behind a silent redirect. So:
+ *
+ *  1. an exact id, or a symbol/alias exactly as written ("kWh", "Mg");
+ *  2. the lowercase alias slugs that are prerendered as redirects ("kwh",
+ *     "kilowatt-hour") — only when the slug was typed in lowercase;
+ *  3. a spelled-out id in any case, with spaces or hyphens for underscores
+ *     ("Kilowatt-Hour", "KILOWATT_HOUR"): ids are words, where case carries
+ *     nothing.
  */
 export function resolveUnitSlug(
 	slug: string,
 	unitIds: ReadonlySet<string>,
-	redirects: ReadonlyMap<string, string>
+	redirects: ReadonlyMap<string, string>,
+	exactSymbols: ReadonlyMap<string, string>
 ): string | undefined {
-	const lower = slug.trim().toLowerCase();
-	if (lower === '') return undefined;
-	for (const candidate of [slug, lower, lower.replace(/[-\s]+/g, '_')]) {
-		if (unitIds.has(candidate)) return candidate;
-		const target = redirects.get(candidate);
+	const trimmed = slug.trim();
+	if (trimmed === '') return undefined;
+	if (unitIds.has(trimmed)) return trimmed;
+	const bySymbol = exactSymbols.get(trimmed);
+	if (bySymbol) return bySymbol;
+	if (trimmed === trimmed.toLowerCase()) {
+		const target = redirects.get(trimmed);
 		if (target) return target;
 	}
-	return undefined;
+	const asId = trimmed.toLowerCase().replace(/[-\s]+/g, '_');
+	return unitIds.has(asId) ? asId : undefined;
 }
