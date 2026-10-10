@@ -71,7 +71,9 @@
 
 	<!-- Value groups (already in canonical order) -->
 	<h2 class="sr-only">Conversion results</h2>
-	<div class="grid gap-4 md:grid-cols-2">
+	<!-- items-start: a two-row Mass card next to an eight-row Energy card was
+	     stretched to the same height, leaving a large empty box. -->
+	<div class="grid items-start gap-4 md:grid-cols-2">
 		{#each valueGroups as group (group.key)}
 			<ResultGroupCard {group} {contextControl} />
 		{/each}

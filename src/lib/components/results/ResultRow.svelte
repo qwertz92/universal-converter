@@ -82,15 +82,22 @@
 	});
 </script>
 
+<!--
+	A row is a line in its group's list, not a card of its own: eight bordered
+	boxes for one fuel's energy figures filled a whole screen. The requested
+	target row carries an accent tint so the answer stands out in its group.
+-->
 <div
-	class="rounded-lg border px-3 py-2.5"
-	style="border-color:var(--border);background:var(--surface)"
+	class="-mx-2 rounded-lg px-2 py-2"
+	style={result.is_target
+		? 'background:color-mix(in srgb, var(--accent) 9%, transparent)'
+		: undefined}
 >
-	<div class="flex items-start justify-between gap-3">
+	<div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
 		<div class="min-w-0 flex-1">
 			{#if hasValue}
 				<div class="flex flex-wrap items-baseline gap-x-2">
-					<span class="uc-num text-xl font-semibold tracking-tight" style="color:var(--text)">
+					<span class="uc-num text-lg font-semibold tracking-tight" style="color:var(--text)">
 						{result.value}
 					</span>
 					<span class="text-sm font-medium" style="color:var(--text-muted)"
@@ -122,10 +129,39 @@
 			{/if}
 		</div>
 
-		<div class="flex shrink-0 items-center gap-2">
+		<div class="ml-auto flex shrink-0 items-center gap-1.5">
 			<ExactnessBadge exactness={result.exactness} />
 			{#if hasValue}
-				<CopyButton text={copyValue} label="Copy" compact />
+				<CopyButton text={copyValue} label="Copy value" iconOnly />
+			{/if}
+			{#if hasDetail}
+				<!-- The visible word never changes ("Details"), only the chevron and
+				     the accessible state do — so toggling cannot resize the cluster
+				     and re-wrap the value opposite it. Below `sm` the word is dropped
+				     (the accessible name stays): on a phone it pushed the unit onto a
+				     second line on most rows. -->
+				<button
+					type="button"
+					class="inline-flex h-9 min-w-9 items-center justify-center gap-1 rounded-md border px-2 text-xs font-medium transition-colors hover:bg-[var(--surface-2)] sm:h-8"
+					style="border-color:var(--border);color:var(--text-muted)"
+					onclick={() => (expanded = !expanded)}
+					aria-expanded={expanded}
+					aria-controls={detailId}
+					aria-label={expanded ? 'Hide details' : 'Show details'}
+				>
+					<svg
+						width="13"
+						height="13"
+						viewBox="0 0 24 24"
+						fill="none"
+						aria-hidden="true"
+						class="transition-transform"
+						style={expanded ? 'transform:rotate(90deg)' : ''}
+					>
+						<path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+					</svg>
+					<span class="hidden sm:inline">Details</span>
+				</button>
 			{/if}
 		</div>
 	</div>
@@ -179,29 +215,7 @@
 	     Also shown for value-less rows: their warnings/sources would otherwise
 	     only appear unattributed in the set-level panels. -->
 	{#if hasDetail}
-		<div class="mt-2">
-			<button
-				type="button"
-				class="-mx-1 inline-flex items-center gap-1 rounded px-1 py-1.5 text-xs font-medium hover:text-[var(--accent)]"
-				style="color:var(--text-faint)"
-				onclick={() => (expanded = !expanded)}
-				aria-expanded={expanded}
-				aria-controls={detailId}
-			>
-				<svg
-					width="13"
-					height="13"
-					viewBox="0 0 24 24"
-					fill="none"
-					aria-hidden="true"
-					class="transition-transform"
-					style={expanded ? 'transform:rotate(90deg)' : ''}
-				>
-					<path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-				</svg>
-				{expanded ? 'Hide details' : 'Show details'}
-			</button>
-
+		<div>
 			{#if expanded}
 				<div
 					id={detailId}
