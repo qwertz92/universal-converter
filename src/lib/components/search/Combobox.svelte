@@ -17,6 +17,26 @@
 		if (active === NO_HIGHLIGHT) return delta > 0 ? 0 : count - 1;
 		return (active + delta + count) % count;
 	}
+
+	/**
+	 * The option a typed text unambiguously names, if any: one whose label or
+	 * hint (a unit symbol) equals the text, ignoring case — or the only option
+	 * left in the caller's filtered list. Without it, typing "kWh" and pressing
+	 * Enter or tabbing on committed nothing, and the form it sat in stayed
+	 * disabled with no explanation. Several partial matches are never guessed
+	 * between.
+	 */
+	export function typedMatch<T extends { label: string; hint?: string }>(
+		options: readonly T[],
+		query: string
+	): T | undefined {
+		const q = query.trim().toLowerCase();
+		if (!q) return undefined;
+		const exact = options.filter((o) => o.label.toLowerCase() === q || o.hint?.toLowerCase() === q);
+		if (exact.length === 1) return exact[0];
+		if (exact.length === 0 && options.length === 1) return options[0];
+		return undefined;
+	}
 </script>
 
 <script lang="ts">
@@ -137,6 +157,11 @@
 				if (open && flat[active]) {
 					e.preventDefault();
 					choose(flat[active]);
+				} else if (!value) {
+					// Nothing highlighted: commit what the text names, and let the
+					// surrounding form submit as the user asked.
+					const match = typedMatch(flat, query);
+					if (match) choose(match);
 				}
 				break;
 			case 'Escape':
@@ -172,6 +197,12 @@
 	function onFocusOut(e: FocusEvent) {
 		const next = e.relatedTarget;
 		if (next instanceof Node && rootEl?.contains(next)) return;
+		// Leaving the field with a text that names one option is the same as
+		// picking it — but only when nothing is committed yet.
+		if (!value) {
+			const match = typedMatch(flat, query);
+			if (match) choose(match);
+		}
 		open = false;
 		// Same reason as Escape: tabbing away abandons the highlight.
 		active = NO_HIGHLIGHT;

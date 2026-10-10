@@ -118,6 +118,7 @@
 		<button
 			type="submit"
 			disabled={!canSubmit}
+			title={canSubmit ? undefined : 'Choose a unit first'}
 			class="h-[42px] w-full rounded-lg px-4 text-sm font-semibold transition-opacity sm:w-auto"
 			style="background:var(--accent);color:var(--accent-contrast)"
 			class:opacity-40={!canSubmit}
@@ -125,4 +126,9 @@
 			Convert
 		</button>
 	</div>
+	<!-- Always rendered, so the form never grows when the state changes. It
+	     says why Convert may be disabled instead of leaving the reader to guess. -->
+	<p class="text-xs sm:col-span-4" style="color:var(--text-faint)">
+		Type a unit name or symbol (kWh, L, therm) or pick one from the list; the material is optional.
+	</p>
 </form>
