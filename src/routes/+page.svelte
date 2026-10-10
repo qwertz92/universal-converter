@@ -44,15 +44,17 @@
 
 <!-- Hero -->
 <section class="border-b" style="border-color:var(--border);background:var(--bg-subtle)">
-	<div class="mx-auto max-w-5xl px-4 pt-14 pb-10 sm:px-6 sm:pt-20">
+	<div class="mx-auto max-w-5xl px-4 pt-8 pb-10 sm:px-6 sm:pt-12">
+		<!-- Hidden on phones, where it wrapped to two lines above the headline;
+		     the footer carries the version on every page. -->
 		<div
-			class="mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium"
+			class="mb-4 hidden items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium sm:inline-flex"
 			style="border-color:var(--border);background:var(--surface);color:var(--text-muted)"
 		>
 			<span class="h-2 w-2 rounded-full" style="background:var(--accent)"></span>
 			v{APP_VERSION} — a sourced reference tool, not a black-box calculator
 		</div>
-		<h1 class="max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">
+		<h1 class="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
 			A transparent converter for units, energy, fuels and emissions.
 		</h1>
 		<p class="mt-4 max-w-2xl text-base sm:text-lg" style="color:var(--text-muted)">
@@ -60,12 +62,10 @@
 			source. Exact conversions and estimates are always kept apart.
 		</p>
 
-		<!-- Embedded converter -->
-		<div class="mt-8">
-			<p class="mb-3 text-sm" style="color:var(--text-faint)">
-				A value always needs a unit. Add a target to convert directly — e.g.
-				<code>1 kWh to MJ</code>.
-			</p>
+		<!-- Embedded converter. No hint line above it: the field's own status line
+		     already says "Type a value and a unit" with examples, and saying it
+		     twice only pushed the results further down. -->
+		<div class="mt-6">
 			<Converter compact />
 			<div class="mt-3 text-right">
 				<!-- eslint-disable svelte/no-navigation-without-resolve -->

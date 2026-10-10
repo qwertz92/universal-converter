@@ -218,7 +218,9 @@ export const exampleSchema = z
 		input: z.string().min(1),
 		label: z.string().optional(),
 		category: z.string().optional(),
-		notes: z.string().optional()
+		notes: z.string().optional(),
+		/** Shown before the "More examples" disclosure in the converter. */
+		featured: z.boolean().optional()
 	})
 	.strict();
 

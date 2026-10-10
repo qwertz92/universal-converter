@@ -8,7 +8,7 @@
 	 * `compact` renders the embedded variant used on the home page (no structured
 	 * row / options by default, but still fully functional).
 	 */
-	import { untrack } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -277,12 +277,31 @@
 		runConversion(query);
 		pushUrl();
 		remember(query);
+		revealResults();
 	}
 
 	function submit(): void {
 		runConversion(queryText);
 		pushUrl();
 		remember(queryText);
+		revealResults();
+	}
+
+	/**
+	 * Bring the answer on screen after an explicit action (Enter, an example,
+	 * a history entry). On a phone the results start below the fold, so tapping
+	 * an example changed nothing visible but the text in the field. Never on a
+	 * debounced keystroke, and not at all when the results are already in view.
+	 */
+	let resultsEl = $state<HTMLDivElement | null>(null);
+	async function revealResults(): Promise<void> {
+		if (!browser) return;
+		await tick();
+		if (!resultsEl) return;
+		const top = resultsEl.getBoundingClientRect().top;
+		if (top < window.innerHeight - 160) return;
+		const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		resultsEl.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
 	}
 
 	function onInput(): void {
@@ -297,6 +316,7 @@
 		runConversion(input);
 		pushUrl();
 		remember(input);
+		revealResults();
 	}
 
 	/**
@@ -556,7 +576,7 @@
 		on the plain entry path. Reserving the space costs nothing when a result
 		is present, because a result is always taller than the box.
 	-->
-	<div class={compact ? undefined : 'min-h-[7.5rem]'}>
+	<div bind:this={resultsEl} class={compact ? 'scroll-mt-20' : 'min-h-[7.5rem] scroll-mt-20'}>
 		{#if parseError}
 			<ParseErrorNote error={parseError} onpick={onErrorPick} />
 		{:else if resultSet}

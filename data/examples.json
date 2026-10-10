@@ -1,5 +1,5 @@
 {
-	"$comment": "Quick-example inputs for the converter UI (spec §8.1, §8.2). Every spec §8.2 example is present. Each input parses via getConverter().convertText(...) without an unknown-unit/unknown-fuel error (tests/examples.test.ts). context_required results (e.g. electricity, or a mass/volume with no fuel) are expected and OK — they are not parse failures. Fuel phrases use names/aliases from data/fuels.json. Envelope: { $comment, examples: [...] }. See src/lib/data/schemas.ts (exampleSchema).",
+	"$comment": "Quick-example inputs for the converter UI (spec §8.1, §8.2). Every spec §8.2 example is present. Each input parses via getConverter().convertText(...) without an unknown-unit/unknown-fuel error (tests/examples.test.ts). context_required results (e.g. electricity, or a mass/volume with no fuel) are expected and OK — they are not parse failures. Fuel phrases use names/aliases from data/fuels.json. Envelope: { $comment, examples: [...] }. `featured: true` marks the handful the converter shows before the More examples button — keep it to about eight, spread across kinds of question. See src/lib/data/schemas.ts (exampleSchema).",
 	"examples": [
 		{
 			"id": "ex-1-kwh",
@@ -73,6 +73,7 @@
 		},
 		{
 			"id": "ex-1-l-diesel",
+			"featured": true,
 			"input": "1 liter diesel",
 			"label": "1 L diesel",
 			"category": "fuel",
@@ -101,6 +102,7 @@
 		},
 		{
 			"id": "ex-1-m3-natural-gas",
+			"featured": true,
 			"input": "1 m3 natural gas",
 			"label": "1 m³ natural gas",
 			"category": "fuel",
@@ -108,6 +110,7 @@
 		},
 		{
 			"id": "ex-1-kg-hydrogen",
+			"featured": true,
 			"input": "1 kg hydrogen",
 			"label": "1 kg hydrogen",
 			"category": "fuel",
@@ -136,6 +139,7 @@
 		},
 		{
 			"id": "ex-1-kwh-electricity",
+			"featured": true,
 			"input": "1 kWh electricity",
 			"label": "1 kWh electricity",
 			"category": "fuel",
@@ -143,6 +147,7 @@
 		},
 		{
 			"id": "ex-kwh-to-mj",
+			"featured": true,
 			"input": "1 kWh to MJ",
 			"label": "1 kWh to MJ",
 			"category": "energy",
@@ -150,6 +155,7 @@
 		},
 		{
 			"id": "ex-kw-for-3h",
+			"featured": true,
 			"input": "5 kW for 3 h",
 			"label": "5 kW for 3 h",
 			"category": "energy",
@@ -164,6 +170,7 @@
 		},
 		{
 			"id": "ex-price-per-kwh",
+			"featured": true,
 			"input": "1000 kWh at 0.32 EUR/kWh",
 			"label": "1000 kWh at 0.32 EUR/kWh",
 			"category": "energy",
@@ -185,6 +192,7 @@
 		},
 		{
 			"id": "ex-heat-pump-cop",
+			"featured": true,
 			"input": "100 kWh at 3.5 COP",
 			"label": "100 kWh at 3.5 COP",
 			"category": "energy",
