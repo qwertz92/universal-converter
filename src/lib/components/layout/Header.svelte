@@ -1,5 +1,6 @@
 <script lang="ts">
 	/** Site header: brand, primary nav, theme toggle, responsive menu. */
+	import { untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import ThemeToggle from './ThemeToggle.svelte';
 
@@ -34,6 +35,13 @@
 	// Esc (below) is the way back to the toggle.
 	$effect(() => {
 		if (menuOpen) menuPanelEl?.querySelector('a')?.focus();
+	});
+
+	// Any navigation closes the menu — the logo and the browser's Back button
+	// included, which neither the menu's own links nor tap-outside cover.
+	$effect(() => {
+		void pathname;
+		untrack(() => (menuOpen = false));
 	});
 
 	// Tap-outside closes the menu. `pointerdown` rather than `click`: iOS Safari

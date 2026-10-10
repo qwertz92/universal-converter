@@ -57,6 +57,9 @@
 	);
 
 	const canSubmit = $derived(Boolean(value.trim()) && Boolean(unitId));
+	/** Text typed in the unit box that did not become a unit (no exact match on leaving it). */
+	let unitFocused = $state(false);
+	const unitPending = $derived(!unitId && !unitFocused && unitQuery.trim() !== '');
 
 	function submit() {
 		if (!canSubmit) return;
@@ -96,14 +99,18 @@
 		/>
 	</div>
 
-	<Combobox
-		id="struct-unit"
-		label="Unit"
-		placeholder="Search units…"
-		options={unitOptions}
-		bind:value={unitId}
-		bind:query={unitQuery}
-	/>
+	<!-- Tracks focus only to hold the "not a unit yet" message back while the
+	     user is still typing. -->
+	<div onfocusin={() => (unitFocused = true)} onfocusout={() => (unitFocused = false)}>
+		<Combobox
+			id="struct-unit"
+			label="Unit"
+			placeholder="Search units…"
+			options={unitOptions}
+			bind:value={unitId}
+			bind:query={unitQuery}
+		/>
+	</div>
 
 	<Combobox
 		id="struct-fuel"
@@ -126,9 +133,19 @@
 			Convert
 		</button>
 	</div>
-	<!-- Always rendered, so the form never grows when the state changes. It
-	     says why Convert may be disabled instead of leaving the reader to guess. -->
-	<p class="text-xs sm:col-span-4" style="color:var(--text-faint)">
-		Type a unit name or symbol (kWh, L, therm) or pick one from the list; the material is optional.
+	<!-- Always rendered with two lines reserved, so the form never grows when
+	     the message changes. It says why Convert is disabled instead of leaving
+	     the reader to guess — a `title` tooltip never shows on a phone. -->
+	<p
+		class="min-h-[2lh] text-xs sm:col-span-4"
+		style="color:{unitPending ? 'var(--warn-fg)' : 'var(--text-faint)'}"
+		aria-live="polite"
+	>
+		{#if unitPending}
+			“{unitQuery.trim()}” is not a unit yet — pick one from the list.
+		{:else}
+			Type a unit name or symbol (kWh, L, therm) or pick one from the list; the material is
+			optional.
+		{/if}
 	</p>
 </form>

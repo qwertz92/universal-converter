@@ -30,3 +30,13 @@ clearly disturbing; P3 minor or rare; P4 not noticeable.
 - **The LHV/HHV heading's one-line explanation lives only in a `title`**
   (`src/lib/components/results/ResultGroupCard.svelte`), unreachable on touch
   and by keyboard; the "LHV vs. HHV" link next to it is reachable. (2026-10-10)
+- **`/units?q=…` and `/fuels?q=…` read the search after mount**
+  (`src/routes/units/+page.svelte`, `src/routes/fuels/+page.svelte`), so a hard
+  load of such a link may paint the full list before filtering. Only the 404
+  page generates these links, via client-side navigation, where it does not
+  show. (2026-10-10, unmeasured)
+- **The info button's enlarged hit area overlaps neighbours by 1–2px** at 320px
+  in the options bar (`InfoPopover.svelte`, `after:-inset-[11px]`); a tap on
+  that sliver opens the popover. (2026-10-10)
+- **The 404 near-miss search only fixes separators and case**: `/fuels/natural_gass`
+  searches "natural gass" and finds nothing. (2026-10-10)
