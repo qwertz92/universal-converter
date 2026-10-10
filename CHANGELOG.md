@@ -3,6 +3,45 @@
 All notable changes to Universal Converter. Versioning follows semver
 (pre-1.0: minor bumps may include behavior changes; they are listed here).
 
+## Unreleased — UI/UX pass (2026-10-10)
+
+### Fixed
+
+- **Two different energy figures for one fuel with nothing to tell them
+  apart.** `10 L diesel` listed 356.6 MJ and 379.1 MJ in one group; the LHV/HHV
+  basis sat behind "Show details" and was missing from the CSV entirely. Rows
+  computed from a calorific value now carry `basis` (`lhv`/`hhv`) in the API
+  and a `basis` CSV column, and the UI puts them under "Net calorific value ·
+  LHV/NCV" and "Gross calorific value · HHV/GCV" headings.
+- **The grid picker listed US 2023 twice** (once per metric) under one value
+  and one each-key: Svelte rejected the duplicate key and /convert crashed on
+  hydration in dev; with a shared value the second option could never be
+  selected. One option per region/year now names every metric with its own
+  figure, rounded as a grid result is (`~348 gCO2/kWh / CO2e ~350 gCO2e/kWh`).
+- **The dropdown form dead-ended** when a unit was typed rather than clicked:
+  Convert stayed disabled with no message. A typed name or symbol is committed
+  on Enter (and an exact one on leaving the field).
+- **The header overflowed between 768 and ~840px**, so every page scrolled
+  sideways on a portrait tablet.
+
+### Changed
+
+- Result rows are lines in their group instead of one card each, with copy and
+  details inline; badges line up in a column; the requested answer is the
+  largest figure.
+- Eight featured examples instead of 28 chips (the rest behind "More
+  examples"); a shorter hero and /convert intro; after Enter or an example the
+  page scrolls to the results when they start below the fold. At 375px the
+  result area of /convert moved from 1062px to 739px down the page.
+- Fuel pages: the worked example is collapsed, emission factors stack on
+  phones, a shared source is cited once per card. /units has jump links and two
+  columns on phones; /units/kilowatt-hour redirects like /units/kwh; the app's
+  404 page under /units or /fuels links to a search for what was typed (on
+  Cloudflare Pages a mistyped prerendered path still gets the adapter's plain
+  static 404 — see docs/BUGS.md). /sources has an
+  index. The mobile menu closes on a tap outside it; footer links are 40px tap
+  targets.
+
 ## 0.3.10 — 2026-08-17
 
 ### Added

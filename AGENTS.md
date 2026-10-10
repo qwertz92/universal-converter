@@ -46,4 +46,5 @@ universal-converter.org). The authoritative product spec is
 - Larger architecture decisions get an ADR in `docs/adr/`.
 - Tests live in `tests/`, mirroring engine modules; versioned data files
   live in `data/` and are validated with Zod schemas.
-- Documentation in `docs/`; Mermaid for diagrams.
+- Documentation in `docs/`; Mermaid for diagrams. Known open defects:
+  [docs/BUGS.md](docs/BUGS.md).
