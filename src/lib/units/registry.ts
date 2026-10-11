@@ -221,10 +221,17 @@ export class UnitRegistry {
 	 * matches whatever its case, so a word spelling is never a conflict.
 	 */
 	private prefixConflict(token: string, unit: Unit): boolean {
-		if (unit.system !== 'SI') return false;
 		const loose = normalizeLoose(token);
 		const first = token[0];
 		if (!(first in CASE_FLIPPED_PREFIXES)) return false;
+		// A listed symbol with only its prefix letter flipped ("mJ/kg" for
+		// MJ/kg) names the other prefix, whatever system the unit belongs to.
+		// The catalog's own lowercase spellings ("mj/kg") match exactly before
+		// this fallback runs, so the convention they carry is unaffected.
+		const flipped = (s: string) =>
+			s[0] !== first && s[0].toLowerCase() === first.toLowerCase() && s.slice(1) === token.slice(1);
+		if (unit.symbols.some(flipped)) return true;
+		if (unit.system !== 'SI') return false;
 		const spellings = [...unit.names, ...unit.symbols, ...unit.aliases].filter(
 			(s) => normalizeLoose(s) === loose
 		);

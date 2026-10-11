@@ -67,7 +67,11 @@ describe('milli and mega are different units', () => {
 
 	it.each([
 		['5 ML', 'mega'],
-		['5 pJ', 'pico']
+		['5 pJ', 'pico'],
+		// Not an SI-system unit in the catalog (a display unit), same rule:
+		// mJ/kg would be a millijoule per kilogram, 10^9 below MJ/kg.
+		['5 mJ/kg', 'milli'],
+		['5 mJ/L', 'milli']
 	])(
 		'%s names a unit the catalog lacks — refused, never read as its case twin',
 		(input, prefix) => {
@@ -103,5 +107,16 @@ describe('short unit URLs never cross a prefix', () => {
 	it('keeps the shortcuts that are not ambiguous', () => {
 		expect(aliases.get('kwh')).toBe('kilowatt_hour');
 		expect(aliases.get('gwh')).toBe('gigawatt_hour');
+	});
+});
+
+describe('the lowercase convention for energy density stays', () => {
+	it.each([
+		['5 MJ/kg', 'mj_per_kg'],
+		['5 mj/kg', 'mj_per_kg'],
+		['5 Mtoe', 'mtoe'],
+		['5 mtoe', 'mtoe']
+	])('%s → %s', (input, unit) => {
+		expect(unitOf(input)).toBe(unit);
 	});
 });
