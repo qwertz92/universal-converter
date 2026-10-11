@@ -28,6 +28,7 @@
 		fuels,
 		onchange,
 		composed,
+		held,
 		onedittext
 	}: {
 		form: GuidedState;
@@ -38,7 +39,9 @@
 		onchange: () => void;
 		/** The query the form currently stands for, if complete. */
 		composed: string | undefined;
-		/** Switch to the text mode with the composed query. */
+		/** A typed query no form could hold; switching back restores it. */
+		held?: string;
+		/** Switch to the text mode with the composed query (or the held one). */
 		onedittext: () => void;
 	} = $props();
 
@@ -100,7 +103,13 @@
 	function unitChanged(): void {
 		const next = units.find((u) => u.id === form.unitId);
 		const target = units.find((u) => u.id === form.targetId);
-		if (target && next && !targetDimensions(form.task, next).includes(target.dimension)) {
+		// Also when the target IS the new unit: the target list leaves the
+		// input unit out, so the select would show blank while still sending it.
+		if (
+			target &&
+			next &&
+			(target.id === next.id || !targetDimensions(form.task, next).includes(target.dimension))
+		) {
 			form.targetId = '';
 		}
 		onchange();
@@ -196,7 +205,22 @@
 			</button>
 		{/each}
 	</div>
-	<p class="line-clamp-1 text-xs" style="color:var(--text-faint)">{blurb}</p>
+	<!-- One line either way: the task's blurb, or — after switching here from a
+	     typed query no form can hold — the way back to it. -->
+	{#if held}
+		<p class="flex min-w-0 items-center gap-1 text-xs" style="color:var(--text-faint)">
+			<span class="shrink-0">Your typed query has parts no form can hold.</span>
+			<button
+				type="button"
+				class="min-w-0 truncate font-medium hover:underline"
+				style="color:var(--accent)"
+				title={held}
+				onclick={onedittext}>← Back to “{held}”</button
+			>
+		</p>
+	{:else}
+		<p class="line-clamp-1 text-xs" style="color:var(--text-faint)">{blurb}</p>
+	{/if}
 
 	<!-- The fields take only the rows they need, so the "typed, that is" line
 	     sits right under them. The parent reserves the tallest task's height

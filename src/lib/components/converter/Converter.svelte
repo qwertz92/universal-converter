@@ -224,16 +224,37 @@
 	}, 150);
 	const rememberSoon = debounce(() => remember(queryText), 1500);
 
+	// A typed query no form can hold ("100 kWh at 85% efficiency", a half-typed
+	// one) is kept here when switching to the guided mode, which then opens on
+	// its worked example. Until the form is edited, switching back restores the
+	// typed query — the switch alone never loses what was written.
+	let heldText = $state<string | undefined>();
+
+	/** A form edit by the reader: what was held is no longer what they want. */
+	function onFormChange(): void {
+		heldText = undefined;
+		applyGuided();
+	}
+
 	function setMode(next: 'guided' | 'text'): void {
 		if (next === mode) return;
 		if (next === 'text') {
-			if (composed) queryText = composed;
+			if (heldText !== undefined) {
+				queryText = heldText;
+				heldText = undefined;
+				runConversion(queryText);
+				pushUrl();
+			} else if (composed) {
+				queryText = composed;
+			}
 			mode = 'text';
 			tick().then(() => document.getElementById('uc-query')?.focus());
 			return;
 		}
 		const parsed = engine().parse(effectiveQuery(queryText).text);
-		form = (parsed.ok ? stateFromQuery(parsed.query) : undefined) ?? defaultState(DEFAULT_TASK);
+		const state = parsed.ok ? stateFromQuery(parsed.query) : undefined;
+		heldText = state || !queryText.trim() ? undefined : queryText;
+		form = state ?? defaultState(DEFAULT_TASK);
 		mode = 'guided';
 		applyGuided();
 	}
@@ -424,6 +445,13 @@
 		if (f && parsed.ok && !parsed.query.fuel_id) {
 			queryText = `${queryText.trim()} ${f.names[0]}`;
 			pickedFuelId = undefined; // the text now carries the fuel
+			// The guided form must say what is being answered: "1 kg" plus a
+			// picked fuel becomes the fuel form, so the next edit keeps the fuel.
+			if (mode === 'guided') {
+				const next = engine().parse(queryText);
+				const state = next.ok ? stateFromQuery(next.query) : undefined;
+				if (state) form = state;
+			}
 		}
 		runConversion(queryText);
 		pushUrl();
@@ -461,6 +489,12 @@
 			}
 			booted = true;
 			settled = true;
+			// The home page hides the converter while a shared ?q= link loads
+			// (src/routes/+page.svelte), because the prerendered HTML shows the
+			// worked example instead. Reveal it once the shared result is drawn.
+			if (document.documentElement.dataset.ucShared !== undefined) {
+				void tick().then(() => delete document.documentElement.dataset.ucShared);
+			}
 		});
 	});
 
@@ -575,16 +609,19 @@
 	{/if}
 
 	<!-- The input area reserves the guided form's height in both modes, so
-	     switching modes does not move the results below. -->
-	<div class="min-h-[20.75rem] sm:min-h-[16rem]">
+	     switching modes does not move the results below. flow-root keeps the
+	     task strip's negative margin inside it; otherwise that margin escaped
+	     through the box and the guided mode sat 4px higher than the text mode. -->
+	<div class="flow-root min-h-[20.75rem] sm:min-h-[16rem]">
 		{#if mode === 'guided'}
 			<GuidedForm
 				bind:form
 				bind:grid
 				{units}
 				{fuels}
-				onchange={applyGuided}
+				onchange={onFormChange}
 				{composed}
+				held={heldText}
 				onedittext={() => setMode('text')}
 			/>
 		{:else}

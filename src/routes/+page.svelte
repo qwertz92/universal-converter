@@ -31,6 +31,24 @@
 	description="A transparent converter for units, energy, fuels and emissions. Convert values, understand assumptions, and trace every non-exact result back to its source."
 />
 
+<svelte:head>
+	<!-- This page is prerendered with the worked example (10 L diesel) and its
+	     results. A shared ?q= link would show that example until the app has
+	     started and drawn the shared one — the wrong answer, for a moment. This
+	     runs before the first paint and hides the converter for links with a
+	     query; Converter.svelte reveals it once the shared result is drawn. -->
+	<script>
+		(function () {
+			try {
+				var q = new URLSearchParams(location.search).get('q');
+				if (q && q.trim()) document.documentElement.dataset.ucShared = '';
+			} catch (e) {
+				/* no query string to read: nothing to hide */
+			}
+		})();
+	</script>
+</svelte:head>
+
 <!-- The converter IS the page: a short title, then the tool, already showing a
      worked example. The explanation of what makes it different follows below,
      for anyone who scrolls. -->
@@ -45,7 +63,7 @@
 		</p>
 
 		<div
-			class="mt-5 rounded-[var(--radius-card)] border p-4 sm:p-6"
+			class="uc-home-converter mt-5 rounded-[var(--radius-card)] border p-4 sm:p-6"
 			style="border-color:var(--border);background:var(--bg)"
 		>
 			<Converter />
@@ -116,3 +134,18 @@
 		</div>
 	</div>
 </section>
+
+<style>
+	/* visibility keeps the converter's box, so nothing below moves while it is
+	   hidden. The animation is a failsafe: it shows the converter after 4s even
+	   if the script that reveals it never runs. */
+	:global(html[data-uc-shared]) .uc-home-converter {
+		visibility: hidden;
+		animation: uc-show 0s 4s forwards;
+	}
+	@keyframes uc-show {
+		to {
+			visibility: visible;
+		}
+	}
+</style>

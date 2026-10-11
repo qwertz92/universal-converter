@@ -59,6 +59,8 @@ export function keyFigures(rs: ConversionResultSet, inputDimension: Dimension): 
 			// One tile per metric: CO₂ and CO₂e are different quantities and are
 			// never folded into one figure.
 			for (const metric of ['co2', 'co2e'] as const) {
+				// An emission input ("10 kg CO2e") would only be restated.
+				if (inputDimension === `emission_mass_${metric}`) continue;
 				const row = rows.find((r) => r.unit_id === `kilogram_${metric}`);
 				if (row) out.push({ label: metric === 'co2' ? 'CO₂' : 'CO₂e', row });
 			}

@@ -31,6 +31,11 @@ describe('keyFigures', () => {
 		expect(figures('5 kW for 3 h')).toEqual(['Energy=15 kWh']);
 	});
 
+	it('an emission input is not restated as its own tile', () => {
+		expect(figures('10 kg CO2e').some((f) => f.startsWith('CO₂e='))).toBe(false);
+		expect(figures('10 kg CO2').some((f) => f.startsWith('CO₂='))).toBe(false);
+	});
+
 	it('a plain unit conversion has nothing to headline beyond the table', () => {
 		expect(figures('1 kWh')).toEqual([]);
 	});

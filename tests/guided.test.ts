@@ -77,6 +77,10 @@ describe('a shared query opens the form that can say all of it', () => {
 		expect(again.price?.per_unit_id).toBe(original.price?.per_unit_id);
 	});
 
+	it('a target equal to the unit is dropped, not left as a blank select', () => {
+		expect(stateFromQuery(parse('5 kg diesel to kg'))?.targetId).toBe('');
+	});
+
 	it.each(['100 kWh at 85% efficiency', '100 kWh at 3.5 COP'])(
 		'%s has no form that can hold it → undefined (text mode)',
 		(text) => {

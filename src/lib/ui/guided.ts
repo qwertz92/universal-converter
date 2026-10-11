@@ -163,6 +163,9 @@ export function composeQuery(s: GuidedState, units: Unit[], fuels: Fuel[]): stri
 export function stateFromQuery(q: ParsedQuery): GuidedState | undefined {
 	if (q.efficiency) return undefined;
 	const base = blank('units', q.value, q.unit_id);
+	// "5 kg diesel to kg" asks for the input unit itself; the target lists
+	// leave it out, so keeping it would show a blank select.
+	const targetId = q.target_unit_id === q.unit_id ? '' : (q.target_unit_id ?? '');
 
 	if (q.price) {
 		if (q.time || q.target_unit_id) return undefined;
@@ -190,7 +193,7 @@ export function stateFromQuery(q: ParsedQuery): GuidedState | undefined {
 	}
 	if (q.fuel_id) {
 		if (!unitDimensions('fuel').includes(q.dimension)) return undefined;
-		return { ...base, task: 'fuel', fuelId: q.fuel_id, targetId: q.target_unit_id ?? '' };
+		return { ...base, task: 'fuel', fuelId: q.fuel_id, targetId };
 	}
-	return { ...base, task: 'units', targetId: q.target_unit_id ?? '' };
+	return { ...base, task: 'units', targetId };
 }
