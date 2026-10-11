@@ -41,7 +41,7 @@ point of upgrading, not a regression.
 ## Version coupling
 
 `oxlint` and `@oxlint/plugins` are pinned to the **same exact version** in
-`package.json` (currently `1.80.0`). They are two halves of one API: the plugin
+`package.json` (currently `1.87.0`). They are two halves of one API: the plugin
 source imports `@oxlint/plugins`, and the binary that loads it is `oxlint`. A
 caret range on both could resolve them to different versions, so the pin is
 deliberate.

@@ -13,15 +13,15 @@
 	     of demanding a fixed 16rem that pushed narrow grid cells past the
 	     viewport on a phone. -->
 	<ul
-		class="flex min-w-0 max-w-full flex-wrap gap-x-3 gap-y-1"
+		class="flex max-w-full min-w-0 flex-wrap gap-x-3 gap-y-1"
 		class:text-xs={compact}
 		class:text-sm={!compact}
 	>
 		{#each sources as s (s.id)}
-			<li class="min-w-0 max-w-full">
+			<li class="max-w-full min-w-0">
 				<a
 					href={resolve(`/sources#${s.id}`)}
-					class="inline-flex min-w-0 max-w-full items-center gap-1 hover:text-[var(--accent)]"
+					class="inline-flex max-w-full min-w-0 items-center gap-1 hover:text-[var(--accent)]"
 					style="color:var(--text-muted)"
 					title={s.title}
 				>

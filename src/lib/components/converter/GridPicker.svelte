@@ -30,7 +30,7 @@
 	<select
 		{id}
 		bind:value
-		class="w-full min-w-0 max-w-full rounded-lg border px-2.5 py-1.5 text-sm font-medium outline-none sm:w-auto"
+		class="w-full max-w-full min-w-0 rounded-lg border px-2.5 py-1.5 text-sm font-medium outline-none sm:w-auto"
 		style="border-color:var(--border);background:var(--surface);color:var(--text)"
 	>
 		<option value="">Not set — ask per query</option>
