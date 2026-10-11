@@ -241,7 +241,9 @@ export class UnitRegistry {
 		// "million tonnes of oil equivalent" starts with "milli" but names no prefix.
 		const name = unit.names[0].toLowerCase();
 		const namedWithTwin = name.startsWith(PREFIX_WORDS[twinLetter]) && !name.startsWith('million ');
-		if (namedWithTwin && !spelledOut && /[A-Z]/.test(token.slice(1))) return true;
+		// Only the numerator shows intent: in "mj/L" the capital is the litre's.
+		const numerator = token.split(/\/|\s+per\s+/i)[0];
+		if (namedWithTwin && !spelledOut && /[A-Z]/.test(numerator.slice(1))) return true;
 		if (unit.system !== 'SI') return false;
 		const spellings = [...unit.names, ...unit.symbols, ...unit.aliases].filter(
 			(s) => normalizeLoose(s) === loose

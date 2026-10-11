@@ -130,6 +130,9 @@ describe('the lowercase convention for energy density stays', () => {
 		['5 mmBtu', 'mmbtu'],
 		['5 Mmbtu', 'mmbtu'],
 		['5 MM BTU', 'mmbtu'],
+		// The capital belongs to the denominator, not to the prefix.
+		['5 mj/L', 'mj_per_l'],
+		['5 mj/KG', 'mj_per_kg'],
 		['5 MTOE', 'mtoe'],
 		// No prefix in sight: minute is not a mega-unit.
 		['5 Min', 'minute'],
