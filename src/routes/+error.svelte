@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import { allFuels, allUnits } from '$lib/ui/engine';
+	import { closestMatches } from '$lib/ui/near-miss';
 
 	const status = $derived(page.status);
 	const message = $derived(page.error?.message ?? 'Something went wrong.');
@@ -23,9 +25,23 @@
 		}
 		const kind = m[1] === 'units' ? 'unit' : 'fuel';
 		const query = slug.replace(/[-_+\s]+/g, ' ').trim();
+		// A slip the index search cannot absorb ("natural gass"): offer the nearest
+		// names as links. Suggestions only, never a redirect: a wrong unit or fuel is
+		// worse than a 404.
+		const suggestions =
+			m[1] === 'units'
+				? closestMatches(query, allUnits(), (u) => [u.id, ...u.names]).map((u) => ({
+						href: resolve(`/units/${u.id}`),
+						label: u.names[0]
+					}))
+				: closestMatches(query, allFuels(), (f) => [f.id, ...f.names]).map((f) => ({
+						href: resolve(`/fuels/${f.id}`),
+						label: f.names[0]
+					}));
 		return {
 			kind,
 			slug,
+			suggestions,
 			href:
 				m[1] === 'units'
 					? resolve(`/units?q=${encodeURIComponent(query)}`)
@@ -67,6 +83,21 @@
 		>
 			Search the {nearMiss.kind} index for “{nearMiss.slug}” →
 		</a>
+	{/if}
+
+	{#if nearMiss && nearMiss.suggestions.length > 0}
+		<div class="mt-5 flex flex-wrap items-center justify-center gap-2">
+			<span class="text-sm" style="color:var(--text-muted)">Did you mean</span>
+			{#each nearMiss.suggestions as s (s.href)}
+				<a
+					href={s.href}
+					class="inline-flex min-h-10 items-center rounded-lg border px-4 py-2 text-sm font-semibold transition-colors hover:border-[var(--accent)]"
+					style="border-color:var(--border);color:var(--accent)"
+				>
+					{s.label}
+				</a>
+			{/each}
+		</div>
 	{/if}
 
 	<div class="mt-6 flex flex-wrap justify-center gap-2">
