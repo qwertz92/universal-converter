@@ -19,6 +19,13 @@ const config = {
 		// the SPA fallback (404s), which keeps us under Cloudflare's _routes.json
 		// exclude-rule limit instead of listing every prerendered path.
 		adapter: adapter({
+			// `/units/*`, `/fuels/*` and `/learn/*` are excluded from the Pages Function
+			// below, so a URL there that matches no prerendered file is answered by the
+			// static `404.html` (HTTP 404) and never reaches the server. The default
+			// `plaintext` 404.html is just "Not Found"; `spa` makes it the app shell,
+			// which boots in the browser, routes the URL client-side and shows
+			// +error.svelte (or follows the runtime redirect in units/[unit]/+page.ts).
+			fallback: 'spa',
 			routes: {
 				include: ['/*'],
 				// Exclude build assets and every static section via directory
