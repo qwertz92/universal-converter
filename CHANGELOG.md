@@ -3,6 +3,21 @@
 All notable changes to Universal Converter. Versioning follows semver
 (pre-1.0: minor bumps may include behavior changes; they are listed here).
 
+## Unreleased
+
+### Changed
+
+- **SvelteKit 3 and adapter-cloudflare 8, Vitest 5.** `npm audit` reports 0
+  vulnerabilities (the last, `cookie` <0.7.0, came with SvelteKit 2). The
+  config moved from `svelte.config.js` into `vite.config.ts`, `$lib` became
+  `#lib`, and Node 22.17 is now the minimum. Deployed and checked on the live
+  site 2026-10-11.
+- **Held back, with the reason:** TypeScript stays on 6 because
+  `typescript-eslint` 8.71 (peer `<6.1.0`), `svelte-check` 4.7.6 (peer `^6`) and
+  SvelteKit 3.0.1 (peer `^6`) do not accept 7 yet; `@types/node` stays on 24
+  because the project targets Node 22 (`.nvmrc`), and types for 26 would offer
+  APIs the runtime lacks.
+
 ## 0.4.0 — 2026-10-11
 
 A first-time visitor now gets a calculator instead of a text field: pick what
