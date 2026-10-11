@@ -246,8 +246,12 @@
 				heldText = undefined;
 				runConversion(queryText);
 				pushUrl();
-			} else if (composed) {
+			} else if (composed && composed !== queryText) {
+				// An edit still inside applyGuided's debounce: that run now returns
+				// early (mode is text), so convert here or the result lags the field.
 				queryText = composed;
+				runConversion(queryText);
+				pushUrl();
 			}
 			mode = 'text';
 			tick().then(() => document.getElementById('uc-query')?.focus());
