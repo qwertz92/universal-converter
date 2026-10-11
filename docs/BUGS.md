@@ -6,17 +6,6 @@ clearly disturbing; P3 minor or rare; P4 not noticeable.
 
 ## P3
 
-- **A mistyped unit or fuel URL gets a bare "Not Found" on production.**
-  (2026-10-10) `/units/*` and `/fuels/*` are prerendered and excluded from the
-  Pages Function in `svelte.config.js`, so an unknown slug never reaches
-  `src/routes/+error.svelte`; Cloudflare serves the adapter's plaintext
-  `404.html`. The helpful near-miss link only shows in dev and on in-app
-  navigation. Options: a prerendered `/404` page served as the static 404, or
-  routing those paths through the Function. Effort: ~1 h plus a deployed check.
-- **`/fuels/natural_gas` and `/fuels/Diesel` do not redirect** the way
-  `/units/kWh` and `/units/kilowatt-hour` now do. (2026-10-10) Needs the
-  `resolveUnitSlug` treatment in `src/routes/fuels/[fuel]/+page.ts`. Effort:
-  ~30 min.
 - **On a phone the options bar sits between the field and the results.**
   (2026-10-10) `/convert` at 375px: field at 316px, results at 739px; the
   LHV/HHV toggle and grid picker take ~140px of that. Moving or collapsing it is
@@ -39,13 +28,13 @@ clearly disturbing; P3 minor or rare; P4 not noticeable.
 - **The LHV/HHV heading's one-line explanation lives only in a `title`**
   (`src/lib/components/results/ResultGroupCard.svelte`), unreachable on touch
   and by keyboard; the "LHV vs. HHV" link next to it is reachable. (2026-10-10)
-- **`/units?q=…` and `/fuels?q=…` read the search after mount**
-  (`src/routes/units/+page.svelte`, `src/routes/fuels/+page.svelte`), so a hard
-  load of such a link may paint the full list before filtering. Only the 404
-  page generates these links, via client-side navigation, where it does not
-  show. (2026-10-10, unmeasured)
-- **The info button's enlarged hit area overlaps neighbours by 1–2px** at 320px
-  in the options bar (`InfoPopover.svelte`, `after:-inset-[11px]`); a tap on
-  that sliver opens the popover. (2026-10-10)
-- **The 404 near-miss search only fixes separators and case**: `/fuels/natural_gass`
-  searches "natural gass" and finds nothing. (2026-10-10)
+- **The static 404 fallback and the new fuel/unit redirects are untested on real
+  Cloudflare Pages.** (2026-10-11) `fallback: 'spa'` in `svelte.config.js` and
+  the prerendered `/fuels/natural_gas` redirect were verified only under
+  `wrangler pages dev` (`npm run preview`), which on Windows also serves
+  `/fuels/Diesel` and `/units/Kilowatt-Hour` from the lowercase file, so the
+  case-variant path through the runtime redirect was checked with a spelling
+  that has no file (`/fuels/Red_Diesel`, `/units/Kilowatt%20Hour`). After the
+  next deploy, check `/units/MW`, `/units/nonsense`, `/fuels/Diesel` and
+  `/learn/nonsense` once on the live domain (status 404 and the styled page; MW
+  and Diesel end on the canonical page).
