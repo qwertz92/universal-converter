@@ -35,7 +35,13 @@ describe('milli and mega are different units', () => {
 		['5 mWh', 'milliwatt_hour'],
 		['5 MWh', 'megawatt_hour'],
 		['5 milliwatt', 'milliwatt'],
-		['5 Megawatt', 'megawatt']
+		['5 Megawatt', 'megawatt'],
+		// Words carry no case meaning: only a symbol's first letter is a prefix.
+		['5 Megawatts', 'megawatt'],
+		['5 MEGAWATTS', 'megawatt'],
+		['5 Milliliters', 'milliliter'],
+		['5 Megajoules', 'megajoule'],
+		['5 Metric tons', 'tonne']
 	])('%s → %s', (input, unit) => {
 		expect(unitOf(input)).toBe(unit);
 	});

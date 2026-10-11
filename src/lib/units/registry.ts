@@ -71,6 +71,17 @@ export type UnitMatch =
 	| { kind: 'ambiguous'; token: string; interpretations: Interpretation[] }
 	| { kind: 'unknown'; token: string; suggestions: string[] };
 
+/**
+ * A symbol-like spelling, where the case of the first letter is an SI prefix:
+ * a listed symbol, or a short alias such as "kWh" or "m3". Anything longer
+ * is a word ("megawatts") and names the unit in any case.
+ */
+function isSymbolSpelling(spelling: string, unit: Unit): boolean {
+	if (unit.symbols.includes(spelling)) return true;
+	if (unit.names.includes(spelling)) return false;
+	return spelling.replace(/\s+/g, '').length <= 4;
+}
+
 export class UnitRegistry {
 	private readonly byId = new Map<string, Unit>();
 	/** Case-SENSITIVE exact-string index over symbols AND aliases. */
@@ -205,16 +216,19 @@ export class UnitRegistry {
 
 	/**
 	 * True when the case-insensitive fallback would match `unit` only by
-	 * changing the case of an SI prefix letter. A match through a spelled-out
-	 * name ("Megawatt") is never a conflict: names carry no case meaning.
+	 * changing the case of an SI prefix letter. Only a symbol carries that
+	 * meaning: a spelled-out word ("Megawatt", "Megawatts", "Metric tons")
+	 * matches whatever its case, so a word spelling is never a conflict.
 	 */
 	private prefixConflict(token: string, unit: Unit): boolean {
 		if (unit.system !== 'SI') return false;
 		const loose = normalizeLoose(token);
-		if (unit.names.some((n) => normalizeLoose(n) === loose)) return false;
 		const first = token[0];
 		if (!(first in CASE_FLIPPED_PREFIXES)) return false;
-		const spellings = [...unit.symbols, ...unit.aliases].filter((s) => normalizeLoose(s) === loose);
+		const spellings = [...unit.names, ...unit.symbols, ...unit.aliases].filter(
+			(s) => normalizeLoose(s) === loose
+		);
+		if (spellings.some((s) => !isSymbolSpelling(s, unit))) return false;
 		return spellings.length > 0 && spellings.every((s) => s[0] !== first);
 	}
 
