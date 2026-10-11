@@ -66,6 +66,14 @@ const CASE_FLIPPED_PREFIXES: Record<string, string> = Object.assign(Object.creat
 	P: 'peta (10¹⁵)'
 });
 
+/** The prefix each case-flipped letter stands for, spelled out as in unit names. */
+const PREFIX_WORDS: Record<string, string> = Object.assign(Object.create(null), {
+	m: 'milli',
+	M: 'mega',
+	p: 'pico',
+	P: 'peta'
+});
+
 export type UnitMatch =
 	| { kind: 'match'; unit: Unit; via: 'symbol' | 'name' | 'alias'; note?: string }
 	| { kind: 'ambiguous'; token: string; interpretations: Interpretation[] }
@@ -208,9 +216,7 @@ export class UnitRegistry {
 		const trimmed = token.trim();
 		const unit = this.byLoose.get(normalizeLoose(trimmed));
 		if (!unit || !this.prefixConflict(trimmed, unit)) return undefined;
-		const twin = [...unit.symbols, ...unit.aliases].find(
-			(s) => normalizeLoose(s) === normalizeLoose(trimmed)
-		);
+		const twin = unit.symbols[0];
 		return `Unit symbols are case-sensitive. In "${trimmed}", ${trimmed[0]} means ${CASE_FLIPPED_PREFIXES[trimmed[0]]}, and no such unit is in the catalog. "${twin}" (${unit.names[0]}) is a different unit.`;
 	}
 
@@ -224,13 +230,18 @@ export class UnitRegistry {
 		const loose = normalizeLoose(token);
 		const first = token[0];
 		if (!(first in CASE_FLIPPED_PREFIXES)) return false;
-		// A listed symbol with only its prefix letter flipped ("mJ/kg" for
-		// MJ/kg) names the other prefix, whatever system the unit belongs to.
-		// The catalog's own lowercase spellings ("mj/kg") match exactly before
-		// this fallback runs, so the convention they carry is unaffected.
-		const flipped = (s: string) =>
-			s[0] !== first && s[0].toLowerCase() === first.toLowerCase() && s.slice(1) === token.slice(1);
-		if (unit.symbols.some(flipped)) return true;
+		// Whatever the unit's system: a unit named with the OTHER prefix
+		// ("megajoule per liter" for "mJ/l") is a conflict when the writer is
+		// visibly using case — a capital anywhere after the first letter — and
+		// did not spell the prefix out ("MILLIGRAMS"). An all-lowercase token
+		// ("mj/kg") stays the energy-density convention; "Min" names no prefix.
+		const lower = token.toLowerCase();
+		const spelledOut = Object.values(PREFIX_WORDS).some((w) => lower.startsWith(w));
+		const twinLetter = first === first.toLowerCase() ? first.toUpperCase() : first.toLowerCase();
+		// "million tonnes of oil equivalent" starts with "milli" but names no prefix.
+		const name = unit.names[0].toLowerCase();
+		const namedWithTwin = name.startsWith(PREFIX_WORDS[twinLetter]) && !name.startsWith('million ');
+		if (namedWithTwin && !spelledOut && /[A-Z]/.test(token.slice(1))) return true;
 		if (unit.system !== 'SI') return false;
 		const spellings = [...unit.names, ...unit.symbols, ...unit.aliases].filter(
 			(s) => normalizeLoose(s) === loose

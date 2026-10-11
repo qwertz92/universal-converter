@@ -71,7 +71,13 @@ describe('milli and mega are different units', () => {
 		// Not an SI-system unit in the catalog (a display unit), same rule:
 		// mJ/kg would be a millijoule per kilogram, 10^9 below MJ/kg.
 		['5 mJ/kg', 'milli'],
-		['5 mJ/L', 'milli']
+		['5 mJ/L', 'milli'],
+		// Any spelling of the rest: the lowercase m before a capital J is the
+		// writer using case, so it is read as milli, whatever follows.
+		['5 mJ/l', 'milli'],
+		['5 mJ/KG', 'milli'],
+		['5 mJ/litre', 'milli'],
+		['5 mJ/M3', 'milli']
 	])(
 		'%s names a unit the catalog lacks — refused, never read as its case twin',
 		(input, prefix) => {
@@ -110,12 +116,25 @@ describe('short unit URLs never cross a prefix', () => {
 	});
 });
 
+it('"5 mJ per kg" reads mJ as millijoule, never as the MJ/kg unit', () => {
+	const out = converter.parse('5 mJ per kg');
+	expect(out.ok && out.query.unit_id === 'mj_per_kg').toBe(false);
+});
+
 describe('the lowercase convention for energy density stays', () => {
 	it.each([
 		['5 MJ/kg', 'mj_per_kg'],
 		['5 mj/kg', 'mj_per_kg'],
 		['5 Mtoe', 'mtoe'],
-		['5 mtoe', 'mtoe']
+		['5 mtoe', 'mtoe'],
+		['5 mmBtu', 'mmbtu'],
+		['5 Mmbtu', 'mmbtu'],
+		['5 MM BTU', 'mmbtu'],
+		['5 MTOE', 'mtoe'],
+		// No prefix in sight: minute is not a mega-unit.
+		['5 Min', 'minute'],
+		['5 MILLIGRAMS', 'milligram'],
+		['5 MEGAJOULES', 'megajoule']
 	])('%s → %s', (input, unit) => {
 		expect(unitOf(input)).toBe(unit);
 	});
