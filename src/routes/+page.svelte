@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import Seo from '$lib/components/layout/Seo.svelte';
-	import Converter from '$lib/components/converter/Converter.svelte';
-	import ExactnessBadge from '$lib/components/badges/ExactnessBadge.svelte';
+	import Seo from '#lib/components/layout/Seo.svelte';
+	import Converter from '#lib/components/converter/Converter.svelte';
+	import ExactnessBadge from '#lib/components/badges/ExactnessBadge.svelte';
 
 	const features = [
 		{
@@ -85,7 +85,7 @@
 		<ExactnessBadge exactness="context_required" />
 		<ExactnessBadge exactness="unsupported" />
 		<a
-			href={resolve('/methodology')}
+			href={resolve('methodology')}
 			class="text-sm font-medium hover:underline"
 			style="color:var(--accent)"
 		>

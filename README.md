@@ -98,7 +98,7 @@ universal-converter/
       emissions/    factors.ts, scopes.ts, co2-vs-co2e.ts
       data/         load-data.ts, validate-data.ts, schemas.ts
       formatting/   numbers.ts, units.ts
-      index.ts      public $lib export surface
+      index.ts      public #lib export surface
     routes/         SvelteKit pages (UI layer only — see docs/architecture.md)
   data/             units.json, fuels.json, emission-factors.json,
                     sources.json, examples.json (Zod-validated)

@@ -15,9 +15,9 @@
  * is read-only.
  */
 
-import { getConverter } from '$lib/index';
-import type { ConversionResultSet, EngineOptions, ParseError } from '$lib/conversion/types';
-import { APP_VERSION } from '$lib/version';
+import { getConverter } from '#lib/index.js';
+import type { ConversionResultSet, EngineOptions, ParseError } from '#lib/conversion/types.js';
+import { APP_VERSION } from '#lib/version.js';
 
 /** Bumped when the response shape changes; mirrors the app version line. */
 export const API_VERSION = '0.2-draft';

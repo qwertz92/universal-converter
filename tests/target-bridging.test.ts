@@ -5,8 +5,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { getConverter } from '$lib/index';
-import type { ConversionResult, EngineOptions } from '$lib/conversion/types';
+import { getConverter } from '#lib/index.js';
+import type { ConversionResult, EngineOptions } from '#lib/conversion/types.js';
 
 const converter = getConverter();
 

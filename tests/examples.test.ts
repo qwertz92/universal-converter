@@ -16,8 +16,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { getConverter, loadExamples } from '$lib/index';
-import type { ConversionResultSet, ParseError } from '$lib/conversion/types';
+import { getConverter, loadExamples } from '#lib/index.js';
+import type { ConversionResultSet, ParseError } from '#lib/conversion/types.js';
 
 const converter = getConverter();
 

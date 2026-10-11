@@ -5,7 +5,7 @@
  * Converter component can read/write it with SvelteKit's `goto`.
  */
 
-import type { HeatingBasis } from '$lib/conversion/types';
+import type { HeatingBasis } from '#lib/conversion/types.js';
 
 export interface ConverterUrlState {
 	q: string;
@@ -17,7 +17,9 @@ export interface ConverterUrlState {
 }
 
 export function readUrlState(
-	url: URL,
+	/** Only `searchParams.get` is read, so SvelteKit 3's readonly `page.url`
+	 *  (whose `searchParams` has no `set`/`append`) is accepted as well as a `URL`. */
+	url: { searchParams: Pick<URLSearchParams, 'get'> },
 	/** Region/year pairs that actually have a cited factor. A pair outside this
 	 *  list is dropped rather than bound to the picker, where it rendered as an
 	 *  empty select with no explanation. */

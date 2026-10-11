@@ -17,9 +17,9 @@
  * uses, and the description reports the parse result rather than a guess.
  */
 
-import type { Fuel, ParseError, ParseResult, Unit } from '$lib/conversion/types';
-import { DIMENSION_LABEL } from '$lib/ui/engine';
-import { searchFuels, searchUnits } from '$lib/ui/search';
+import type { Fuel, ParseError, ParseResult, Unit } from '#lib/conversion/types.js';
+import { DIMENSION_LABEL } from '#lib/ui/engine.js';
+import { searchFuels, searchUnits } from '#lib/ui/search.js';
 
 /** Words that introduce a conversion target (mirrors the parser's grammar). */
 const TARGET_WORDS = new Set(['to', 'in', 'into', 'as', '->', '→', '⇒', '=', '=>']);

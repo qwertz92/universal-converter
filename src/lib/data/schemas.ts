@@ -10,7 +10,7 @@
  */
 
 import { z } from 'zod';
-import { BASE_DIMENSIONS, EXACTNESS_LEVELS, PSEUDO_DIMENSIONS } from '$lib/conversion/types';
+import { BASE_DIMENSIONS, EXACTNESS_LEVELS, PSEUDO_DIMENSIONS } from '#lib/conversion/types.js';
 
 /* ------------------------------------------------------------------ *
  * Shared primitives

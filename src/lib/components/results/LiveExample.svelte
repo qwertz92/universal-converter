@@ -5,8 +5,8 @@
 	 * Renders the full ResultSet plus a link into the converter.
 	 */
 	import { resolve } from '$app/paths';
-	import { engine } from '$lib/ui/engine';
-	import type { ConversionResultSet } from '$lib/conversion/types';
+	import { engine } from '#lib/ui/engine.js';
+	import type { ConversionResultSet } from '#lib/conversion/types.js';
 	import ResultSet from './ResultSet.svelte';
 
 	let { query }: { query: string } = $props();
@@ -27,7 +27,7 @@
 				Live example
 			</span>
 			<a
-				href={resolve(`/convert?q=${encodeURIComponent(query)}`)}
+				href={resolve(`convert?q=${encodeURIComponent(query)}`)}
 				class="text-sm font-medium hover:underline"
 				style="color:var(--accent)"
 			>

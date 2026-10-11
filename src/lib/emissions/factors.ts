@@ -16,7 +16,7 @@
  */
 
 import Decimal from 'decimal.js';
-import type { EmissionFactor } from '$lib/conversion/types';
+import type { EmissionFactor } from '#lib/conversion/types.js';
 
 Decimal.set({ precision: 40 });
 

@@ -2,9 +2,9 @@
 	import './layout.css';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import Header from '$lib/components/layout/Header.svelte';
-	import Footer from '$lib/components/layout/Footer.svelte';
-	import { theme } from '$lib/ui/theme.svelte';
+	import Header from '#lib/components/layout/Header.svelte';
+	import Footer from '#lib/components/layout/Footer.svelte';
+	import { theme } from '#lib/ui/theme.svelte.js';
 
 	let { children } = $props();
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { createConverter } from '$lib/conversion/engine';
+import { createConverter } from '#lib/conversion/engine.js';
 import { testBundle } from './fixtures/fuel-bundle';
-import type { ConversionResult } from '$lib/conversion/types';
+import type { ConversionResult } from '#lib/conversion/types.js';
 
 const converter = createConverter(testBundle());
 

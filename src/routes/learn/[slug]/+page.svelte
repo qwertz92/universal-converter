@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import Seo from '$lib/components/layout/Seo.svelte';
-	import Breadcrumbs from '$lib/components/layout/Breadcrumbs.svelte';
-	import LiveExample from '$lib/components/results/LiveExample.svelte';
-	import { LEARN_TOPICS } from '$lib/content/learn';
+	import Seo from '#lib/components/layout/Seo.svelte';
+	import Breadcrumbs from '#lib/components/layout/Breadcrumbs.svelte';
+	import LiveExample from '#lib/components/results/LiveExample.svelte';
+	import { LEARN_TOPICS } from '#lib/content/learn.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -19,7 +19,7 @@
 
 <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
 	<Breadcrumbs
-		items={[{ href: resolve('/learn'), path: '/learn', label: 'Learn' }, { label: topic.title }]}
+		items={[{ href: resolve('learn'), path: '/learn', label: 'Learn' }, { label: topic.title }]}
 	/>
 
 	<header class="mb-6">
@@ -51,7 +51,7 @@
 				{#each sources as s (s.id)}
 					<li>
 						<a
-							href={resolve(`/sources#${s.id}`)}
+							href={resolve(`sources#${s.id}`)}
 							class="hover:text-[var(--accent)]"
 							style="color:var(--text-muted)"
 						>
@@ -70,7 +70,7 @@
 	>
 		{#if prev}
 			<a
-				href={resolve(`/learn/${prev.slug}`)}
+				href={resolve(`learn/${prev.slug}`)}
 				class="group flex-1 rounded-lg border p-3 transition-colors hover:border-[var(--accent)]"
 				style="border-color:var(--border)"
 			>
@@ -82,7 +82,7 @@
 		{/if}
 		{#if next}
 			<a
-				href={resolve(`/learn/${next.slug}`)}
+				href={resolve(`learn/${next.slug}`)}
 				class="group flex-1 rounded-lg border p-3 text-right transition-colors hover:border-[var(--accent)]"
 				style="border-color:var(--border)"
 			>

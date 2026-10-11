@@ -8,15 +8,15 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { loadDataBundle } from '$lib/index';
+import { loadDataBundle } from '#lib/index.js';
 import {
 	buildExactSymbolMap,
 	buildUnitSlugAliases,
 	buildUnitSlugRedirects,
 	caseVariantUnits,
 	resolveUnitSlug
-} from '$lib/ui/unit-slugs';
-import type { Unit } from '$lib/conversion/types';
+} from '#lib/ui/unit-slugs.js';
+import type { Unit } from '#lib/conversion/types.js';
 
 const { units } = loadDataBundle();
 const ids = new Set(units.map((u) => u.id));

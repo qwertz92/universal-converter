@@ -5,7 +5,7 @@
 	 *  - the grid region/year picker for electricity emissions (0.2 roadmap item 1).
 	 */
 	import { resolve } from '$app/paths';
-	import type { HeatingBasis } from '$lib/conversion/types';
+	import type { HeatingBasis } from '#lib/conversion/types.js';
 	import InfoPopover from './InfoPopover.svelte';
 	import GridPicker from './GridPicker.svelte';
 
@@ -51,7 +51,7 @@
 			diesel, ~11% for natural gas and methane, and ~18% for hydrogen — so every fuel-energy result
 			is labeled with its basis. Default is LHV/NCV.
 			<a
-				href={resolve('/learn/hhv-vs-lhv')}
+				href={resolve('learn/hhv-vs-lhv')}
 				class="mt-1 block hover:text-[var(--accent)]"
 				style="color:var(--accent)"
 			>
@@ -92,7 +92,7 @@
 			there is no single correct global factor. Only region/year combinations with a cited factor
 			are offered; each is labeled CO2 or CO2e (they are different metrics).
 			<a
-				href={resolve('/learn/electricity-emissions-region-year')}
+				href={resolve('learn/electricity-emissions-region-year')}
 				class="mt-1 block hover:text-[var(--accent)]"
 				style="color:var(--accent)"
 			>

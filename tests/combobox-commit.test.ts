@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { typedMatch } from '$lib/components/search/Combobox.svelte';
+import { typedMatch } from '#lib/components/search/Combobox.svelte';
 
 const opts = [
 	{ id: 'kilowatt_hour', label: 'kilowatt hour', hint: 'kWh', group: 'Energy' },

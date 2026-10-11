@@ -40,16 +40,16 @@ import type {
 	Unit,
 	Warning
 } from './types';
-import { UnitRegistry } from '$lib/units/registry';
-import { FuelRegistry } from '$lib/fuels/registry';
-import { convertWithinDimension, toBaseValue } from '$lib/units/exact-conversions';
+import { UnitRegistry } from '#lib/units/registry.js';
+import { FuelRegistry } from '#lib/fuels/registry.js';
+import { convertWithinDimension, toBaseValue } from '#lib/units/exact-conversions.js';
 import { parseQuery } from './parser';
 import { combineExactness } from './precision';
 import { ResultSetBuilder } from './result-groups';
-import { formatValue, roundToSigFigs, sigFigsFor } from '$lib/formatting/numbers';
-import { unitLabel } from '$lib/formatting/units';
+import { formatValue, roundToSigFigs, sigFigsFor } from '#lib/formatting/numbers.js';
+import { unitLabel } from '#lib/formatting/units.js';
 import { step } from './formulas';
-import { resolveDensity, volumeToMassKg, massToVolumeM3 } from '$lib/fuels/density';
+import { resolveDensity, volumeToMassKg, massToVolumeM3 } from '#lib/fuels/density.js';
 import {
 	allHeatingValues,
 	amountToEnergyJ,
@@ -57,11 +57,11 @@ import {
 	energyToAmountBase,
 	pickHeatingValue,
 	type HeatingValueResolved
-} from '$lib/fuels/heating-values';
-import { isElectricity, isHydrogen } from '$lib/fuels/fuel-types';
-import { CO2_CO2E_EXPLANATION, isCo2Co2eCrossing } from '$lib/emissions/co2-vs-co2e';
-import { applyFactor, factorInputKind, factorUnitLabel } from '$lib/emissions/factors';
-import { POLLUTANT_LABEL, SCOPE_LABEL } from '$lib/emissions/scopes';
+} from '#lib/fuels/heating-values.js';
+import { isElectricity, isHydrogen } from '#lib/fuels/fuel-types.js';
+import { CO2_CO2E_EXPLANATION, isCo2Co2eCrossing } from '#lib/emissions/co2-vs-co2e.js';
+import { applyFactor, factorInputKind, factorUnitLabel } from '#lib/emissions/factors.js';
+import { POLLUTANT_LABEL, SCOPE_LABEL } from '#lib/emissions/scopes.js';
 import {
 	biogenicCo2Warning,
 	boeConventionWarning,

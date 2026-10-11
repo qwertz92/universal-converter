@@ -7,7 +7,7 @@
 	 * text ("5 kW for 3 h") rather than into hidden state: it stays visible,
 	 * editable and shareable, and the engine still never assumes it.
 	 */
-	import type { Unit } from '$lib/conversion/types';
+	import type { Unit } from '#lib/conversion/types.js';
 
 	let {
 		units,

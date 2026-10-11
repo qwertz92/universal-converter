@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { allFuels, allUnits } from '$lib/ui/engine';
-	import { closestMatches } from '$lib/ui/near-miss';
-	import { caseVariantUnits } from '$lib/ui/unit-slugs';
+	import { allFuels, allUnits } from '#lib/ui/engine.js';
+	import { closestMatches } from '#lib/ui/near-miss.js';
+	import { caseVariantUnits } from '#lib/ui/unit-slugs.js';
 
 	const status = $derived(page.status);
 	const message = $derived(page.error?.message ?? 'Something went wrong.');
@@ -36,7 +36,7 @@
 			const byCase = caseVariantUnits(slug, allUnits());
 			const near = closestMatches(query, allUnits(), (u) => [u.id, ...u.names]);
 			return [...byCase, ...near.filter((u) => !byCase.includes(u))].slice(0, 3).map((u) => ({
-				href: resolve(`/units/${u.id}`),
+				href: resolve(`units/${u.id}`),
 				label: byCase.includes(u) ? `${u.names[0]} (${u.symbols[0]})` : u.names[0]
 			}));
 		};
@@ -44,7 +44,7 @@
 			m[1] === 'units'
 				? unitSuggestions()
 				: closestMatches(query, allFuels(), (f) => [f.id, ...f.names]).map((f) => ({
-						href: resolve(`/fuels/${f.id}`),
+						href: resolve(`fuels/${f.id}`),
 						label: f.names[0]
 					}));
 		return {
@@ -53,8 +53,8 @@
 			suggestions,
 			href:
 				m[1] === 'units'
-					? resolve(`/units?q=${encodeURIComponent(query)}`)
-					: resolve(`/fuels?q=${encodeURIComponent(query)}`)
+					? resolve(`units?q=${encodeURIComponent(query)}`)
+					: resolve(`fuels?q=${encodeURIComponent(query)}`)
 		};
 	});
 

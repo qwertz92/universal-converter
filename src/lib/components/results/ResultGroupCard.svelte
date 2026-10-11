@@ -1,11 +1,11 @@
 <script lang="ts">
 	/** A titled card grouping conversion result rows (rulebook §C.8). */
 	import { resolve } from '$app/paths';
-	import type { ResultGroup, ConversionResult, HeatingBasis } from '$lib/conversion/types';
-	import { groupMeta } from '$lib/ui/groups';
-	import { basisSections } from '$lib/ui/basis-sections';
+	import type { ResultGroup, ConversionResult, HeatingBasis } from '#lib/conversion/types.js';
+	import { groupMeta } from '#lib/ui/groups.js';
+	import { basisSections } from '#lib/ui/basis-sections.js';
 	import ResultRow from './ResultRow.svelte';
-	import { rowHasDetail } from '$lib/ui/result-row';
+	import { rowHasDetail } from '#lib/ui/result-row.js';
 
 	let {
 		group,
@@ -86,7 +86,7 @@
 				</h4>
 				{#if s === firstBasisSection}
 					<a
-						href={resolve('/learn/hhv-vs-lhv')}
+						href={resolve('learn/hhv-vs-lhv')}
 						class="text-xs hover:underline"
 						style="color:var(--accent)">LHV vs. HHV — what is the difference?</a
 					>

@@ -14,13 +14,13 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { createRawSnippet } from 'svelte';
 import { render } from 'svelte/server';
-import type { ConversionResult, ResultGroup } from '$lib/conversion/types';
-import InfoPopover from '$lib/components/converter/InfoPopover.svelte';
-import Header from '$lib/components/layout/Header.svelte';
-import ResultGroupCard from '$lib/components/results/ResultGroupCard.svelte';
-import WarningsNote from '$lib/components/results/WarningsNote.svelte';
-import { NO_HIGHLIGHT, nextHighlight } from '$lib/components/search/Combobox.svelte';
-import { readStored, theme, writeStored, type ThemeStorage } from '$lib/ui/theme.svelte';
+import type { ConversionResult, ResultGroup } from '#lib/conversion/types.js';
+import InfoPopover from '#lib/components/converter/InfoPopover.svelte';
+import Header from '#lib/components/layout/Header.svelte';
+import ResultGroupCard from '#lib/components/results/ResultGroupCard.svelte';
+import WarningsNote from '#lib/components/results/WarningsNote.svelte';
+import { NO_HIGHLIGHT, nextHighlight } from '#lib/components/search/Combobox.svelte';
+import { readStored, theme, writeStored, type ThemeStorage } from '#lib/ui/theme.svelte.js';
 
 /** Every `aria-controls` value in a rendered fragment, in document order. */
 function ariaControls(html: string): string[] {

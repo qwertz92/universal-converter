@@ -12,7 +12,7 @@
  * module does is compose the full query the engine would have received anyway.
  */
 
-import type { ParseResult, Unit } from '$lib/conversion/types';
+import type { ParseResult, Unit } from '#lib/conversion/types.js';
 
 export interface Pin {
 	/** Unit a bare number is measured in. */

@@ -14,7 +14,7 @@ import type {
 	ConversionResultSet,
 	Dimension,
 	ResultGroupKey
-} from '$lib/conversion/types';
+} from '#lib/conversion/types.js';
 
 export interface KeyFigure {
 	label: string;

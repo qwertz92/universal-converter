@@ -11,7 +11,7 @@
  * number stripped of its provenance.
  */
 
-import type { ConversionResultSet } from '$lib/conversion/types';
+import type { ConversionResultSet } from '#lib/conversion/types.js';
 
 const META_KEYS = new Set(['assumptions', 'warnings', 'sources', 'formula']);
 

@@ -9,7 +9,7 @@ import {
 	PSEUDO_DIMENSIONS,
 	type BaseDimension,
 	type Dimension
-} from '$lib/conversion/types';
+} from '#lib/conversion/types.js';
 
 /** Canonical base-unit id per base dimension (to_base_factor === "1"). */
 export const BASE_UNIT_ID = {

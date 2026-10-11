@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import Seo from '$lib/components/layout/Seo.svelte';
-	import Breadcrumbs from '$lib/components/layout/Breadcrumbs.svelte';
-	import ResultSet from '$lib/components/results/ResultSet.svelte';
-	import SourceRefs from '$lib/components/results/SourceRefs.svelte';
-	import { engine, fuelById, unitById } from '$lib/ui/engine';
-	import { basisLabel } from '$lib/fuels/heating-values';
-	import { SCOPE_LABEL, POLLUTANT_LABEL } from '$lib/emissions/scopes';
-	import type { Density, EmissionFactor, ConversionResultSet } from '$lib/conversion/types';
-	import { loadDataBundle } from '$lib';
+	import Seo from '#lib/components/layout/Seo.svelte';
+	import Breadcrumbs from '#lib/components/layout/Breadcrumbs.svelte';
+	import ResultSet from '#lib/components/results/ResultSet.svelte';
+	import SourceRefs from '#lib/components/results/SourceRefs.svelte';
+	import { engine, fuelById, unitById } from '#lib/ui/engine.js';
+	import { basisLabel } from '#lib/fuels/heating-values.js';
+	import { SCOPE_LABEL, POLLUTANT_LABEL } from '#lib/emissions/scopes.js';
+	import type { Density, EmissionFactor, ConversionResultSet } from '#lib/conversion/types.js';
+	import { loadDataBundle } from '#lib';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -16,7 +16,7 @@
 
 	/**
 	 * `loadDataBundle()` re-parses and re-validates ~120 KB of JSON through Zod on
-	 * every call, so it is held once here. `$lib/ui/engine` already memoizes the
+	 * every call, so it is held once here. `#lib/ui/engine.js` already memoizes the
 	 * bundle for units and fuels (used below); it exposes no emission-factor
 	 * getter, so this page keeps the one parse it needs for factors.
 	 */
@@ -138,7 +138,7 @@
 
 <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
 	<Breadcrumbs
-		items={[{ href: resolve('/fuels'), path: '/fuels', label: 'Fuels' }, { label: fuel.category }]}
+		items={[{ href: resolve('fuels'), path: '/fuels', label: 'Fuels' }, { label: fuel.category }]}
 	/>
 
 	<header class="mb-8">
@@ -206,7 +206,7 @@
 				{#each related as r (r.fuel.id)}
 					<li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
 						<a
-							href={resolve(`/fuels/${r.fuel.id}`)}
+							href={resolve(`fuels/${r.fuel.id}`)}
 							class="font-medium underline underline-offset-2"
 							style="color:var(--accent)">{r.fuel.names[0]}</a
 						>
@@ -369,7 +369,7 @@
 					Biogenic CO₂ is listed on its own line: the carbon still leaves the stack, but it is
 					accounted for separately from fossil CO₂ rather than added to it.{/if}
 				<a
-					href={resolve('/learn/co2-vs-co2e')}
+					href={resolve('learn/co2-vs-co2e')}
 					class="hover:text-[var(--accent)]"
 					style="color:var(--text-muted)">What these metrics mean →</a
 				>
@@ -411,7 +411,7 @@
 			<div class="px-4 pb-4">
 				<div class="mb-3">
 					<a
-						href={resolve(`/convert?q=${encodeURIComponent(sampleQuery)}`)}
+						href={resolve(`convert?q=${encodeURIComponent(sampleQuery)}`)}
 						class="inline-flex min-h-10 items-center text-sm font-medium hover:underline"
 						style="color:var(--accent)"
 					>
@@ -447,7 +447,7 @@
 			<div class="grid gap-2 sm:grid-cols-2">
 				{#each learn as topic (topic.slug)}
 					<a
-						href={resolve(`/learn/${topic.slug}`)}
+						href={resolve(`learn/${topic.slug}`)}
 						class="rounded-lg border px-3 py-2.5 transition-colors hover:border-[var(--accent)]"
 						style="border-color:var(--border);background:var(--surface)"
 					>

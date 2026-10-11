@@ -26,7 +26,7 @@ static-first SSG) that follows from it.
   automatic preview deploys per branch/PR with no additional CI
   configuration required.
 - **`@sveltejs/adapter-cloudflare`** is the SvelteKit adapter used
-  (`svelte.config.js`), targeting Cloudflare's Pages/Workers runtime.
+  (configured in `vite.config.ts`), targeting Cloudflare's Pages/Workers runtime.
   `wrangler.jsonc` pins `pages_build_output_dir` to
   `.svelte-kit/cloudflare` (the adapter's actual output directory — verified
   against the committed config, not assumed) and `compatibility_date` to

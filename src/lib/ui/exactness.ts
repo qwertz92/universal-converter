@@ -4,7 +4,7 @@
  * uses, so badges and the legend look identical everywhere (spec §10).
  */
 
-import type { Exactness } from '$lib/conversion/types';
+import type { Exactness } from '#lib/conversion/types.js';
 
 export interface ExactnessMeta {
 	/** Short badge text. */

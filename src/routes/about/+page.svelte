@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import Seo from '$lib/components/layout/Seo.svelte';
-	import PageHero from '$lib/components/layout/PageHero.svelte';
-	import { APP_VERSION } from '$lib/version';
+	import Seo from '#lib/components/layout/Seo.svelte';
+	import PageHero from '#lib/components/layout/PageHero.svelte';
+	import { APP_VERSION } from '#lib/version.js';
 </script>
 
 <Seo
@@ -51,23 +51,23 @@
 
 		<h2>How to read a result</h2>
 		<p>
-			Each result carries an <a href={resolve('/methodology')}>exactness badge</a>, an expandable
+			Each result carries an <a href={resolve('methodology')}>exactness badge</a>, an expandable
 			calculation path, its assumptions, any warnings, and links to its
-			<a href={resolve('/sources')}>sources</a>. Follow those back to the original document for
+			<a href={resolve('sources')}>sources</a>. Follow those back to the original document for
 			anything that matters. That traceability is the entire point.
 		</p>
 	</div>
 
 	<div class="mt-8 flex flex-wrap gap-3">
 		<a
-			href={resolve('/convert')}
+			href={resolve('convert')}
 			class="rounded-lg px-4 py-2.5 text-sm font-semibold"
 			style="background:var(--accent);color:var(--accent-contrast)"
 		>
 			Open the converter
 		</a>
 		<a
-			href={resolve('/methodology')}
+			href={resolve('methodology')}
 			class="rounded-lg border px-4 py-2.5 text-sm font-semibold"
 			style="border-color:var(--border);color:var(--text)"
 		>

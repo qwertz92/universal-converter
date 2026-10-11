@@ -5,8 +5,8 @@
  * the arithmetic easy to check by hand, not to be physically authoritative.
  */
 
-import { loadDataBundle } from '$lib/data/load-data';
-import type { DataBundle, EmissionFactor, Fuel, Source } from '$lib/conversion/types';
+import { loadDataBundle } from '#lib/data/load-data.js';
+import type { DataBundle, EmissionFactor, Fuel, Source } from '#lib/conversion/types.js';
 
 const TEST_SOURCE: Source = {
 	id: 'test-fixture',

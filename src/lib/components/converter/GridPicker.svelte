@@ -6,7 +6,7 @@
 	 * its own figure (CO2 vs CO2e stay visibly distinct, §D.6). The empty
 	 * choice is explicit: no default grid is ever assumed.
 	 */
-	import { gridPickerOptions } from '$lib/ui/engine';
+	import { gridPickerOptions } from '#lib/ui/engine.js';
 
 	let {
 		value = $bindable(''),

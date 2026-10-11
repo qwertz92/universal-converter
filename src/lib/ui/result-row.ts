@@ -5,7 +5,7 @@
  * column instead of shifting row by row).
  */
 
-import type { ConversionResult } from '$lib/conversion/types';
+import type { ConversionResult } from '#lib/conversion/types.js';
 
 export function rowHasDetail(result: ConversionResult): boolean {
 	// Value-less rows already show their explanation inline — the disclosure is

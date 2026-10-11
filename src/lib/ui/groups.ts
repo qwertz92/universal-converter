@@ -3,7 +3,7 @@
  * a small glyph, so the converter renders a coherent set of section cards.
  */
 
-import type { ResultGroupKey } from '$lib/conversion/types';
+import type { ResultGroupKey } from '#lib/conversion/types.js';
 
 export interface GroupMeta {
 	title: string;

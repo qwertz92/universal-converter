@@ -15,7 +15,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import type {
 		ConversionResult,
 		ConversionResultSet,
@@ -23,11 +23,11 @@
 		ParseError,
 		HeatingBasis,
 		Fuel
-	} from '$lib/conversion/types';
-	import { engine, allUnits, allFuels, gridIntensityOptions } from '$lib/ui/engine';
-	import { debounce, searchFuels } from '$lib/ui/search';
-	import { buildQueryString, readUrlState, type ConverterUrlState } from '$lib/ui/query-state';
-	import { exportFilename, resultSetToCsv, resultSetToJson } from '$lib/ui/export';
+	} from '#lib/conversion/types.js';
+	import { engine, allUnits, allFuels, gridIntensityOptions } from '#lib/ui/engine.js';
+	import { debounce, searchFuels } from '#lib/ui/search.js';
+	import { buildQueryString, readUrlState, type ConverterUrlState } from '#lib/ui/query-state.js';
+	import { exportFilename, resultSetToCsv, resultSetToJson } from '#lib/ui/export.js';
 	import {
 		clearRecent,
 		clearSaved,
@@ -37,20 +37,20 @@
 		save as saveQuery,
 		unsave as unsaveQuery,
 		type SavedEntry
-	} from '$lib/ui/history';
-	import { applyPin, decodePin, encodePin, type Pin } from '$lib/ui/pin';
+	} from '#lib/ui/history.js';
+	import { applyPin, decodePin, encodePin, type Pin } from '#lib/ui/pin.js';
 	import HistoryPanel from './HistoryPanel.svelte';
-	import CopyButton from '$lib/components/results/CopyButton.svelte';
+	import CopyButton from '#lib/components/results/CopyButton.svelte';
 	import OptionsBar from './OptionsBar.svelte';
 	import GridPicker from './GridPicker.svelte';
 	import QueryField from './QueryField.svelte';
 	import DurationPrompt from './DurationPrompt.svelte';
 	import QuickExamples from './QuickExamples.svelte';
 	import GuidedForm from './GuidedForm.svelte';
-	import { composeQuery, defaultState, stateFromQuery, type GuidedState } from '$lib/ui/guided';
-	import ResultSet from '$lib/components/results/ResultSet.svelte';
-	import ParseErrorNote from '$lib/components/results/ParseErrorNote.svelte';
-	import Combobox, { type ComboOption } from '$lib/components/search/Combobox.svelte';
+	import { composeQuery, defaultState, stateFromQuery, type GuidedState } from '#lib/ui/guided.js';
+	import ResultSet from '#lib/components/results/ResultSet.svelte';
+	import ParseErrorNote from '#lib/components/results/ParseErrorNote.svelte';
+	import Combobox, { type ComboOption } from '#lib/components/search/Combobox.svelte';
 
 	let { syncUrl = true }: { syncUrl?: boolean } = $props();
 
@@ -312,15 +312,14 @@
 		const onConvert = page.url.pathname.endsWith('/convert');
 		const target = params
 			? onConvert
-				? resolve(`/convert?${params}`)
-				: resolve(`/?${params}`)
+				? resolve(`convert?${params}`)
+				: resolve(`?${params}`)
 			: onConvert
-				? resolve('/convert')
+				? resolve('convert')
 				: resolve('/');
 		goto(target, {
-			replaceState: true,
-			keepFocus: true,
-			noScroll: true
+			replace: true,
+			reset: false
 		});
 	}
 
@@ -557,7 +556,7 @@
 	 *  through resolve(); the search suffix is appended manually because the
 	 *  typed router models search-string suffixes for pages but not endpoints. */
 	const apiHref = $derived(
-		`${resolve('/api/convert')}${buildQueryString({ q: queryText, basis, ...gridParts(grid) })}`
+		`${resolve('api/convert')}${buildQueryString({ q: queryText, basis, ...gridParts(grid) })}`
 	);
 </script>
 
@@ -751,7 +750,7 @@
 				>
 					Download CSV
 				</button>
-				<!-- apiHref is resolve('/api/convert') + a query string; the typed router
+				<!-- apiHref is resolve('api/convert') + a query string; the typed router
 				     models search suffixes for pages but not for endpoints, so the rule
 				     is disabled for this one element rather than for the file. -->
 				<!-- eslint-disable svelte/no-navigation-without-resolve -->

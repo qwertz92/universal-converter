@@ -5,13 +5,13 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { handleConvertRequest, API_VERSION } from '$lib/api/convert-endpoint';
+import { handleConvertRequest, API_VERSION } from '#lib/api/convert-endpoint.js';
 import type {
 	ConvertErrorBody,
 	ConvertSuccessBody,
 	EndpointResult
-} from '$lib/api/convert-endpoint';
-import { APP_VERSION } from '$lib/version';
+} from '#lib/api/convert-endpoint.js';
+import { APP_VERSION } from '#lib/version.js';
 
 function req(query: string) {
 	return handleConvertRequest(new URL(`https://example.org/api/convert${query}`));

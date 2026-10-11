@@ -9,10 +9,17 @@
  * bundle may be sparse (e.g. an empty fuel catalog) and callers must handle that.
  */
 
-import { getConverter, loadDataBundle } from '$lib';
-import { factorInputKind } from '$lib/emissions/factors';
-import { formatValue } from '$lib/formatting/numbers';
-import type { Converter, DataBundle, Fuel, Source, Unit, Dimension } from '$lib/conversion/types';
+import { getConverter, loadDataBundle } from '#lib';
+import { factorInputKind } from '#lib/emissions/factors.js';
+import { formatValue } from '#lib/formatting/numbers.js';
+import type {
+	Converter,
+	DataBundle,
+	Fuel,
+	Source,
+	Unit,
+	Dimension
+} from '#lib/conversion/types.js';
 
 let _bundle: DataBundle | undefined;
 

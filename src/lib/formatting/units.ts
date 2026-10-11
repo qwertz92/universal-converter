@@ -2,7 +2,7 @@
  * Unit display helpers: the canonical label to show for a unit id.
  */
 
-import type { Unit } from '$lib/conversion/types';
+import type { Unit } from '#lib/conversion/types.js';
 
 /** The label shown next to a value — the unit's first (canonical) symbol. */
 export function unitLabel(unit: Unit): string {

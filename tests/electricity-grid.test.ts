@@ -10,9 +10,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { getConverter } from '$lib/index';
-import { gridIntensityOptions } from '$lib/ui/engine';
-import type { ConversionResult, EngineOptions } from '$lib/conversion/types';
+import { getConverter } from '#lib/index.js';
+import { gridIntensityOptions } from '#lib/ui/engine.js';
+import type { ConversionResult, EngineOptions } from '#lib/conversion/types.js';
 
 const converter = getConverter();
 

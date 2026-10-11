@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { loadDataBundle } from '$lib/data/load-data';
-import { UnitRegistry } from '$lib/units/registry';
-import { convertWithinDimension } from '$lib/units/exact-conversions';
-import type { Unit } from '$lib/conversion/types';
+import { loadDataBundle } from '#lib/data/load-data.js';
+import { UnitRegistry } from '#lib/units/registry.js';
+import { convertWithinDimension } from '#lib/units/exact-conversions.js';
+import type { Unit } from '#lib/conversion/types.js';
 
 const registry = new UnitRegistry(loadDataBundle().units);
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { validateAll } from '$lib/data/validate-data';
-import { loadDataBundle, loadExamples } from '$lib/data/load-data';
+import { validateAll } from '#lib/data/validate-data.js';
+import { loadDataBundle, loadExamples } from '#lib/data/load-data.js';
 
 /**
  * This file doubles as the `npm run validate:data` entry point: running

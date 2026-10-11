@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { resolve } from '$app/paths';
-	import Seo from '$lib/components/layout/Seo.svelte';
-	import PageHero from '$lib/components/layout/PageHero.svelte';
-	import { allFuels } from '$lib/ui/engine';
-	import { searchFuels } from '$lib/ui/search';
-	import { closestMatches } from '$lib/ui/near-miss';
-	import type { Fuel } from '$lib/conversion/types';
+	import Seo from '#lib/components/layout/Seo.svelte';
+	import PageHero from '#lib/components/layout/PageHero.svelte';
+	import { allFuels } from '#lib/ui/engine.js';
+	import { searchFuels } from '#lib/ui/search.js';
+	import { closestMatches } from '#lib/ui/near-miss.js';
+	import type { Fuel } from '#lib/conversion/types.js';
 
 	const fuels = allFuels();
 	let query = $state('');
@@ -85,7 +85,7 @@
 			<p class="mt-1 text-sm" style="color:var(--text-faint)">
 				Fuel properties are populated from <code>data/fuels.json</code>. Until then, exact unit
 				conversions still work in the
-				<a href={resolve('/convert')} class="hover:text-[var(--accent)]" style="color:var(--accent)"
+				<a href={resolve('convert')} class="hover:text-[var(--accent)]" style="color:var(--accent)"
 					>converter</a
 				>.
 			</p>
@@ -114,7 +114,7 @@
 							<span class="text-sm" style="color:var(--text-muted)">Did you mean</span>
 							{#each suggestions as s (s.id)}
 								<a
-									href={resolve(`/fuels/${s.id}`)}
+									href={resolve(`fuels/${s.id}`)}
 									class="inline-flex min-h-10 items-center rounded-lg border px-3 text-sm font-semibold transition-colors hover:border-[var(--accent)]"
 									style="border-color:var(--border);background:var(--surface);color:var(--accent)"
 									>{s.names[0]}</a
@@ -137,7 +137,7 @@
 							<div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
 								{#each g.items as f (f.id)}
 									<a
-										href={resolve(`/fuels/${f.id}`)}
+										href={resolve(`fuels/${f.id}`)}
 										class="rounded-lg border px-3 py-2.5 transition-colors hover:border-[var(--accent)]"
 										style="border-color:var(--border);background:var(--surface)"
 									>

@@ -4,7 +4,7 @@
  * `unknown_or_mixed` is only ever shown clearly marked.
  */
 
-import type { Pollutant, Scope } from '$lib/conversion/types';
+import type { Pollutant, Scope } from '#lib/conversion/types.js';
 
 export const SCOPE_LABEL = {
 	direct_combustion: 'direct combustion',

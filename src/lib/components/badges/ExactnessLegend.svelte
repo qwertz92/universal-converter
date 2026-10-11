@@ -1,6 +1,6 @@
 <script lang="ts">
 	/** The full exactness legend (rulebook §A) — the badge + its description. */
-	import { EXACTNESS_LEGEND_ORDER, EXACTNESS_META } from '$lib/ui/exactness';
+	import { EXACTNESS_LEGEND_ORDER, EXACTNESS_META } from '#lib/ui/exactness.js';
 	import ExactnessBadge from './ExactnessBadge.svelte';
 </script>
 

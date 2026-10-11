@@ -7,7 +7,7 @@
 	 * because a "Copy" word repeated on every row took room the value needed.
 	 * Both stay comfortably tappable on a phone.
 	 */
-	import { copyText } from '$lib/ui/clipboard';
+	import { copyText } from '#lib/ui/clipboard.js';
 
 	let {
 		text,

@@ -12,9 +12,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { FuelRegistry, UnitRegistry, getConverter, parseQuery } from '$lib/index';
-import { loadDataBundle } from '$lib/data/load-data';
-import type { ConversionResult } from '$lib/conversion/types';
+import { FuelRegistry, UnitRegistry, getConverter, parseQuery } from '#lib/index.js';
+import { loadDataBundle } from '#lib/data/load-data.js';
+import type { ConversionResult } from '#lib/conversion/types.js';
 
 const converter = getConverter();
 const { units, fuels, emissionFactors } = loadDataBundle();

@@ -1,6 +1,6 @@
 # Deployment — Cloudflare Pages
 
-> Verified against this repo's actual configuration: `svelte.config.js` uses
+> Verified against this repo's actual configuration: `vite.config.ts` (the `sveltekit()` plugin options; SvelteKit 3 no longer reads `svelte.config.js`) uses
 > `@sveltejs/adapter-cloudflare` (targets Cloudflare Pages/Workers) with no
 > custom adapter options; `wrangler.jsonc` sets
 > `pages_build_output_dir: ".svelte-kit/cloudflare"` and
@@ -9,7 +9,7 @@
 > `wrangler pages dev .svelte-kit/cloudflare --port 4173`; there is a `gen`
 > script (`wrangler types`) and no separate `deploy` script (path B below
 > covers the equivalent CLI command directly). Since 0.2 the repo pins Node
-> via `.nvmrc` (22) and an `engines` field (`>=20`) — Cloudflare Pages reads
+> via `.nvmrc` (22) and an `engines` field (`>=22.17`, the SvelteKit 3 minimum) — Cloudflare Pages reads
 > `.nvmrc` automatically; a dashboard `NODE_VERSION` environment variable
 > (Path A, step 5) still works and takes precedence if set. Note: with
 > `/api/convert` (0.2) the deployment is no longer purely static — the

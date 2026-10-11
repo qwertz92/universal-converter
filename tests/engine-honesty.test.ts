@@ -8,9 +8,13 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { getConverter } from '$lib/index';
-import { formatValue } from '$lib/formatting/numbers';
-import type { ConversionResult, ConversionResultSet, EngineOptions } from '$lib/conversion/types';
+import { getConverter } from '#lib/index.js';
+import { formatValue } from '#lib/formatting/numbers.js';
+import type {
+	ConversionResult,
+	ConversionResultSet,
+	EngineOptions
+} from '#lib/conversion/types.js';
 
 const converter = getConverter();
 

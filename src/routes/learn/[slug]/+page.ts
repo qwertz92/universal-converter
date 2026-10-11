@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
-import { LEARN_TOPICS, LEARN_BY_SLUG } from '$lib/content/learn';
-import { LEARN_BODIES } from '$lib/content/learn-bodies';
-import { resolveSources } from '$lib/ui/engine';
+import { LEARN_TOPICS, LEARN_BY_SLUG } from '#lib/content/learn.js';
+import { LEARN_BODIES } from '#lib/content/learn-bodies.js';
+import { resolveSources } from '#lib/ui/engine.js';
 import type { EntryGenerator } from './$types';
 
 export const prerender = true;

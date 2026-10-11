@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { getConverter } from '$lib/index';
-import { basisSections } from '$lib/ui/basis-sections';
+import { getConverter } from '#lib/index.js';
+import { basisSections } from '#lib/ui/basis-sections.js';
 
 function group(input: string, key: string) {
 	const out = getConverter().convertText(input);

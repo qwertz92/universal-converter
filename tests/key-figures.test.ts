@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { getConverter, loadDataBundle } from '$lib/index';
-import { keyFigures } from '$lib/ui/key-figures';
-import type { EngineOptions } from '$lib/conversion/types';
+import { getConverter, loadDataBundle } from '#lib/index.js';
+import { keyFigures } from '#lib/ui/key-figures.js';
+import type { EngineOptions } from '#lib/conversion/types.js';
 
 const converter = getConverter();
 const { units } = loadDataBundle();

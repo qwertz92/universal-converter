@@ -22,8 +22,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { getConverter, loadDataBundle } from '$lib/index';
-import type { ConversionResult } from '$lib/conversion/types';
+import { getConverter, loadDataBundle } from '#lib/index.js';
+import type { ConversionResult } from '#lib/conversion/types.js';
 
 describe('electricity fuel wired into the shipped catalog (spec §13.4, §9.6, rulebook §C.6)', () => {
 	it('data/fuels.json has exactly one electricity-category fuel', () => {

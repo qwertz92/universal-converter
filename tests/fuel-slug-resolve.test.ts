@@ -7,8 +7,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { loadDataBundle } from '$lib/index';
-import { buildFuelSlugIndex, buildFuelSlugRedirects, resolveFuelSlug } from '$lib/ui/fuel-slugs';
+import { loadDataBundle } from '#lib/index.js';
+import { buildFuelSlugIndex, buildFuelSlugRedirects, resolveFuelSlug } from '#lib/ui/fuel-slugs.js';
 
 const { fuels } = loadDataBundle();
 const index = buildFuelSlugIndex(fuels);

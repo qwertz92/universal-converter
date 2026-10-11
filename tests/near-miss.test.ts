@@ -7,8 +7,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { loadDataBundle } from '$lib/index';
-import { closestMatches, editDistance } from '$lib/ui/near-miss';
+import { loadDataBundle } from '#lib/index.js';
+import { closestMatches, editDistance } from '#lib/ui/near-miss.js';
 
 const { units, fuels } = loadDataBundle();
 const fuelLabels = (f: (typeof fuels)[number]) => [f.id, ...f.names];

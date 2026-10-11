@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { loadDataBundle } from '$lib/data/load-data';
-import { UnitRegistry } from '$lib/units/registry';
-import { FuelRegistry } from '$lib/fuels/registry';
-import { normalizeNumber, parseQuery } from '$lib/conversion/parser';
+import { loadDataBundle } from '#lib/data/load-data.js';
+import { UnitRegistry } from '#lib/units/registry.js';
+import { FuelRegistry } from '#lib/fuels/registry.js';
+import { normalizeNumber, parseQuery } from '#lib/conversion/parser.js';
 import { testBundle } from './fixtures/fuel-bundle';
 
 const base = loadDataBundle();

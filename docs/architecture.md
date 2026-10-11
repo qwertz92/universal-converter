@@ -191,7 +191,7 @@ Assumptions/Warnings/Sources meta-groups discoverable in one click (rulebook
 | `data/validate-data.ts` | Cross-file validation report (dangling `source_refs`, duplicate ids, etc.) beyond per-file Zod shape checks. |
 | `formatting/numbers.ts` | Display-time rounding, sig-fig capping, `~` marker, range formatting (rulebook §C.7). |
 | `formatting/units.ts` | Canonical display labels for units. |
-| `index.ts` | The public `$lib` export surface — the only import path other code (UI, tests, future consumers) should use. |
+| `index.ts` | The public `#lib` export surface — the only import path other code (UI, tests, future consumers) should use. |
 
 The UI layer (`src/routes`, `src/lib/components`) is, at the time of writing,
 the least-built part of the app (see `docs/roadmap.md` for status) — it

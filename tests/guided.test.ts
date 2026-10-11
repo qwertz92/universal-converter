@@ -6,14 +6,14 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { getConverter, loadDataBundle } from '$lib/index';
+import { getConverter, loadDataBundle } from '#lib/index.js';
 import {
 	composeQuery,
 	defaultState,
 	GUIDED_TASKS,
 	stateFromQuery,
 	unitDimensions
-} from '$lib/ui/guided';
+} from '#lib/ui/guided.js';
 
 const converter = getConverter();
 const { units, fuels } = loadDataBundle();

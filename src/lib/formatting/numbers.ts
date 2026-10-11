@@ -13,7 +13,7 @@
  */
 
 import Decimal from 'decimal.js';
-import type { Exactness } from '$lib/conversion/types';
+import type { Exactness } from '#lib/conversion/types.js';
 
 Decimal.set({ precision: 40, rounding: Decimal.ROUND_HALF_EVEN });
 

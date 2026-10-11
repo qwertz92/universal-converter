@@ -6,13 +6,13 @@
 	 * (`context_required`, `unsupported`, "not available") as inline prompts /
 	 * notes rather than errors (rulebook §A.2, §C.6).
 	 */
-	import type { ConversionResult } from '$lib/conversion/types';
-	import { formatRange, formatValue } from '$lib/formatting/numbers';
-	import { resolveSources } from '$lib/ui/engine';
-	import ExactnessBadge from '$lib/components/badges/ExactnessBadge.svelte';
+	import type { ConversionResult } from '#lib/conversion/types.js';
+	import { formatRange, formatValue } from '#lib/formatting/numbers.js';
+	import { resolveSources } from '#lib/ui/engine.js';
+	import ExactnessBadge from '#lib/components/badges/ExactnessBadge.svelte';
 	import CopyButton from './CopyButton.svelte';
 	import SourceRefs from './SourceRefs.svelte';
-	import { rowHasDetail } from '$lib/ui/result-row';
+	import { rowHasDetail } from '#lib/ui/result-row.js';
 
 	let {
 		result,

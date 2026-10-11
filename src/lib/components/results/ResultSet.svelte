@@ -8,15 +8,15 @@
 	 * context_required row (a fuel picker, a basis toggle, a region/year prompt).
 	 */
 	import { resolve } from '$app/paths';
-	import type { ConversionResultSet, ConversionResult } from '$lib/conversion/types';
+	import type { ConversionResultSet, ConversionResult } from '#lib/conversion/types.js';
 	import ResultGroupCard from './ResultGroupCard.svelte';
 	import WarningsNote from './WarningsNote.svelte';
 	import SourceRefs from './SourceRefs.svelte';
-	import ExactnessBadge from '$lib/components/badges/ExactnessBadge.svelte';
+	import ExactnessBadge from '#lib/components/badges/ExactnessBadge.svelte';
 	import CopyButton from './CopyButton.svelte';
 	import KeyFigures from './KeyFigures.svelte';
-	import { keyFigures } from '$lib/ui/key-figures';
-	import { unitById } from '$lib/ui/engine';
+	import { keyFigures } from '#lib/ui/key-figures.js';
+	import { unitById } from '#lib/ui/engine.js';
 
 	let {
 		resultSet,
@@ -142,7 +142,7 @@
 			<p class="mt-2 text-xs" style="color:var(--text-faint)">
 				Follow each source back to its primary document — that traceability is the point.
 				<a
-					href={resolve('/methodology')}
+					href={resolve('methodology')}
 					class="hover:text-[var(--accent)]"
 					style="color:var(--text-muted)">How conversions work →</a
 				>

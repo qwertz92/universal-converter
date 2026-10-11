@@ -20,7 +20,7 @@
  *    fixture doesn't silently encode float/rounding-mode assumptions.
  */
 
-import type { Exactness, ResultGroupKey } from '$lib/conversion/types';
+import type { Exactness, ResultGroupKey } from '#lib/conversion/types.js';
 
 export interface GoldenCheck {
 	/** Which result to find: category + unit_id (unit_id '' matches pseudo-groups). */

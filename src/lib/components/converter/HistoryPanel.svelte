@@ -9,7 +9,7 @@
 	 *
 	 * Everything here is browser-local. Nothing is sent anywhere.
 	 */
-	import type { SavedEntry } from '$lib/ui/history';
+	import type { SavedEntry } from '#lib/ui/history.js';
 
 	let {
 		recent,

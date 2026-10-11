@@ -38,9 +38,9 @@
 
 import Decimal from 'decimal.js';
 import type { Efficiency, ParseError, ParseResult, ParsedQuery, Price, Quantity } from './types';
-import type { UnitRegistry } from '$lib/units/registry';
-import { normalizeLoose } from '$lib/units/aliases';
-import type { FuelRegistry } from '$lib/fuels/registry';
+import type { UnitRegistry } from '#lib/units/registry.js';
+import { normalizeLoose } from '#lib/units/aliases.js';
+import type { FuelRegistry } from '#lib/fuels/registry.js';
 
 /** Leading number: optional sign, digits with `.` or `,` decimal (leading-dot
  *  decimals like ".5" allowed), optional exponent. */

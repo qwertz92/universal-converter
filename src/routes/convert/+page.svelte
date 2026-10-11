@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import Seo from '$lib/components/layout/Seo.svelte';
-	import PageHero from '$lib/components/layout/PageHero.svelte';
-	import Converter from '$lib/components/converter/Converter.svelte';
+	import Seo from '#lib/components/layout/Seo.svelte';
+	import PageHero from '#lib/components/layout/PageHero.svelte';
+	import Converter from '#lib/components/converter/Converter.svelte';
 </script>
 
 <Seo
@@ -24,7 +24,7 @@
 	<p class="-mt-4 mb-6 text-sm" style="color:var(--text-muted)">
 		Every result is labeled with how exact it is.
 		<a
-			href={resolve('/methodology#exactness-levels')}
+			href={resolve('methodology#exactness-levels')}
 			class="font-medium hover:underline"
 			style="color:var(--accent)">What the labels mean →</a
 		>

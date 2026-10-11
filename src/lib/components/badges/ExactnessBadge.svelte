@@ -11,8 +11,8 @@
 	 * itself, where linking back to the same section would be circular).
 	 */
 	import { resolve } from '$app/paths';
-	import type { Exactness } from '$lib/conversion/types';
-	import { EXACTNESS_META, badgeStyle } from '$lib/ui/exactness';
+	import type { Exactness } from '#lib/conversion/types.js';
+	import { EXACTNESS_META, badgeStyle } from '#lib/ui/exactness.js';
 
 	let {
 		exactness,
@@ -34,7 +34,7 @@
 
 {#if interactive}
 	<a
-		href={resolve('/methodology#exactness-levels')}
+		href={resolve('methodology#exactness-levels')}
 		class="{shared} no-underline hover:underline focus-visible:underline"
 		class:px-2={size === 'sm'}
 		class:py-0.5={size === 'sm'}

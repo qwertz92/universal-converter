@@ -5,7 +5,7 @@
  * without a basis form runs of their own with `basis` undefined.
  */
 
-import type { ConversionResult, HeatingBasis } from '$lib/conversion/types';
+import type { ConversionResult, HeatingBasis } from '#lib/conversion/types.js';
 
 export interface BasisSection {
 	basis?: HeatingBasis;

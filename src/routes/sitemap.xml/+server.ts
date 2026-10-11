@@ -1,7 +1,7 @@
 /**
  * GET /sitemap.xml — lists every prerendered page as an absolute URL (SEO
  * batch). Units/fuels/learn topics are enumerated from the same data the
- * page-level `EntryGenerator`s use (`$lib/ui/engine`, `$lib/content/learn`) —
+ * page-level `EntryGenerator`s use (`#lib/ui/engine.js`, `#lib/content/learn.js`) —
  * never a hardcoded id list — so this can't silently drift from what's
  * actually built. No <lastmod>: we don't track per-page dates, so we don't
  * invent them.
@@ -12,15 +12,15 @@
  *    — these 308-redirect to their canonical /units/<id> page, and a
  *    redirecting URL doesn't belong in a sitemap.
  */
-import { allFuels, allUnits } from '$lib/ui/engine';
-import { LEARN_TOPICS } from '$lib/content/learn';
+import { allFuels, allUnits } from '#lib/ui/engine.js';
+import { LEARN_TOPICS } from '#lib/content/learn.js';
 import type { RequestHandler } from './$types';
 
 export const prerender = true;
 
 const ORIGIN = 'https://universal-converter.org';
 
-/** Top-level static routes (mirrors the section list in svelte.config.js). */
+/** Top-level static routes (mirrors the adapter routes.exclude list in vite.config.ts). */
 const STATIC_PATHS = [
 	'/',
 	'/convert',

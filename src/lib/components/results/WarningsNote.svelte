@@ -3,7 +3,7 @@
 	 * A calm, expandable warnings note (spec §10: visible but not intrusive).
 	 * Renders at group or set level. Critical warnings are shown expanded.
 	 */
-	import type { Warning } from '$lib/conversion/types';
+	import type { Warning } from '#lib/conversion/types.js';
 
 	let { warnings, title = 'Warnings' }: { warnings: Warning[]; title?: string } = $props();
 

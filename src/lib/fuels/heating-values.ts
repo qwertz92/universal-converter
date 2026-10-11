@@ -10,7 +10,7 @@
  */
 
 import Decimal from 'decimal.js';
-import type { Fuel, HeatingBasis, HeatingValue } from '$lib/conversion/types';
+import type { Fuel, HeatingBasis, HeatingValue } from '#lib/conversion/types.js';
 
 Decimal.set({ precision: 40 });
 

@@ -13,9 +13,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { getConverter } from '$lib/index';
+import { getConverter } from '#lib/index.js';
 import { GOLDEN_CASES, type GoldenCase, type GoldenCheck } from './cases';
-import type { ConversionResult, ConversionResultSet } from '$lib/conversion/types';
+import type { ConversionResult, ConversionResultSet } from '#lib/conversion/types.js';
 
 const converter = getConverter();
 

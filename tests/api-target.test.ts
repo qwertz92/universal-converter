@@ -4,7 +4,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { handleConvertRequest } from '$lib/api/convert-endpoint';
+import { handleConvertRequest } from '#lib/api/convert-endpoint.js';
 
 /**
  * Narrows to the 200 body rather than asserting it: every case below expects a

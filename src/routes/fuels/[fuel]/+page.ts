@@ -1,8 +1,8 @@
 import { error, redirect } from '@sveltejs/kit';
 import { resolve } from '$app/paths';
-import { allFuels, fuelById, resolveSources } from '$lib/ui/engine';
-import { learnForFuel } from '$lib/content/learn';
-import { buildFuelSlugIndex, buildFuelSlugRedirects, resolveFuelSlug } from '$lib/ui/fuel-slugs';
+import { allFuels, fuelById, resolveSources } from '#lib/ui/engine.js';
+import { learnForFuel } from '#lib/content/learn.js';
+import { buildFuelSlugIndex, buildFuelSlugRedirects, resolveFuelSlug } from '#lib/ui/fuel-slugs.js';
 import type { EntryGenerator } from './$types';
 
 export const prerender = true;
@@ -27,7 +27,7 @@ export function load({ params }: { params: { fuel: string } }) {
 	// variants that no prerendered file exists for.
 	const canonicalId = resolveFuelSlug(params.fuel, fuelSlugIndex);
 	if (canonicalId && canonicalId !== params.fuel) {
-		redirect(308, resolve(`/fuels/${canonicalId}`));
+		redirect(308, resolve(`fuels/${canonicalId}`));
 	}
 
 	const fuel = fuelById(params.fuel);

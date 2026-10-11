@@ -8,7 +8,7 @@
  */
 
 import Decimal from 'decimal.js';
-import type { Unit } from '$lib/conversion/types';
+import type { Unit } from '#lib/conversion/types.js';
 
 // Generous working precision; display rounding happens later (rulebook §C.7).
 Decimal.set({ precision: 40 });

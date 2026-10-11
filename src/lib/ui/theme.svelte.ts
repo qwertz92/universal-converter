@@ -24,7 +24,7 @@ function systemPrefersDark(): boolean {
 	return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
-/** The slice of the Web Storage API this module needs (mirrors $lib/ui/history). */
+/** The slice of the Web Storage API this module needs (mirrors #lib/ui/history.js). */
 export interface ThemeStorage {
 	getItem(key: string): string | null;
 	setItem(key: string, value: string): void;

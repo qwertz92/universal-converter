@@ -15,7 +15,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { loadDataBundle } from '$lib/data/load-data';
+import { loadDataBundle } from '#lib/data/load-data.js';
 
 const { fuels } = loadDataBundle();
 

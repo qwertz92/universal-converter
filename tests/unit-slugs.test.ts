@@ -4,9 +4,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { loadDataBundle } from '$lib/index';
-import { buildUnitSlugAliases } from '$lib/ui/unit-slugs';
-import type { Unit } from '$lib/conversion/types';
+import { loadDataBundle } from '#lib/index.js';
+import { buildUnitSlugAliases } from '#lib/ui/unit-slugs.js';
+import type { Unit } from '#lib/conversion/types.js';
 
 const { units } = loadDataBundle();
 const aliases = buildUnitSlugAliases(units);

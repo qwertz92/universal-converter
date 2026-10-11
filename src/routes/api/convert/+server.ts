@@ -4,7 +4,7 @@
  * without SvelteKit. Runs as a Cloudflare Pages Function (Web APIs only).
  */
 import type { RequestHandler } from './$types';
-import { handleConvertRequest } from '$lib/api/convert-endpoint';
+import { handleConvertRequest } from '#lib/api/convert-endpoint.js';
 
 // The one dynamic route in an otherwise fully prerendered app.
 export const prerender = false;

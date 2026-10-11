@@ -4,7 +4,7 @@
  * matches first, and is forgiving of case and spacing.
  */
 
-import type { Fuel, Unit } from '$lib/conversion/types';
+import type { Fuel, Unit } from '#lib/conversion/types.js';
 
 function norm(s: string): string {
 	return s.toLowerCase().replace(/\s+/g, ' ').trim();

@@ -35,7 +35,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import Decimal from 'decimal.js';
-import { loadDataBundle } from '$lib/data/load-data';
+import { loadDataBundle } from '#lib/data/load-data.js';
 
 Decimal.set({ precision: 40 });
 

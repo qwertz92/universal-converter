@@ -3,7 +3,7 @@
 	 * Renders a parser error as a helpful, non-alarming prompt (spec §8.2):
 	 * unknown-unit suggestions, ambiguity choices, empty-input examples.
 	 */
-	import type { ParseError } from '$lib/conversion/types';
+	import type { ParseError } from '#lib/conversion/types.js';
 
 	let {
 		error,

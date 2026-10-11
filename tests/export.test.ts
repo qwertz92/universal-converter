@@ -3,9 +3,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { getConverter } from '$lib/index';
-import { exportFilename, resultSetToCsv, resultSetToJson } from '$lib/ui/export';
-import type { ConversionResultSet } from '$lib/conversion/types';
+import { getConverter } from '#lib/index.js';
+import { exportFilename, resultSetToCsv, resultSetToJson } from '#lib/ui/export.js';
+import type { ConversionResultSet } from '#lib/conversion/types.js';
 
 function resultSet(input: string): ConversionResultSet {
 	const out = getConverter().convertText(input);

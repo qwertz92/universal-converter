@@ -5,7 +5,7 @@
  */
 
 import Decimal from 'decimal.js';
-import type { Assumption, Density, Fuel } from '$lib/conversion/types';
+import type { Assumption, Density, Fuel } from '#lib/conversion/types.js';
 
 Decimal.set({ precision: 40 });
 

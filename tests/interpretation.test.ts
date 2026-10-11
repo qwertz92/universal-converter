@@ -5,9 +5,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { getConverter } from '$lib/index';
-import { allFuels, allUnits } from '$lib/ui/engine';
-import { describeQuery, starterUnits, suggestCompletions } from '$lib/ui/interpretation';
+import { getConverter } from '#lib/index.js';
+import { allFuels, allUnits } from '#lib/ui/engine.js';
+import { describeQuery, starterUnits, suggestCompletions } from '#lib/ui/interpretation.js';
 
 const converter = getConverter();
 const units = allUnits();

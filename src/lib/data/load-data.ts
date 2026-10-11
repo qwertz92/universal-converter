@@ -8,7 +8,7 @@
  * deep inside the engine.
  */
 
-import type { DataBundle, EmissionFactor, Fuel, Source, Unit } from '$lib/conversion/types';
+import type { DataBundle, EmissionFactor, Fuel, Source, Unit } from '#lib/conversion/types.js';
 import unitsJson from '../../../data/units.json';
 import fuelsJson from '../../../data/fuels.json';
 import emissionFactorsJson from '../../../data/emission-factors.json';

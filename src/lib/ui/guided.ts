@@ -11,7 +11,7 @@
  * falls back to the text mode rather than dropping part of the question.
  */
 
-import type { Dimension, Fuel, ParsedQuery, Unit } from '$lib/conversion/types';
+import type { Dimension, Fuel, ParsedQuery, Unit } from '#lib/conversion/types.js';
 
 export type GuidedTask = 'units' | 'fuel' | 'electricity' | 'power' | 'cost';
 

@@ -7,9 +7,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { getConverter } from '$lib/index';
-import { allUnits } from '$lib/ui/engine';
-import { applyPin, decodePin, encodePin, type Pin } from '$lib/ui/pin';
+import { getConverter } from '#lib/index.js';
+import { allUnits } from '#lib/ui/engine.js';
+import { applyPin, decodePin, encodePin, type Pin } from '#lib/ui/pin.js';
 
 const converter = getConverter();
 const units = allUnits();

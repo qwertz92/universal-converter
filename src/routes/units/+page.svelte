@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { resolve } from '$app/paths';
-	import Seo from '$lib/components/layout/Seo.svelte';
-	import PageHero from '$lib/components/layout/PageHero.svelte';
-	import ExactnessBadge from '$lib/components/badges/ExactnessBadge.svelte';
-	import { allUnits, DIMENSION_LABEL, DIMENSION_ORDER } from '$lib/ui/engine';
-	import { searchUnits } from '$lib/ui/search';
-	import { closestMatches } from '$lib/ui/near-miss';
-	import type { Unit } from '$lib/conversion/types';
+	import Seo from '#lib/components/layout/Seo.svelte';
+	import PageHero from '#lib/components/layout/PageHero.svelte';
+	import ExactnessBadge from '#lib/components/badges/ExactnessBadge.svelte';
+	import { allUnits, DIMENSION_LABEL, DIMENSION_ORDER } from '#lib/ui/engine.js';
+	import { searchUnits } from '#lib/ui/search.js';
+	import { closestMatches } from '#lib/ui/near-miss.js';
+	import type { Unit } from '#lib/conversion/types.js';
 
 	const units = allUnits();
 	let query = $state('');
@@ -111,7 +111,7 @@
 							<span class="text-sm" style="color:var(--text-muted)">Did you mean</span>
 							{#each suggestions as s (s.id)}
 								<a
-									href={resolve(`/units/${s.id}`)}
+									href={resolve(`units/${s.id}`)}
 									class="inline-flex min-h-10 items-center rounded-lg border px-3 text-sm font-semibold transition-colors hover:border-[var(--accent)]"
 									style="border-color:var(--border);background:var(--surface);color:var(--accent)"
 									>{s.names[0]}</a
@@ -152,7 +152,7 @@
 							<div class="grid grid-cols-2 gap-2 lg:grid-cols-3">
 								{#each g.units as u (u.id)}
 									<a
-										href={resolve(`/units/${u.id}`)}
+										href={resolve(`units/${u.id}`)}
 										class="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border px-3 py-2.5 transition-colors hover:border-[var(--accent)] sm:flex-nowrap sm:justify-between sm:gap-3"
 										style="border-color:var(--border);background:var(--surface)"
 									>

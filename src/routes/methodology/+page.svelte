@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import Seo from '$lib/components/layout/Seo.svelte';
-	import PageHero from '$lib/components/layout/PageHero.svelte';
-	import ExactnessLegend from '$lib/components/badges/ExactnessLegend.svelte';
-	import { APP_VERSION } from '$lib/version';
+	import Seo from '#lib/components/layout/Seo.svelte';
+	import PageHero from '#lib/components/layout/PageHero.svelte';
+	import ExactnessLegend from '#lib/components/badges/ExactnessLegend.svelte';
+	import { APP_VERSION } from '#lib/version.js';
 
 	const layers = [
 		{
@@ -118,7 +118,7 @@
 				<strong>default is LHV/NCV</strong> (lower / net) — the dominant convention in international
 				energy statistics — and every fuel-energy result is <strong>labeled with its basis</strong>.
 				Where the data has an HHV/GCV value too, we show it alongside; we never derive one basis
-				from the other with a generic factor. <a href={resolve('/learn/hhv-vs-lhv')}>Read more →</a>
+				from the other with a generic factor. <a href={resolve('learn/hhv-vs-lhv')}>Read more →</a>
 			</p>
 		</div>
 	</section>
@@ -147,7 +147,7 @@
 		<p class="text-sm" style="color:var(--text-muted)">
 			For the honest scope of what v{APP_VERSION} answers exactly, estimates, and refuses — and what you
 			must not use it for — see the limitations summary, and follow every result's
-			<a href={resolve('/sources')} class="font-medium hover:underline" style="color:var(--accent)"
+			<a href={resolve('sources')} class="font-medium hover:underline" style="color:var(--accent)"
 				>sources</a
 			> back to the primary document.
 		</p>

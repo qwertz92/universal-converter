@@ -44,8 +44,8 @@ import {
 	unitsFileSchema
 } from './schemas';
 import { rawData } from './load-data';
-import { normalizeLoose, normalizeSymbol } from '$lib/units/aliases';
-import type { Pollutant } from '$lib/conversion/types';
+import { normalizeLoose, normalizeSymbol } from '#lib/units/aliases.js';
+import type { Pollutant } from '#lib/conversion/types.js';
 
 export interface ValidationIssue {
 	file: 'units' | 'fuels' | 'emission-factors' | 'sources' | 'examples' | 'cross-file';

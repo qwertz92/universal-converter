@@ -18,9 +18,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { loadDataBundle, loadExamples } from '$lib/data/load-data';
-import { UnitRegistry } from '$lib/units/registry';
-import { normalizeLoose } from '$lib/units/aliases';
+import { loadDataBundle, loadExamples } from '#lib/data/load-data.js';
+import { UnitRegistry } from '#lib/units/registry.js';
+import { normalizeLoose } from '#lib/units/aliases.js';
 
 const { units, fuels, emissionFactors, sources } = loadDataBundle();
 const sourceIds = new Set(sources.map((s) => s.id));

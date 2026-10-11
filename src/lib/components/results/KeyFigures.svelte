@@ -1,11 +1,11 @@
 <script lang="ts">
 	/**
 	 * "At a glance" tiles above the full results: one headline figure per kind
-	 * of result (`$lib/ui/key-figures`). Each tile is an existing result row —
+	 * of result (`#lib/ui/key-figures.js`). Each tile is an existing result row —
 	 * same value, same exactness badge, same basis — never a recomputation.
 	 */
-	import type { KeyFigure } from '$lib/ui/key-figures';
-	import ExactnessBadge from '$lib/components/badges/ExactnessBadge.svelte';
+	import type { KeyFigure } from '#lib/ui/key-figures.js';
+	import ExactnessBadge from '#lib/components/badges/ExactnessBadge.svelte';
 
 	let { figures }: { figures: KeyFigure[] } = $props();
 </script>

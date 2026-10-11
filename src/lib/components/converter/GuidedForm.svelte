@@ -2,15 +2,15 @@
 	/**
 	 * The guided converter (default mode): pick what you are converting, fill
 	 * in two to four fields, and the answer follows as you type. The form only
-	 * COMPOSES a query in the text grammar (`$lib/ui/guided`) — the engine, the
+	 * COMPOSES a query in the text grammar (`#lib/ui/guided.js`) — the engine, the
 	 * guards and the shared URL are the same as the text mode's.
 	 *
 	 * Layout stability: the task buttons are a fixed grid, the blurb is one
 	 * clamped line, and the parent (Converter) reserves the height of the
 	 * tallest task (cost), so switching tasks never moves the results below.
 	 */
-	import type { Dimension, Fuel, Unit } from '$lib/conversion/types';
-	import { DIMENSION_LABEL, gridPickerOptions } from '$lib/ui/engine';
+	import type { Dimension, Fuel, Unit } from '#lib/conversion/types.js';
+	import { DIMENSION_LABEL, gridPickerOptions } from '#lib/ui/engine.js';
 	import {
 		CURRENCIES,
 		GUIDED_TASKS,
@@ -19,7 +19,7 @@
 		unitDimensions,
 		type GuidedState,
 		type GuidedTask
-	} from '$lib/ui/guided';
+	} from '#lib/ui/guided.js';
 
 	let {
 		form = $bindable(),

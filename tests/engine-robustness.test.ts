@@ -8,9 +8,9 @@
 
 import { describe, expect, it } from 'vitest';
 import Decimal from 'decimal.js';
-import { getConverter } from '$lib/index';
-import { formatValue } from '$lib/formatting/numbers';
-import type { ConversionResult } from '$lib/conversion/types';
+import { getConverter } from '#lib/index.js';
+import { formatValue } from '#lib/formatting/numbers.js';
+import type { ConversionResult } from '#lib/conversion/types.js';
 
 const converter = getConverter();
 

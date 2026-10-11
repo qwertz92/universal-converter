@@ -6,7 +6,7 @@ import {
 	sigFigsFor,
 	usesApproxMarker,
 	withThousandsSeparators
-} from '$lib/formatting/numbers';
+} from '#lib/formatting/numbers.js';
 
 describe('sig-fig policy keyed off exactness (rulebook §C.7)', () => {
 	it('exact/standard_definition get up to 6 sig figs (default)', () => {

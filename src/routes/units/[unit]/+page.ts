@@ -1,9 +1,13 @@
 import { error, redirect } from '@sveltejs/kit';
 import { resolve } from '$app/paths';
-import { allUnits, unitById, resolveSources } from '$lib/ui/engine';
-import { commonConversions } from '$lib/ui/common-conversions';
-import { learnForUnit } from '$lib/content/learn';
-import { buildExactSymbolMap, buildUnitSlugRedirects, resolveUnitSlug } from '$lib/ui/unit-slugs';
+import { allUnits, unitById, resolveSources } from '#lib/ui/engine.js';
+import { commonConversions } from '#lib/ui/common-conversions.js';
+import { learnForUnit } from '#lib/content/learn.js';
+import {
+	buildExactSymbolMap,
+	buildUnitSlugRedirects,
+	resolveUnitSlug
+} from '#lib/ui/unit-slugs.js';
 import type { EntryGenerator } from './$types';
 
 export const prerender = true;
@@ -27,7 +31,7 @@ export function load({ params }: { params: { unit: string } }) {
 	// case and hyphen/underscore mix-ups that no prerendered file exists for.
 	const canonicalId = resolveUnitSlug(params.unit, unitIds, unitSlugRedirects, exactSymbols);
 	if (canonicalId && canonicalId !== params.unit) {
-		redirect(308, resolve(`/units/${canonicalId}`));
+		redirect(308, resolve(`units/${canonicalId}`));
 	}
 
 	const unit = unitById(params.unit);

@@ -1,6 +1,6 @@
 <script lang="ts">
 	/** Manual dark/light toggle (spec §10). Persists via the theme store. */
-	import { theme } from '$lib/ui/theme.svelte';
+	import { theme } from '#lib/ui/theme.svelte.js';
 </script>
 
 <button

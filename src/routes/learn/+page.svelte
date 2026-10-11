@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import Seo from '$lib/components/layout/Seo.svelte';
-	import PageHero from '$lib/components/layout/PageHero.svelte';
-	import { LEARN_TOPICS } from '$lib/content/learn';
+	import Seo from '#lib/components/layout/Seo.svelte';
+	import PageHero from '#lib/components/layout/PageHero.svelte';
+	import { LEARN_TOPICS } from '#lib/content/learn.js';
 
 	let query = $state('');
 
@@ -48,7 +48,7 @@
 		<div class="grid gap-3 sm:grid-cols-2">
 			{#each filtered as topic (topic.slug)}
 				<a
-					href={resolve(`/learn/${topic.slug}`)}
+					href={resolve(`learn/${topic.slug}`)}
 					class="group flex flex-col rounded-[var(--radius-card)] border p-5 transition-colors hover:border-[var(--accent)]"
 					style="border-color:var(--border);background:var(--surface)"
 				>

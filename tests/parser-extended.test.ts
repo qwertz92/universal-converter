@@ -11,7 +11,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { getConverter } from '$lib/index';
+import { getConverter } from '#lib/index.js';
 
 const converter = getConverter();
 

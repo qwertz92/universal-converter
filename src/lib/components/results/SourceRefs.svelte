@@ -1,7 +1,7 @@
 <script lang="ts">
 	/** Render a list of source_refs as links into /sources anchors. */
 	import { resolve } from '$app/paths';
-	import { resolveSources } from '$lib/ui/engine';
+	import { resolveSources } from '#lib/ui/engine.js';
 
 	let { refs, compact = false }: { refs: string[] | undefined; compact?: boolean } = $props();
 	const sources = $derived(resolveSources(refs));
@@ -20,7 +20,7 @@
 		{#each sources as s (s.id)}
 			<li class="max-w-full min-w-0">
 				<a
-					href={resolve(`/sources#${s.id}`)}
+					href={resolve(`sources#${s.id}`)}
 					class="inline-flex max-w-full min-w-0 items-center gap-1 hover:text-[var(--accent)]"
 					style="color:var(--text-muted)"
 					title={s.title}

@@ -4,8 +4,8 @@
  * convert one into the other is `unsupported` with an explanation.
  */
 
-import { CO2_DIMENSION, CO2E_DIMENSION } from '$lib/units/dimensions';
-import type { Dimension } from '$lib/conversion/types';
+import { CO2_DIMENSION, CO2E_DIMENSION } from '#lib/units/dimensions.js';
+import type { Dimension } from '#lib/conversion/types.js';
 
 /** True when going from `from` to `to` would illegally cross CO2 and CO2e. */
 export function isCo2Co2eCrossing(from: Dimension, to: Dimension): boolean {

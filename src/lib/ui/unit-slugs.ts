@@ -10,7 +10,7 @@
  * AGENTS.md): src/lib/ui/*.ts stays free of framework imports beyond what
  * already lives here.
  */
-import type { Unit } from '$lib/conversion/types';
+import type { Unit } from '#lib/conversion/types.js';
 
 /** Alias slugs must be safe to use verbatim as a URL path segment. */
 const SLUG_SAFE = /^[a-z0-9_+-]+$/;

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import Seo from '$lib/components/layout/Seo.svelte';
-	import PageHero from '$lib/components/layout/PageHero.svelte';
-	import { allSources } from '$lib/ui/engine';
+	import Seo from '#lib/components/layout/Seo.svelte';
+	import PageHero from '#lib/components/layout/PageHero.svelte';
+	import { allSources } from '#lib/ui/engine.js';
 
 	const sources = $derived([...allSources()].sort((a, b) => a.title.localeCompare(b.title)));
 </script>
@@ -173,7 +173,7 @@
 	<p class="mt-8 text-sm" style="color:var(--text-faint)">
 		How these feed into results is described on the
 		<a
-			href={resolve('/methodology')}
+			href={resolve('methodology')}
 			class="hover:text-[var(--accent)]"
 			style="color:var(--text-muted)">methodology page</a
 		>.

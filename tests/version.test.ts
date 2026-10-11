@@ -5,7 +5,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { APP_VERSION } from '$lib/version';
+import { APP_VERSION } from '#lib/version.js';
 import pkg from '../package.json';
 
 describe('APP_VERSION', () => {

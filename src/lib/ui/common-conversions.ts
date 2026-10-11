@@ -4,10 +4,10 @@
  * targets per dimension so the table stays readable (rather than N×N).
  */
 
-import { convertWithinDimension } from '$lib/units/exact-conversions';
-import { combineExactness } from '$lib/conversion/precision';
-import { formatValue } from '$lib/formatting/numbers';
-import type { Unit, Dimension, Exactness } from '$lib/conversion/types';
+import { convertWithinDimension } from '#lib/units/exact-conversions.js';
+import { combineExactness } from '#lib/conversion/precision.js';
+import { formatValue } from '#lib/formatting/numbers.js';
+import type { Unit, Dimension, Exactness } from '#lib/conversion/types.js';
 
 /**
  * Preferred target unit ids per dimension (shown if present in the catalog).

@@ -2,7 +2,7 @@
 	/** Site footer: honest versioned positioning, section links, OGL attribution
 	 *  (docs/sources.md: DESNZ-derived figures require the standard OGL line). */
 	import { resolve } from '$app/paths';
-	import { APP_VERSION } from '$lib/version';
+	import { APP_VERSION } from '#lib/version.js';
 	const cols = [
 		{
 			title: 'Convert',
@@ -80,7 +80,7 @@
 		<p class="mt-3 text-xs" style="color:var(--text-faint)">
 			A number looks wrong? Every figure here names the source it came from — see the
 			<a
-				href={resolve('/sources')}
+				href={resolve('sources')}
 				class="underline decoration-dotted underline-offset-2 hover:text-[var(--accent)]"
 				>sources page</a
 			>
@@ -108,7 +108,7 @@
 			>
 			(UK DESNZ 2025 GHG conversion factors) — see
 			<a
-				href={resolve('/sources')}
+				href={resolve('sources')}
 				class="underline decoration-dotted underline-offset-2 hover:text-[var(--accent)]"
 				>all sources &amp; licenses</a
 			>.

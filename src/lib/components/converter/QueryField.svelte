@@ -15,13 +15,13 @@
 	 * rendered in the result area below.
 	 */
 	import { tick } from 'svelte';
-	import type { Fuel, ParseResult, Unit } from '$lib/conversion/types';
+	import type { Fuel, ParseResult, Unit } from '#lib/conversion/types.js';
 	import {
 		describeQuery,
 		starterUnits,
 		suggestCompletions,
 		type Completion
-	} from '$lib/ui/interpretation';
+	} from '#lib/ui/interpretation.js';
 
 	let {
 		value = $bindable(''),

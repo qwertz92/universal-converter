@@ -8,9 +8,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { getConverter } from '$lib/index';
-import { buildUnitSlugAliases } from '$lib/ui/unit-slugs';
-import { loadDataBundle } from '$lib/index';
+import { getConverter } from '#lib/index.js';
+import { buildUnitSlugAliases } from '#lib/ui/unit-slugs.js';
+import { loadDataBundle } from '#lib/index.js';
 
 const converter = getConverter();
 

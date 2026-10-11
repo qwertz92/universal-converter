@@ -8,7 +8,7 @@
 	 * lines on a desktop and nine on a phone, which pushed every result below the
 	 * fold; the rest stay one click away behind "More examples".
 	 */
-	import { loadExamples } from '$lib';
+	import { loadExamples } from '#lib';
 
 	let { onpick }: { onpick: (input: string) => void } = $props();
 

@@ -4,8 +4,8 @@
  * adds later (tests use inline fixtures, tests/fixtures/).
  */
 
-import type { Fuel } from '$lib/conversion/types';
-import { levenshtein, normalizeLoose } from '$lib/units/aliases';
+import type { Fuel } from '#lib/conversion/types.js';
+import { levenshtein, normalizeLoose } from '#lib/units/aliases.js';
 
 export class FuelRegistry {
 	private readonly byId = new Map<string, Fuel>();

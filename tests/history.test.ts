@@ -15,7 +15,7 @@ import {
 	save,
 	unsave,
 	type HistoryStore
-} from '$lib/ui/history';
+} from '#lib/ui/history.js';
 
 function fakeStore(initial: Record<string, string> = {}): HistoryStore {
 	const data = { ...initial };

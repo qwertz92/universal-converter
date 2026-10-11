@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import Seo from '$lib/components/layout/Seo.svelte';
-	import Breadcrumbs from '$lib/components/layout/Breadcrumbs.svelte';
-	import ExactnessBadge from '$lib/components/badges/ExactnessBadge.svelte';
-	import { DIMENSION_LABEL } from '$lib/ui/engine';
-	import { EXACTNESS_META } from '$lib/ui/exactness';
+	import Seo from '#lib/components/layout/Seo.svelte';
+	import Breadcrumbs from '#lib/components/layout/Breadcrumbs.svelte';
+	import ExactnessBadge from '#lib/components/badges/ExactnessBadge.svelte';
+	import { DIMENSION_LABEL } from '#lib/ui/engine.js';
+	import { EXACTNESS_META } from '#lib/ui/exactness.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -20,7 +20,7 @@
 
 <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
 	<Breadcrumbs
-		items={[{ href: resolve('/units'), path: '/units', label: 'Units' }, { label: dimLabel }]}
+		items={[{ href: resolve('units'), path: '/units', label: 'Units' }, { label: dimLabel }]}
 	/>
 
 	<header class="mb-8">
@@ -119,7 +119,7 @@
 					{#each sources as s (s.id)}
 						<li>
 							<a
-								href={resolve(`/sources#${s.id}`)}
+								href={resolve(`sources#${s.id}`)}
 								class="hover:text-[var(--accent)]"
 								style="color:var(--text-muted)"
 							>
@@ -157,7 +157,7 @@
 							<tr class="border-t" style="border-color:var(--border)">
 								<td class="py-2 pr-3">
 									<a
-										href={resolve(`/units/${c.targetId}`)}
+										href={resolve(`units/${c.targetId}`)}
 										class="hover:text-[var(--accent)]"
 										style="color:var(--text-muted)">{c.label}</a
 									>
@@ -179,7 +179,7 @@
 			</div>
 			<div class="mt-4">
 				<a
-					href={resolve(`/convert?q=${encodeURIComponent(`1 ${unit.symbols[0]}`)}`)}
+					href={resolve(`convert?q=${encodeURIComponent(`1 ${unit.symbols[0]}`)}`)}
 					class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold"
 					style="background:var(--accent);color:var(--accent-contrast)"
 				>
@@ -201,7 +201,7 @@
 			<div class="grid gap-2 sm:grid-cols-2">
 				{#each learn as topic (topic.slug)}
 					<a
-						href={resolve(`/learn/${topic.slug}`)}
+						href={resolve(`learn/${topic.slug}`)}
 						class="rounded-lg border px-3 py-2.5 transition-colors hover:border-[var(--accent)]"
 						style="border-color:var(--border);background:var(--surface)"
 					>

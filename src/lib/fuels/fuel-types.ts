@@ -2,7 +2,7 @@
  * Small fuel-domain helpers shared across the fuel pipeline.
  */
 
-import type { Fuel } from '$lib/conversion/types';
+import type { Fuel } from '#lib/conversion/types.js';
 
 /** Electricity is modeled as a "fuel" for routing, but is context_required for CO2e. */
 export function isElectricity(fuel: Fuel): boolean {

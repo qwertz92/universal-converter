@@ -22,7 +22,7 @@
  *    parser can disambiguate rather than silently pick (rulebook D.9, D.10).
  */
 
-import type { Interpretation, Unit } from '$lib/conversion/types';
+import type { Interpretation, Unit } from '#lib/conversion/types.js';
 import { levenshtein, normalizeLoose, normalizeSymbol } from './aliases';
 
 /**
