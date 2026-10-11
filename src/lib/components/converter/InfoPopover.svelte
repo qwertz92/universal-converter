@@ -42,7 +42,10 @@
 
 <svelte:window onkeydown={onKeydown} />
 
-<span class="relative inline-flex" bind:this={rootEl} onfocusout={onFocusOut}>
+<!-- The margin (left, top, bottom) is the slack the 40px hit area needs: the button's ::after
+     reaches 10px past the circle, and its neighbours sit 8px away (the options bar's
+     gap-2 and gap-y-2), so without 2.5px of margin it overlapped them by 1–2px. -->
+<span class="relative my-[2.5px] ml-[2.5px] inline-flex" bind:this={rootEl} onfocusout={onFocusOut}>
 	<button
 		type="button"
 		bind:this={triggerEl}
