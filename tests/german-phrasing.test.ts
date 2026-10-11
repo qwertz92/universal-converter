@@ -50,7 +50,7 @@ describe('a German question is answered', () => {
 
 	it('the English forms it was modelled on still work', () => {
 		expect(value('how many kWh in 1 liter diesel', 'kilowatt_hour')).toBe('9.905');
-		expect(value('convert 5 kwh to mj', 'megajoule')).toBe('18');
+		expect(value('convert 5 kwh to MJ', 'megajoule')).toBe('18');
 	});
 
 	it('English gained the "does X make" shape at the same time', () => {

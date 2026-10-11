@@ -347,10 +347,14 @@ describe('§13.5 unit aliases: case-insensitive-loose collisions across DIFFEREN
 	 */
 	const DELIBERATE_COLLISIONS = [
 		{ key: 'mg', units: ['milligram', 'tonne'], tokens: ['mg', 'Mg'] },
-		{ key: 'cal', units: ['calorie', 'food_calorie'], tokens: ['cal', 'Cal'] }
+		{ key: 'cal', units: ['calorie', 'food_calorie'], tokens: ['cal', 'Cal'] },
+		// SI prefixes: lowercase m is milli, capital M mega.
+		{ key: 'mw', units: ['megawatt', 'milliwatt'], tokens: ['MW', 'mW'] },
+		{ key: 'mwh', units: ['megawatt_hour', 'milliwatt_hour'], tokens: ['MWh', 'mWh'] },
+		{ key: 'mj', units: ['megajoule', 'millijoule'], tokens: ['MJ', 'mJ'] }
 	];
 
-	it('the only loose-key collisions are the two case-sensitive pairs, exactly as pinned', () => {
+	it('the only loose-key collisions are the case-sensitive pairs, exactly as pinned', () => {
 		// normalizeLoose, not toLowerCase(): the registry also folds ³→3, ²→2,
 		// μ→µ and collapses internal whitespace, so "m³" on one unit and "m3" on
 		// another DO collide there. Checking with the weaker key would have let

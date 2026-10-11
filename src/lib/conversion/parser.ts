@@ -906,8 +906,18 @@ function unknownUnitError(
 			suggestions: []
 		};
 	}
-	const suggestions = units.suggest(firstToken);
 	const what = isTarget ? 'target unit' : 'unit';
+	const prefixNote = units.prefixNote(phrase) ?? units.prefixNote(firstToken);
+	if (prefixNote) {
+		return {
+			kind: 'unknown_unit',
+			message: `Unknown ${what} "${phrase}".`,
+			token: phrase,
+			hint: prefixNote,
+			suggestions: []
+		};
+	}
+	const suggestions = units.suggest(firstToken);
 	return {
 		kind: 'unknown_unit',
 		message: suggestions.length

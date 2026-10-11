@@ -40,9 +40,23 @@ describe('resolveUnitSlug on the real catalog', () => {
 	// Case is meaning in a unit symbol: m is milli, M is mega. Folding case
 	// sent /units/Mg (a tonne) to milligram and /units/mW to megawatt — 10^9
 	// off, behind a silent redirect. A symbol resolves only as written.
-	it.each(['mW', 'mWh', 'ML', 'mJ', 'KWH'])('%s names no unit as written → undefined', (slug) => {
-		expect(resolveUnitSlug(slug, ids, aliases, symbols)).toBeUndefined();
+	it.each([
+		['mW', 'milliwatt'],
+		['MW', 'megawatt'],
+		['mWh', 'milliwatt_hour'],
+		['MWh', 'megawatt_hour'],
+		['mJ', 'millijoule'],
+		['MJ', 'megajoule']
+	])('%s → %s, exactly as written', (slug, expected) => {
+		expect(resolveUnitSlug(slug, ids, aliases, symbols)).toBe(expected);
 	});
+
+	it.each(['ML', 'pJ', 'KWH', 'mw', 'mwh', 'mj'])(
+		'%s names no unit as written → undefined',
+		(slug) => {
+			expect(resolveUnitSlug(slug, ids, aliases, symbols)).toBeUndefined();
+		}
+	);
 
 	it('returns undefined for a slug that names no unit, instead of guessing', () => {
 		expect(resolveUnitSlug('kilowatt-hours-per-moon', ids, aliases, symbols)).toBeUndefined();

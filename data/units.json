@@ -2,6 +2,19 @@
 	"$comment": "Unit catalog for Universal Converter v0.1. DEFINITIONAL data only. to_base_factor is an EXACT decimal STRING; multiply a value by it to reach the dimension base unit (energy=J, power=W, mass=kg, volume=m^3, time=s). exactness: 'exact' for SI identities, 'standard_definition' for convention-defined units. Pseudo-dimension units (energy_density_*, emission_mass_*, emission_intensity) exist for result DISPLAY and carry to_base_factor '1' (no cross-dimension bridging is done via these factors). Envelope: { $comment, units: [...] }. See src/lib/data/schemas.ts for the contract.",
 	"units": [
 		{
+			"id": "millijoule",
+			"dimension": "energy",
+			"symbols": ["mJ"],
+			"names": ["millijoule"],
+			"aliases": ["millijoules"],
+			"to_base_factor": "0.001",
+			"is_exact": true,
+			"exactness": "exact",
+			"system": "SI",
+			"notes": "1 mJ = 0.001 J exactly. Lowercase m is milli; MJ (megajoule) is a billion times larger.",
+			"source_refs": ["nist-sp811"]
+		},
+		{
 			"id": "joule",
 			"dimension": "energy",
 			"symbols": ["J"],
@@ -31,7 +44,7 @@
 			"dimension": "energy",
 			"symbols": ["MJ"],
 			"names": ["megajoule"],
-			"aliases": ["megajoules", "mj"],
+			"aliases": ["megajoules"],
 			"to_base_factor": "1000000",
 			"is_exact": true,
 			"exactness": "exact",
@@ -67,11 +80,24 @@
 			"dimension": "energy",
 			"symbols": ["PJ"],
 			"names": ["petajoule"],
-			"aliases": ["petajoules", "pj"],
+			"aliases": ["petajoules"],
 			"to_base_factor": "1000000000000000",
 			"is_exact": true,
 			"exactness": "exact",
 			"system": "SI",
+			"source_refs": ["nist-sp811"]
+		},
+		{
+			"id": "milliwatt_hour",
+			"dimension": "energy",
+			"symbols": ["mWh"],
+			"names": ["milliwatt hour", "milliwatt-hour"],
+			"aliases": ["milliwatt hours", "milliwatt-hours"],
+			"to_base_factor": "3.6",
+			"is_exact": true,
+			"exactness": "exact",
+			"system": "SI",
+			"notes": "1 mWh = 3.6 J exactly. Lowercase m is milli; MWh (megawatt hour) is a billion times larger.",
 			"source_refs": ["nist-sp811"]
 		},
 		{
@@ -105,7 +131,7 @@
 			"dimension": "energy",
 			"symbols": ["MWh"],
 			"names": ["megawatt hour", "megawatt-hour"],
-			"aliases": ["megawatt hours", "megawatt-hours", "mwh"],
+			"aliases": ["megawatt hours", "megawatt-hours"],
 			"to_base_factor": "3600000000",
 			"is_exact": true,
 			"exactness": "exact",
@@ -307,6 +333,19 @@
 			"source_refs": ["iea-unit-conventions", "spec-conversion-rules"]
 		},
 		{
+			"id": "milliwatt",
+			"dimension": "power",
+			"symbols": ["mW"],
+			"names": ["milliwatt"],
+			"aliases": ["milliwatts"],
+			"to_base_factor": "0.001",
+			"is_exact": true,
+			"exactness": "exact",
+			"system": "SI",
+			"notes": "1 mW = 0.001 W exactly. Lowercase m is milli; MW (megawatt) is a billion times larger.",
+			"source_refs": ["nist-sp811"]
+		},
+		{
 			"id": "watt",
 			"dimension": "power",
 			"symbols": ["W"],
@@ -336,7 +375,7 @@
 			"dimension": "power",
 			"symbols": ["MW"],
 			"names": ["megawatt"],
-			"aliases": ["megawatts", "mw"],
+			"aliases": ["megawatts"],
 			"to_base_factor": "1000000",
 			"is_exact": true,
 			"exactness": "exact",

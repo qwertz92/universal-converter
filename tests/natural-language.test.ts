@@ -34,8 +34,18 @@ function targetRow(input: string): ConversionResult | undefined {
 }
 
 describe('explicit conversion targets', () => {
-	it('"5 kwh to mj" answers 18 MJ and marks it as the requested row', () => {
-		const s = set('5 kwh to mj');
+	it('"5 kwh to mj" asks: lowercase m is milli, so mj could be millijoule or megajoule', () => {
+		const out = converter.convertText('5 kwh to mj');
+		if (!('error' in out)) throw new Error('expected an ambiguity prompt');
+		expect(out.error.kind).toBe('ambiguous_unit');
+		expect((out.error.interpretations ?? []).map((i) => i.unit_id).sort()).toEqual([
+			'megajoule',
+			'millijoule'
+		]);
+	});
+
+	it('"5 kwh to MJ" answers 18 MJ and marks it as the requested row', () => {
+		const s = set('5 kwh to MJ');
 		expect(s.target).toEqual({
 			unit_id: 'megajoule',
 			unit_label: 'MJ',
@@ -55,7 +65,7 @@ describe('explicit conversion targets', () => {
 		['5kWh->MJ', 'megajoule'],
 		['5 kWh = MJ', 'megajoule'],
 		['5 kWh as MJ', 'megajoule'],
-		['convert 5 kwh to mj', 'megajoule'],
+		['convert 5 kwh to MJ', 'megajoule'],
 		['5 kWh to MJ?', 'megajoule']
 	])('"%s" resolves the target to %s', (input, unitId) => {
 		const s = set(input);

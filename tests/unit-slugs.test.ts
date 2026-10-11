@@ -12,9 +12,12 @@ const { units } = loadDataBundle();
 const aliases = buildUnitSlugAliases(units);
 
 describe('buildUnitSlugAliases on the real catalog', () => {
-	it('maps kwh → kilowatt_hour and mwh → megawatt_hour (the spec §4.1 URLs)', () => {
+	it('maps kwh → kilowatt_hour (the spec §4.1 URL)', () => {
 		expect(aliases.get('kwh')).toBe('kilowatt_hour');
-		expect(aliases.get('mwh')).toBe('megawatt_hour');
+	});
+
+	it('gives mwh to nobody: lowercase it reads as milliwatt hour, uppercase it was MWh', () => {
+		expect(aliases.get('mwh')).toBeUndefined();
 	});
 
 	it('never aliases to a slug that equals an existing unit id', () => {

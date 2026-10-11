@@ -39,14 +39,17 @@ export function encodePin(pin: Pin, units: Unit[]): string {
 export function decodePin(raw: string | null, units: Unit[]): Pin {
 	if (!raw) return {};
 	const [fromRaw, toRaw] = raw.split('>');
+	// A symbol is matched exactly as written: in "MJ" vs "mJ" the case is the
+	// difference between mega and milli. Ids and names are words, so their
+	// case carries nothing and is ignored.
 	const match = (token: string | undefined) => {
-		const t = token?.trim().toLowerCase();
-		if (!t) return undefined;
+		const raw = token?.trim();
+		if (!raw) return undefined;
+		const exact = units.filter((u) => u.symbols.includes(raw));
+		if (exact.length === 1) return exact[0].id;
+		const t = raw.toLowerCase();
 		const hits = units.filter(
-			(u) =>
-				u.id.toLowerCase() === t ||
-				u.symbols.some((s) => s.toLowerCase() === t) ||
-				u.names.some((n) => n.toLowerCase() === t)
+			(u) => u.id.toLowerCase() === t || u.names.some((n) => n.toLowerCase() === t)
 		);
 		return hits.length === 1 ? hits[0].id : undefined;
 	};

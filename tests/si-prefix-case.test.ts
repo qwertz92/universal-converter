@@ -1,0 +1,101 @@
+/**
+ * In a unit symbol, case is meaning: m is milli (10^-3) and M is mega (10^6);
+ * p is pico (10^-12) and P is peta (10^15). The registry fell back to a
+ * case-insensitive match whenever the exact spelling was missing, and the
+ * catalog even listed "mw", "mwh", "mj" and "pj" as aliases of the MEGA/PETA
+ * units — so "5 mW" was calculated as 5 megawatts (10^9 too much) and "5 ML"
+ * as 5 millilitres (10^12 too little), with no warning.
+ */
+
+import { describe, expect, it } from 'vitest';
+import { getConverter } from '$lib/index';
+import { buildUnitSlugAliases } from '$lib/ui/unit-slugs';
+import { loadDataBundle } from '$lib/index';
+
+const converter = getConverter();
+
+function unitOf(input: string): string {
+	const out = converter.parse(input);
+	if (!out.ok) throw new Error(`${input}: ${out.error.message}`);
+	return out.query.unit_id;
+}
+
+function errorOf(input: string) {
+	const out = converter.parse(input);
+	if (out.ok) throw new Error(`${input} parsed as ${out.query.unit_id}`);
+	return out.error;
+}
+
+describe('milli and mega are different units', () => {
+	it.each([
+		['5 mW', 'milliwatt'],
+		['5 MW', 'megawatt'],
+		['5 mJ', 'millijoule'],
+		['5 MJ', 'megajoule'],
+		['5 mWh', 'milliwatt_hour'],
+		['5 MWh', 'megawatt_hour'],
+		['5 milliwatt', 'milliwatt'],
+		['5 Megawatt', 'megawatt']
+	])('%s → %s', (input, unit) => {
+		expect(unitOf(input)).toBe(unit);
+	});
+
+	it('converts milliwatts to watts, not megawatts', () => {
+		const out = converter.convertText('5 mW to W');
+		if ('error' in out) throw new Error(out.error.message);
+		const row = out.groups.flatMap((g) => g.results).find((r) => r.is_target);
+		expect(row?.raw).toBe('0.005');
+	});
+
+	it.each(['5 mw', '5 Mw', '5 mwh', '5 MWH', '5 mj'])(
+		'%s could be either — the tool asks instead of picking',
+		(input) => {
+			const error = errorOf(input);
+			expect(error.kind).toBe('ambiguous_unit');
+			const ids = (error.interpretations ?? []).map((i) => i.unit_id).sort();
+			expect(ids.length).toBe(2);
+			expect(ids.some((id) => id.startsWith('milli'))).toBe(true);
+			expect(ids.some((id) => id.startsWith('mega'))).toBe(true);
+		}
+	);
+
+	it.each([
+		['5 ML', 'mega'],
+		['5 pJ', 'pico']
+	])(
+		'%s names a unit the catalog lacks — refused, never read as its case twin',
+		(input, prefix) => {
+			const error = errorOf(input);
+			expect(error.kind).toBe('unknown_unit');
+			expect(`${error.message} ${error.hint ?? ''}`).toMatch(new RegExp(prefix, 'i'));
+		}
+	);
+
+	it.each([
+		['1 kwh', 'kilowatt_hour'],
+		['1 KWH', 'kilowatt_hour'],
+		['1 ml', 'milliliter'],
+		['1 mL', 'milliliter'],
+		['1 mg', 'milligram'],
+		['1 Mg', 'tonne'],
+		['1 PJ', 'petajoule'],
+		['1 MMBTU', 'mmbtu'],
+		['1 mmbtu', 'mmbtu'],
+		['1 Mtoe', 'mtoe'],
+		['1 mtoe', 'mtoe']
+	])('unchanged: %s → %s', (input, unit) => {
+		expect(unitOf(input)).toBe(unit);
+	});
+});
+
+describe('short unit URLs never cross a prefix', () => {
+	const aliases = buildUnitSlugAliases(loadDataBundle().units);
+	// Both readings are plausible for a lowercase URL, so neither gets it.
+	it.each(['mw', 'mwh', 'mj', 'pj'])('/units/%s is not a shortcut to either prefix', (slug) => {
+		expect(aliases.get(slug)).toBeUndefined();
+	});
+	it('keeps the shortcuts that are not ambiguous', () => {
+		expect(aliases.get('kwh')).toBe('kilowatt_hour');
+		expect(aliases.get('gwh')).toBe('gigawatt_hour');
+	});
+});

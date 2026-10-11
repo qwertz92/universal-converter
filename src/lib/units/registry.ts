@@ -14,6 +14,10 @@
  *    tonne alias both lowercase to "mg"), the fallback is AMBIGUOUS and is
  *    reported as such rather than silently picking whichever unit happened to
  *    be registered first;
+ *  - the fallback never changes what an SI prefix letter means. m is milli and
+ *    M mega, p is pico and P peta: "ML" is a megalitre even though only "mL"
+ *    exists, so it is refused (with an explanation) instead of being read as a
+ *    millilitre. That fallback once turned "5 mW" into 5 megawatts.
  *  - the bare tokens "ton" and "gallon" are AMBIGUOUS and returned as such so the
  *    parser can disambiguate rather than silently pick (rulebook D.9, D.10).
  */
@@ -50,6 +54,17 @@ const AMBIGUOUS_TOKENS: Record<string, { candidates: string[]; note: string }> =
 		}
 	}
 );
+
+/**
+ * SI prefix letters whose meaning flips with case. Only these: k/K, g/G, t/T
+ * and the rest either have no case twin among prefixes or name no unit here.
+ */
+const CASE_FLIPPED_PREFIXES: Record<string, string> = Object.assign(Object.create(null), {
+	m: 'milli (one thousandth)',
+	M: 'mega (one million)',
+	p: 'pico (10⁻¹²)',
+	P: 'peta (10¹⁵)'
+});
 
 export type UnitMatch =
 	| { kind: 'match'; unit: Unit; via: 'symbol' | 'name' | 'alias'; note?: string }
@@ -157,6 +172,9 @@ export class UnitRegistry {
 			return { kind: 'ambiguous', token: trimmed, interpretations };
 		}
 		const looseMatch = this.byLoose.get(loose);
+		if (looseMatch && this.prefixConflict(trimmed, looseMatch)) {
+			return { kind: 'unknown', token: trimmed, suggestions: [] };
+		}
 		if (looseMatch) {
 			const via = looseMatch.names.some((n) => normalizeLoose(n) === loose) ? 'name' : 'alias';
 			return { kind: 'match', unit: looseMatch, via };
@@ -168,6 +186,36 @@ export class UnitRegistry {
 		// amplification. Callers that actually present "did you mean" call
 		// suggest() explicitly, exactly once, on the final failing token.
 		return { kind: 'unknown', token: trimmed, suggestions: [] };
+	}
+
+	/**
+	 * Why a token that differs from a catalog symbol only by case was refused —
+	 * or undefined when it was not. "ML" against "mL": the M makes it a
+	 * megalitre, which is a different unit, not a spelling of the millilitre.
+	 */
+	prefixNote(token: string): string | undefined {
+		const trimmed = token.trim();
+		const unit = this.byLoose.get(normalizeLoose(trimmed));
+		if (!unit || !this.prefixConflict(trimmed, unit)) return undefined;
+		const twin = [...unit.symbols, ...unit.aliases].find(
+			(s) => normalizeLoose(s) === normalizeLoose(trimmed)
+		);
+		return `Unit symbols are case-sensitive. In "${trimmed}", ${trimmed[0]} means ${CASE_FLIPPED_PREFIXES[trimmed[0]]}, and no such unit is in the catalog. "${twin}" (${unit.names[0]}) is a different unit.`;
+	}
+
+	/**
+	 * True when the case-insensitive fallback would match `unit` only by
+	 * changing the case of an SI prefix letter. A match through a spelled-out
+	 * name ("Megawatt") is never a conflict: names carry no case meaning.
+	 */
+	private prefixConflict(token: string, unit: Unit): boolean {
+		if (unit.system !== 'SI') return false;
+		const loose = normalizeLoose(token);
+		if (unit.names.some((n) => normalizeLoose(n) === loose)) return false;
+		const first = token[0];
+		if (!(first in CASE_FLIPPED_PREFIXES)) return false;
+		const spellings = [...unit.symbols, ...unit.aliases].filter((s) => normalizeLoose(s) === loose);
+		return spellings.length > 0 && spellings.every((s) => s[0] !== first);
 	}
 
 	/**

@@ -50,9 +50,18 @@ export function buildUnitSlugAliases(units: Unit[]): Map<string, string> {
 		owners.add(unit.id);
 	}
 
+	// Lowercasing an SI prefix changes the unit: "MW" lowercased is "mw", which
+	// reads as milliwatt. Such a slug is dropped for every claimant — including
+	// the milliwatt, since a reader typing /units/mw may well mean either. The
+	// exact symbols still resolve at runtime (resolveUnitSlug).
+	const prefixFlipped = new Set(
+		units.filter((u) => u.system === 'SI' && /^[MP]/.test(u.symbols[0] ?? '')).map((u) => u.id)
+	);
+
 	const aliases = new Map<string, string>();
 	for (const [alias, owners] of claimants) {
 		if (owners.size !== 1) continue; // ambiguous across units — drop, don't guess
+		if ([...owners].some((id) => prefixFlipped.has(id))) continue;
 		aliases.set(alias, [...owners][0]);
 	}
 	return aliases;
