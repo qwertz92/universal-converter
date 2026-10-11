@@ -55,7 +55,13 @@ describe('recent conversions', () => {
 		const s = fakeStore();
 		pushRecent(s, '1 kWh');
 		pushRecent(s, '10 L diesel');
-		expect(pushRecent(s, '1 kwh')).toEqual(['1 kwh', '10 L diesel']);
+		expect(pushRecent(s, ' 1 kWh ')).toEqual(['1 kWh', '10 L diesel']);
+	});
+
+	it('keeps queries that differ only in case apart: mW is not MW', () => {
+		const s = fakeStore();
+		pushRecent(s, '5 MW to kW');
+		expect(pushRecent(s, '5 mW to kW')).toEqual(['5 mW to kW', '5 MW to kW']);
 	});
 
 	it('caps the list at 8 entries', () => {
@@ -91,7 +97,7 @@ describe('saved conversions', () => {
 		const s = fakeStore();
 		save(s, '1 L diesel');
 		expect(save(s, '2 kW for 3 h')).toEqual([{ query: '2 kW for 3 h' }, { query: '1 L diesel' }]);
-		expect(isSaved(readSaved(s), '1 l diesel')).toBe(true);
+		expect(isSaved(readSaved(s), ' 1 L diesel ')).toBe(true);
 		expect(unsave(s, '1 L diesel')).toEqual([{ query: '2 kW for 3 h' }]);
 	});
 
@@ -107,9 +113,16 @@ describe('saved conversions', () => {
 		const s = fakeStore();
 		save(s, '1 kWh');
 		save(s, '2 kWh');
-		const list = save(s, '1 KWH');
+		const list = save(s, '1 kWh ');
 		expect(list).toHaveLength(2);
-		expect(list[0].query).toBe('1 KWH');
+		expect(list[0].query).toBe('1 kWh');
+	});
+
+	it('saving mW does not replace a saved MW', () => {
+		const s = fakeStore();
+		const saved = save(s, '5 MW to kW');
+		expect(isSaved(saved, '5 mW to kW')).toBe(false);
+		expect(save(s, '5 mW to kW').map((e) => e.query)).toEqual(['5 mW to kW', '5 MW to kW']);
 	});
 
 	it('reads an older plain-string saved list without losing it', () => {
@@ -152,8 +165,9 @@ describe('defects found by adversarial review', () => {
 		// The module's own trim CREATES the duplicate, and HistoryPanel keys its
 		// {#each} by the query text — a duplicate key is a hard Svelte error that
 		// takes the whole page down in production.
+		// "1 KWH" stays: case is not folded (mW is not MW), and its key is distinct.
 		const s = fakeStore({ 'uc-recent': '["1 kWh","  1 kWh  ","1 KWH"]' });
-		expect(readRecent(s)).toEqual(['1 kWh']);
+		expect(readRecent(s)).toEqual(['1 kWh', '1 KWH']);
 	});
 
 	it('the same applies to the saved list', () => {

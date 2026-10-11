@@ -104,7 +104,7 @@ function dedupe<T>(items: T[], key: (item: T) => string): T[] {
 	const seen = new Set<string>();
 	const out: T[] = [];
 	for (const item of items) {
-		const k = key(item).toLowerCase();
+		const k = key(item);
 		if (seen.has(k)) continue;
 		seen.add(k);
 		out.push(item);
@@ -114,16 +114,13 @@ function dedupe<T>(items: T[], key: (item: T) => string): T[] {
 
 /**
  * Put `query` at the front, dropping any earlier occurrence that differs only
- * by case or padding, and cap the list.
+ * by padding, and cap the list. Case is NOT folded: "5 mW" and "5 MW" are a
+ * milliwatt and a megawatt, two different questions.
  */
 export function pushRecent(store: HistoryStore | undefined, query: string): string[] {
 	const trimmed = usableQuery(query);
 	if (!trimmed) return readRecent(store);
-	const key = trimmed.toLowerCase();
-	const next = [trimmed, ...readRecent(store).filter((q) => q.toLowerCase() !== key)].slice(
-		0,
-		MAX_RECENT
-	);
+	const next = [trimmed, ...readRecent(store).filter((q) => q !== trimmed)].slice(0, MAX_RECENT);
 	write(store, RECENT_KEY, next);
 	return next;
 }
@@ -163,36 +160,32 @@ export function readSaved(store: HistoryStore | undefined): SavedEntry[] {
 	return dedupe(out, (e) => e.query).slice(0, MAX_SAVED);
 }
 
-/** True when this exact query (case-insensitively) is already saved. */
+/** True when this exact query (case included: mW is not MW) is already saved. */
 export function isSaved(saved: SavedEntry[], query: string): boolean {
-	const key = query.trim().toLowerCase();
-	return saved.some((e) => e.query.toLowerCase() === key);
+	const key = query.trim();
+	return saved.some((e) => e.query === key);
 }
 
 /** Save a query, or update its label if it is already there. Newest first. */
 export function save(store: HistoryStore | undefined, query: string, label?: string): SavedEntry[] {
 	const trimmed = usableQuery(query);
 	if (!trimmed) return readSaved(store);
-	const key = trimmed.toLowerCase();
 	const existing = readSaved(store);
 	// Re-saving without a label must not WIPE a label that is already there —
 	// the docstring promised "or update its label", and dropping one silently is
 	// the same class of bug as dropping a word.
 	const keptLabel = label?.trim()
 		? label.trim().slice(0, 60)
-		: existing.find((e) => e.query.toLowerCase() === key)?.label;
+		: existing.find((e) => e.query === trimmed)?.label;
 	const entry: SavedEntry = keptLabel ? { query: trimmed, label: keptLabel } : { query: trimmed };
-	const next = [entry, ...existing.filter((e) => e.query.toLowerCase() !== key)].slice(
-		0,
-		MAX_SAVED
-	);
+	const next = [entry, ...existing.filter((e) => e.query !== trimmed)].slice(0, MAX_SAVED);
 	write(store, SAVED_KEY, next);
 	return next;
 }
 
 export function unsave(store: HistoryStore | undefined, query: string): SavedEntry[] {
-	const key = query.trim().toLowerCase();
-	const next = readSaved(store).filter((e) => e.query.toLowerCase() !== key);
+	const key = query.trim();
+	const next = readSaved(store).filter((e) => e.query !== key);
 	write(store, SAVED_KEY, next);
 	return next;
 }
