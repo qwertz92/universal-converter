@@ -1,0 +1,294 @@
+<script lang="ts">
+	/**
+	 * The guided converter (default mode): pick what you are converting, fill
+	 * in two to four fields, and the answer follows as you type. The form only
+	 * COMPOSES a query in the text grammar (`$lib/ui/guided`) — the engine, the
+	 * guards and the shared URL are the same as the text mode's.
+	 *
+	 * Layout stability: the task buttons are a fixed grid, the blurb is one
+	 * clamped line, and the parent (Converter) reserves the height of the
+	 * tallest task (cost), so switching tasks never moves the results below.
+	 */
+	import type { Dimension, Fuel, Unit } from '$lib/conversion/types';
+	import { DIMENSION_LABEL, gridPickerOptions } from '$lib/ui/engine';
+	import {
+		CURRENCIES,
+		GUIDED_TASKS,
+		defaultState,
+		targetDimensions,
+		unitDimensions,
+		type GuidedState,
+		type GuidedTask
+	} from '$lib/ui/guided';
+
+	let {
+		form = $bindable(),
+		grid = $bindable(''),
+		units,
+		fuels,
+		onchange,
+		composed,
+		onedittext
+	}: {
+		form: GuidedState;
+		grid?: string;
+		units: Unit[];
+		fuels: Fuel[];
+		/** Called after every edit; the parent re-runs the conversion. */
+		onchange: () => void;
+		/** The query the form currently stands for, if complete. */
+		composed: string | undefined;
+		/** Switch to the text mode with the composed query. */
+		onedittext: () => void;
+	} = $props();
+
+	const uid = $props.id();
+	const fid = (name: string) => `uc-guided-${name}-${uid}`;
+
+	// A fuel category is free text in the data, so the lookup is a Map: an
+	// unlisted category falls back to its own name instead of a blank group.
+	const CATEGORY_LABEL = new Map([
+		['oil', 'Oil products'],
+		['gas', 'Gases'],
+		['hydrogen', 'Hydrogen'],
+		['coal', 'Coal'],
+		['biomass', 'Wood & biomass'],
+		['biofuel', 'Biofuels']
+	]);
+
+	function unitGroups(dims: Dimension[]): { label: string; units: Unit[] }[] {
+		return dims
+			.map((d) => ({ label: DIMENSION_LABEL[d], units: units.filter((u) => u.dimension === d) }))
+			.filter((g) => g.units.length > 0);
+	}
+
+	const fuelGroups = $derived.by(() => {
+		const groups: { label: string; fuels: Fuel[] }[] = [];
+		for (const f of fuels) {
+			if (f.category === 'electricity') continue;
+			const label = CATEGORY_LABEL.get(f.category) ?? f.category;
+			let g = groups.find((x) => x.label === label);
+			if (!g) {
+				g = { label, fuels: [] };
+				groups.push(g);
+			}
+			g.fuels.push(f);
+		}
+		return groups;
+	});
+
+	const unit = $derived(units.find((u) => u.id === form.unitId));
+	const unitOptions = $derived(unitGroups(unitDimensions(form.task)));
+	const targetOptions = $derived(
+		unitGroups(targetDimensions(form.task, unit)).map((g) => ({
+			...g,
+			units: g.units.filter((u) => u.id !== form.unitId)
+		}))
+	);
+	const timeUnits = $derived(units.filter((u) => u.dimension === 'time'));
+	const perUnitOptions = $derived(unitGroups(['energy', 'volume', 'mass']));
+	const gridOptions = gridPickerOptions();
+	const blurb = $derived(GUIDED_TASKS.find((t) => t.id === form.task)?.blurb ?? '');
+
+	function pickTask(task: GuidedTask): void {
+		if (task === form.task) return;
+		form = defaultState(task);
+		onchange();
+	}
+
+	/** A changed FROM unit can make the chosen target meaningless (kWh → kg). */
+	function unitChanged(): void {
+		const next = units.find((u) => u.id === form.unitId);
+		const target = units.find((u) => u.id === form.targetId);
+		if (target && next && !targetDimensions(form.task, next).includes(target.dimension)) {
+			form.targetId = '';
+		}
+		onchange();
+	}
+
+	const fieldClass = 'h-[42px] w-full min-w-0 rounded-lg border px-3 text-sm outline-none uc-num';
+	const fieldStyle = 'background:var(--surface);border-color:var(--border-input);color:var(--text)';
+	const labelClass = 'mb-1 block text-xs font-medium';
+</script>
+
+{#snippet amountField(id: string, label: string, bindTo: 'amount' | 'durationAmount' | 'price')}
+	<div class="min-w-0">
+		<label for={id} class={labelClass} style="color:var(--text-muted)">{label}</label>
+		<input
+			{id}
+			type="text"
+			inputmode="decimal"
+			autocomplete="off"
+			bind:value={form[bindTo]}
+			oninput={onchange}
+			class={fieldClass}
+			style={fieldStyle}
+		/>
+	</div>
+{/snippet}
+
+{#snippet unitSelect(
+	id: string,
+	label: string,
+	groups: { label: string; units: Unit[] }[],
+	bindTo: 'unitId' | 'targetId' | 'durationUnitId' | 'perUnitId',
+	emptyLabel?: string
+)}
+	<div class="min-w-0">
+		<label for={id} class={labelClass} style="color:var(--text-muted)">{label}</label>
+		<select
+			{id}
+			bind:value={form[bindTo]}
+			onchange={bindTo === 'unitId' ? unitChanged : onchange}
+			class={fieldClass}
+			style={fieldStyle}
+		>
+			{#if emptyLabel}<option value="">{emptyLabel}</option>{/if}
+			{#each groups as g (g.label)}
+				<optgroup label={g.label}>
+					{#each g.units as u (u.id)}
+						<option value={u.id}>{u.symbols[0]} — {u.names[0]}</option>
+					{/each}
+				</optgroup>
+			{/each}
+		</select>
+	</div>
+{/snippet}
+
+{#snippet fuelSelect(id: string, label: string, emptyLabel?: string)}
+	<div class="min-w-0">
+		<label for={id} class={labelClass} style="color:var(--text-muted)">{label}</label>
+		<select {id} bind:value={form.fuelId} {onchange} class={fieldClass} style={fieldStyle}>
+			{#if emptyLabel}<option value="">{emptyLabel}</option>{/if}
+			{#each fuelGroups as g (g.label)}
+				<optgroup label={g.label}>
+					{#each g.fuels as f (f.id)}
+						<option value={f.id}>{f.names[0]}</option>
+					{/each}
+				</optgroup>
+			{/each}
+		</select>
+	</div>
+{/snippet}
+
+<div class="space-y-3">
+	<!-- What is being converted. One line: a sideways strip on a phone (with
+	     room for the focus ring), a fixed five-column grid from sm. Selecting
+	     changes colours only. -->
+	<div
+		role="radiogroup"
+		aria-label="What do you want to convert?"
+		class="-my-1 flex gap-1.5 overflow-x-auto py-1 sm:grid sm:grid-cols-5 sm:overflow-visible"
+		style="scrollbar-width:none"
+	>
+		{#each GUIDED_TASKS as t (t.id)}
+			<button
+				type="button"
+				role="radio"
+				aria-checked={form.task === t.id}
+				class="min-h-10 shrink-0 rounded-lg border px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors"
+				style={form.task === t.id
+					? 'background:var(--accent);border-color:var(--accent);color:var(--accent-contrast)'
+					: 'background:var(--surface);border-color:var(--border);color:var(--text-muted)'}
+				onclick={() => pickTask(t.id)}
+			>
+				{t.label}
+			</button>
+		{/each}
+	</div>
+	<p class="line-clamp-1 text-xs" style="color:var(--text-faint)">{blurb}</p>
+
+	<!-- The fields take only the rows they need, so the "typed, that is" line
+	     sits right under them. The parent reserves the tallest task's height
+	     (cost: three rows on a phone), so a task switch still cannot move the
+	     results below — the spare room is under this form, not inside it. -->
+	<div class="grid grid-cols-2 content-start gap-3 sm:grid-cols-4">
+		{#if form.task === 'units'}
+			{@render amountField(fid('amount'), 'Amount', 'amount')}
+			{@render unitSelect(fid('unit'), 'From', unitOptions, 'unitId')}
+			<div class="col-span-2">
+				{@render unitSelect(
+					fid('target'),
+					'To',
+					targetOptions,
+					'targetId',
+					'Every unit of this kind'
+				)}
+			</div>
+		{:else if form.task === 'fuel'}
+			{@render amountField(fid('amount'), 'Amount', 'amount')}
+			{@render unitSelect(fid('unit'), 'Unit', unitOptions, 'unitId')}
+			{@render fuelSelect(fid('fuel'), 'Fuel')}
+			{@render unitSelect(fid('target'), 'Answer in', targetOptions, 'targetId', 'Everything')}
+		{:else if form.task === 'electricity'}
+			{@render amountField(fid('amount'), 'Amount', 'amount')}
+			{@render unitSelect(fid('unit'), 'Unit', unitOptions, 'unitId')}
+			<!-- Never preselected: there is no default grid (rulebook §C.6). -->
+			<div class="col-span-2 min-w-0">
+				<label for={fid('grid')} class={labelClass} style="color:var(--text-muted)"
+					>Grid region &amp; year</label
+				>
+				<select id={fid('grid')} bind:value={grid} {onchange} class={fieldClass} style={fieldStyle}>
+					<option value="">Choose one — needed for CO₂</option>
+					{#each gridOptions as opt (opt.value)}
+						<option value={opt.value}>{opt.label}</option>
+					{/each}
+				</select>
+			</div>
+		{:else if form.task === 'power'}
+			{@render amountField(fid('amount'), 'Power', 'amount')}
+			{@render unitSelect(fid('unit'), 'Unit', unitOptions, 'unitId')}
+			{@render amountField(fid('duration'), 'Running for', 'durationAmount')}
+			{@render unitSelect(
+				fid('duration-unit'),
+				'Time unit',
+				[{ label: 'Time', units: timeUnits }],
+				'durationUnitId'
+			)}
+		{:else}
+			{@render amountField(fid('amount'), 'Amount', 'amount')}
+			{@render unitSelect(fid('unit'), 'Unit', unitOptions, 'unitId')}
+			{@render amountField(fid('price'), 'Your price', 'price')}
+			<div class="min-w-0">
+				<label for={fid('currency')} class={labelClass} style="color:var(--text-muted)"
+					>Currency</label
+				>
+				<select
+					id={fid('currency')}
+					bind:value={form.currency}
+					{onchange}
+					class={fieldClass}
+					style={fieldStyle}
+				>
+					{#each CURRENCIES as c (c)}<option value={c}>{c}</option>{/each}
+				</select>
+			</div>
+			{@render unitSelect(fid('per'), 'Per', perUnitOptions, 'perUnitId')}
+			{@render fuelSelect(fid('fuel'), 'Of (optional)', 'No fuel — energy only')}
+		{/if}
+	</div>
+
+	<!-- Teaches the text grammar on the side: the same question, typed. One
+	     line at every width — a long query is truncated, not wrapped, so the
+	     line cannot grow and push the results down. -->
+	<div class="flex min-h-9 flex-nowrap items-center gap-2 text-xs" style="color:var(--text-faint)">
+		{#if composed}
+			<span class="shrink-0">Typed, that is</span>
+			<code
+				class="min-w-0 truncate rounded px-1.5 py-0.5"
+				style="background:var(--surface-2);color:var(--text)"
+				title={composed}>{composed}</code
+			>
+			<button
+				type="button"
+				class="min-h-9 shrink-0 rounded px-1 font-medium whitespace-nowrap hover:underline"
+				style="color:var(--accent)"
+				onclick={onedittext}>Edit as text →</button
+			>
+		{:else}
+			<span class="truncate"
+				>Fill in an amount{form.task === 'cost' ? ' and your price' : ''} to see the result.</span
+			>
+		{/if}
+	</div>
+</div>

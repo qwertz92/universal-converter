@@ -14,13 +14,20 @@
 	import SourceRefs from './SourceRefs.svelte';
 	import ExactnessBadge from '$lib/components/badges/ExactnessBadge.svelte';
 	import CopyButton from './CopyButton.svelte';
+	import KeyFigures from './KeyFigures.svelte';
+	import { keyFigures } from '$lib/ui/key-figures';
+	import { unitById } from '$lib/ui/engine';
 
 	let {
 		resultSet,
-		contextControl
+		contextControl,
+		echo = true
 	}: {
 		resultSet: ConversionResultSet;
 		contextControl?: import('svelte').Snippet<[ConversionResult]>;
+		/** Restate the input above the results. Off under the guided form, which
+		 *  already shows it field by field; a requested answer is shown either way. */
+		echo?: boolean;
 	} = $props();
 
 	// Meta groups are surfaced as their own dedicated panels below the cards.
@@ -28,6 +35,11 @@
 	const valueGroups = $derived(resultSet.groups.filter((g) => !META_KEYS.has(g.key)));
 
 	const input = $derived(resultSet.input);
+
+	const figures = $derived.by(() => {
+		const dim = unitById(input.unit_id)?.dimension;
+		return dim ? keyFigures(resultSet, dim) : [];
+	});
 
 	/** The row the user explicitly asked for ("5 kWh to MJ"), when it produced a
 	 *  value — shown as a headline so the requested answer is the first thing
@@ -40,39 +52,50 @@
 
 <div class="space-y-4">
 	<!-- Input echo — or, when a target was asked for, the answer itself. -->
-	<div
-		class="rounded-[var(--radius-card)] border px-4 py-3"
-		style="border-color:var(--border);background:var(--surface-2)"
-	>
-		<div class="text-xs font-medium tracking-wide uppercase" style="color:var(--text-faint)">
-			{answer ? 'Answer' : 'Converting'}
-		</div>
-		{#if answer}
-			<div class="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-2">
-				<!-- The requested answer is the largest text in the result area: it is
+	{#if echo || answer}
+		<div
+			class="rounded-[var(--radius-card)] border px-4 py-3"
+			style="border-color:var(--border);background:var(--surface-2)"
+		>
+			<div class="text-xs font-medium tracking-wide uppercase" style="color:var(--text-faint)">
+				{answer ? 'Answer' : 'Converting'}
+			</div>
+			{#if answer}
+				<div class="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+					<!-- The requested answer is the largest text in the result area: it is
 				     what was asked, and everything below is supporting context. -->
-				<div class="text-lg font-semibold sm:text-xl" style="color:var(--text)">
+					<div class="text-lg font-semibold sm:text-xl" style="color:var(--text)">
+						<span class="uc-num">{input.value}</span>
+						<span style="color:var(--text-muted)">{input.unit_label}</span>
+						{#if input.fuel_label}<span style="color:var(--accent)"> {input.fuel_label}</span>{/if}
+						<span class="mx-1.5" style="color:var(--text-faint)">=</span>
+						<span class="uc-num text-2xl font-bold tracking-tight sm:text-3xl">{answer.value}</span>
+						<span style="color:var(--text-muted)">{answer.unit_label}</span>
+					</div>
+					<ExactnessBadge exactness={answer.exactness} />
+					<CopyButton text={answer.raw ?? answer.value ?? ''} label="Copy" compact />
+				</div>
+			{:else}
+				<div class="mt-0.5 text-lg font-semibold" style="color:var(--text)">
 					<span class="uc-num">{input.value}</span>
 					<span style="color:var(--text-muted)">{input.unit_label}</span>
-					{#if input.fuel_label}<span style="color:var(--accent)"> {input.fuel_label}</span>{/if}
-					<span class="mx-1.5" style="color:var(--text-faint)">=</span>
-					<span class="uc-num text-2xl font-bold tracking-tight sm:text-3xl">{answer.value}</span>
-					<span style="color:var(--text-muted)">{answer.unit_label}</span>
+					{#if input.fuel_label}<span style="color:var(--accent)"> · {input.fuel_label}</span>{/if}
 				</div>
-				<ExactnessBadge exactness={answer.exactness} />
-				<CopyButton text={answer.raw ?? answer.value ?? ''} label="Copy" compact />
-			</div>
-		{:else}
-			<div class="mt-0.5 text-lg font-semibold" style="color:var(--text)">
-				<span class="uc-num">{input.value}</span>
-				<span style="color:var(--text-muted)">{input.unit_label}</span>
-				{#if input.fuel_label}<span style="color:var(--accent)"> · {input.fuel_label}</span>{/if}
-			</div>
-		{/if}
-	</div>
+			{/if}
+		</div>
+	{/if}
+
+	{#if figures.length > 0}
+		<KeyFigures {figures} />
+	{/if}
 
 	<!-- Value groups (already in canonical order) -->
-	<h2 class="sr-only">Conversion results</h2>
+	<h2
+		class={figures.length > 0 ? 'pt-2 text-xs font-semibold tracking-wide uppercase' : 'sr-only'}
+		style="color:var(--text-faint)"
+	>
+		{figures.length > 0 ? 'All results' : 'Conversion results'}
+	</h2>
 	<!-- items-start: a two-row Mass card next to an eight-row Energy card was
 	     stretched to the same height, leaving a large empty box. -->
 	<div class="grid items-start gap-4 md:grid-cols-2">

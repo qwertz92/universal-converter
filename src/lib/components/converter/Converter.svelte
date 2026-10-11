@@ -1,12 +1,15 @@
 <script lang="ts">
 	/**
-	 * The core converter (spec §8.1, rulebook §C). Free-text input parsed on submit
-	 * AND debounced as-you-type, a structured fallback row, quick examples, the
-	 * global options bar, grouped result cards, and helpful error/context states.
-	 * URL state (`?q=`, `?basis=`) keeps conversions shareable.
+	 * The core converter (spec §8.1, rulebook §C), in two modes over one engine:
 	 *
-	 * `compact` renders the embedded variant used on the home page (no structured
-	 * row / options by default, but still fully functional).
+	 *  - guided (the default): pick what you are converting and fill in a few
+	 *    fields; the answer follows as you type. The form composes a query in
+	 *    the text grammar, so nothing about the engine or its guards differs.
+	 *  - text: the free-text field with completion, quick examples and the
+	 *    options bar, for anyone who would rather type "10 L diesel to kg".
+	 *
+	 * URL state (`?q=`, `?basis=`) keeps conversions shareable in either mode;
+	 * a shared query opens in the guided form when one can express all of it.
 	 */
 	import { tick, untrack } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -43,12 +46,13 @@
 	import QueryField from './QueryField.svelte';
 	import DurationPrompt from './DurationPrompt.svelte';
 	import QuickExamples from './QuickExamples.svelte';
-	import StructuredInput from './StructuredInput.svelte';
+	import GuidedForm from './GuidedForm.svelte';
+	import { composeQuery, defaultState, stateFromQuery, type GuidedState } from '$lib/ui/guided';
 	import ResultSet from '$lib/components/results/ResultSet.svelte';
 	import ParseErrorNote from '$lib/components/results/ParseErrorNote.svelte';
 	import Combobox, { type ComboOption } from '$lib/components/search/Combobox.svelte';
 
-	let { compact = false, syncUrl = true }: { compact?: boolean; syncUrl?: boolean } = $props();
+	let { syncUrl = true }: { syncUrl?: boolean } = $props();
 
 	const units = allUnits();
 	const fuels = allFuels();
@@ -59,7 +63,27 @@
 	const initial: ConverterUrlState = untrack(() =>
 		syncUrl && browser ? readUrlState(page.url, gridIntensityOptions()) : { q: '', basis: 'lhv' }
 	);
-	let queryText = $state(initial.q);
+	// ---- mode -----------------------------------------------------------------
+	// A first visit opens the guided form with a worked example (10 L diesel),
+	// so the page shows what it does before anyone types. A shared ?q= opens in
+	// the form that can say all of it — or in the text mode when none can (an
+	// efficiency, a duration with a target), rather than dropping part of it.
+	const DEFAULT_TASK = 'fuel';
+	const initialForm: GuidedState | undefined = untrack(() => {
+		if (!initial.q.trim()) return defaultState(DEFAULT_TASK);
+		const parsed = engine().parse(initial.q);
+		return parsed.ok ? stateFromQuery(parsed.query) : undefined;
+	});
+	let mode = $state<'guided' | 'text'>(initialForm ? 'guided' : 'text');
+	let showOptions = $state(false);
+	const uid = $props.id();
+	const optionsId = `uc-options-${uid}`;
+	let form = $state<GuidedState>(initialForm ?? defaultState(DEFAULT_TASK));
+	const composed = $derived(composeQuery(form, units, fuels));
+
+	let queryText = $state(
+		initial.q || (composeQuery(defaultState(DEFAULT_TASK), units, fuels) ?? '')
+	);
 	let basis = $state<HeatingBasis>(initial.basis);
 	// Grid region/year for electricity (rulebook §C.6), encoded "region|year"; '' = unset.
 	let grid = $state(
@@ -67,11 +91,6 @@
 			? `${initial.region}|${initial.year}`
 			: ''
 	);
-	let showStructured = $state(false);
-	// Per-instance, because the converter renders twice on some pages (compact
-	// on a fuel page, full on /convert) and a literal id would collide.
-	const structuredUid = $props.id();
-	const structuredPanelId = `uc-structured-${structuredUid}`;
 	const initialPin = untrack(() =>
 		syncUrl && browser ? decodePin(page.url.searchParams.get('pin'), units) : {}
 	);
@@ -185,6 +204,48 @@
 
 	const debouncedRun = debounce((t: string) => runConversion(t), 260);
 
+	// The worked example a first visit opens with is computed during render, on
+	// the server and in the browser alike, so the prerendered page already shows
+	// its result and hydration finds the same markup — no empty box that fills
+	// in a moment later. A shared ?q= cannot be known at prerender time; it is
+	// converted by the boot effect below, as before.
+	if (!initial.q.trim()) untrack(() => runConversion(queryText));
+
+	// ---- guided mode ----------------------------------------------------------
+	/** Re-run after a form edit. Debounced, and it reads the form only when it
+	 *  fires, so it never sees a half-applied input event. */
+	const applyGuided = debounce(() => {
+		if (!composed) return; // keep the last answer (dimmed) while a field is incomplete
+		queryText = composed;
+		pickedFuelId = undefined;
+		runConversion(queryText);
+		pushUrl();
+		rememberSoon();
+	}, 150);
+	const rememberSoon = debounce(() => remember(queryText), 1500);
+
+	function setMode(next: 'guided' | 'text'): void {
+		if (next === mode) return;
+		if (next === 'text') {
+			if (composed) queryText = composed;
+			mode = 'text';
+			tick().then(() => document.getElementById('uc-query')?.focus());
+			return;
+		}
+		const parsed = engine().parse(effectiveQuery(queryText).text);
+		form = (parsed.ok ? stateFromQuery(parsed.query) : undefined) ?? defaultState(DEFAULT_TASK);
+		mode = 'guided';
+		applyGuided();
+	}
+
+	/** Open a saved or recent query in whichever mode can show it. */
+	function openQuery(query: string): void {
+		const parsed = engine().parse(query);
+		const state = parsed.ok ? stateFromQuery(parsed.query) : undefined;
+		if (mode === 'guided' && state) form = state;
+		else if (mode === 'guided') mode = 'text';
+	}
+
 	/** The engine's own parser, for the input field's live interpretation. */
 	function parseQuery(text: string) {
 		return engine().parse(text);
@@ -272,6 +333,7 @@
 	}
 
 	function runSaved(query: string): void {
+		openQuery(query);
 		queryText = query;
 		pickedFuelId = undefined;
 		runConversion(query);
@@ -457,60 +519,94 @@
 </script>
 
 <div class="space-y-4">
-	<!-- Free-text input: completes units, and says what it understood. -->
-	<QueryField
-		bind:value={queryText}
-		{units}
-		{fuels}
-		parse={parseQuery}
-		onsubmit={submit}
-		oninput={onInput}
-		effective={pinned.text}
-		pinApplied={pinned.usedFrom || pinned.usedTo}
-		pinnedFrom={pin.from}
-		pinnedTo={pin.to}
-		onpin={setPin}
-	/>
-
-	<QuickExamples onpick={useExample} />
-
-	{#if !compact}
-		<!-- Structured fallback + options -->
-		<div class="space-y-3">
-			<button
-				type="button"
-				class="inline-flex items-center gap-1.5 text-sm font-medium hover:text-[var(--accent)]"
-				style="color:var(--text-muted)"
-				onclick={() => (showStructured = !showStructured)}
-				aria-expanded={showStructured}
-				aria-controls={structuredPanelId}
-			>
-				<svg
-					width="14"
-					height="14"
-					viewBox="0 0 24 24"
-					fill="none"
-					aria-hidden="true"
-					class="transition-transform"
-					style={showStructured ? 'transform:rotate(90deg)' : ''}
+	<!-- Mode switch on the left, settings on the right. The settings apply to
+	     both modes and open only on request, so neither mode carries a bar the
+	     other lacks — which kept the two the same height. -->
+	<div class="flex flex-wrap items-center justify-between gap-2">
+		<div
+			role="radiogroup"
+			aria-label="How do you want to enter it?"
+			class="inline-flex rounded-lg border p-0.5"
+			style="border-color:var(--border);background:var(--surface-2)"
+		>
+			{#each [{ id: 'guided', label: 'Guided' }, { id: 'text', label: 'Type a query' }] as const as m (m.id)}
+				<button
+					type="button"
+					role="radio"
+					aria-checked={mode === m.id}
+					class="min-h-9 rounded-md px-3 text-sm font-medium transition-colors"
+					style={mode === m.id
+						? 'background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgb(0 0 0 / 0.08)'
+						: 'color:var(--text-muted)'}
+					onclick={() => setMode(m.id)}
 				>
-					<path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-				</svg>
-				Build it with dropdowns
-			</button>
-			{#if showStructured}
-				<div
-					id={structuredPanelId}
-					class="rounded-xl border p-4"
-					style="border-color:var(--border);background:var(--surface-2)"
-				>
-					<StructuredInput {units} {fuels} onsubmit={useExample} />
-				</div>
-			{/if}
+					{m.label}
+				</button>
+			{/each}
 		</div>
-
-		<OptionsBar bind:basis bind:grid />
+		<button
+			type="button"
+			class="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium hover:underline"
+			style="color:var(--text-muted)"
+			aria-expanded={showOptions}
+			aria-controls={optionsId}
+			onclick={() => (showOptions = !showOptions)}
+		>
+			<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+				<path
+					d="M4 7h10M18 7h2M4 17h4M12 17h8"
+					stroke="currentColor"
+					stroke-width="1.8"
+					stroke-linecap="round"
+				/>
+				<circle cx="16" cy="7" r="2" stroke="currentColor" stroke-width="1.8" />
+				<circle cx="10" cy="17" r="2" stroke="currentColor" stroke-width="1.8" />
+			</svg>
+			Settings
+			<span class="font-normal" style="color:var(--text-faint)">
+				· {basis === 'lhv' ? 'net heating value' : 'gross heating value'}{gridParts(grid).region
+					? ` · grid ${gridParts(grid).region} ${gridParts(grid).year}`
+					: ''}
+			</span>
+		</button>
+	</div>
+	{#if showOptions}
+		<div id={optionsId}><OptionsBar bind:basis bind:grid /></div>
 	{/if}
+
+	<!-- The input area reserves the guided form's height in both modes, so
+	     switching modes does not move the results below. -->
+	<div class="min-h-[20.75rem] sm:min-h-[16rem]">
+		{#if mode === 'guided'}
+			<GuidedForm
+				bind:form
+				bind:grid
+				{units}
+				{fuels}
+				onchange={applyGuided}
+				{composed}
+				onedittext={() => setMode('text')}
+			/>
+		{:else}
+			<div class="space-y-4">
+				<!-- Free-text input: completes units, and says what it understood. -->
+				<QueryField
+					bind:value={queryText}
+					{units}
+					{fuels}
+					parse={parseQuery}
+					onsubmit={submit}
+					oninput={onInput}
+					effective={pinned.text}
+					pinApplied={pinned.usedFrom || pinned.usedTo}
+					pinnedFrom={pin.from}
+					pinnedTo={pin.to}
+					onpin={setPin}
+				/>
+				<QuickExamples onpick={useExample} />
+			</div>
+		{/if}
+	</div>
 
 	<!-- Fuel context prompt (rulebook §C.8: "pick a material") -->
 	{#if needsFuel}
@@ -546,7 +642,7 @@
 	     "what's missing?" sits exactly where the question is asked. Present in
 	     compact mode too, where the OptionsBar picker is not shown. -->
 	{#snippet gridControl(result: ConversionResult)}
-		{#if result === controlOwner.region}
+		{#if result === controlOwner.region && !(mode === 'guided' && form.task === 'electricity')}
 			<!-- Only where a region/year is actually being ASKED for. Rendering it
 			     for every region_year_specific row put two identical, inert
 			     "Grid region & year" selects (with the same DOM id) under a diesel
@@ -576,11 +672,18 @@
 		on the plain entry path. Reserving the space costs nothing when a result
 		is present, because a result is always taller than the box.
 	-->
-	<div bind:this={resultsEl} class={compact ? 'scroll-mt-20' : 'min-h-[7.5rem] scroll-mt-20'}>
+	<!-- Dimmed, not cleared, while a guided field is incomplete: emptying the
+	     area on every half-typed amount would collapse and re-grow the page. -->
+	<div
+		bind:this={resultsEl}
+		class="min-h-[7.5rem] scroll-mt-20 transition-opacity"
+		style={mode === 'guided' && !composed ? 'opacity:0.45' : undefined}
+		aria-busy={mode === 'guided' && !composed}
+	>
 		{#if parseError}
 			<ParseErrorNote error={parseError} onpick={onErrorPick} />
 		{:else if resultSet}
-			<ResultSet {resultSet} contextControl={gridControl} />
+			<ResultSet {resultSet} contextControl={gridControl} echo={mode === 'text'} />
 
 			<!-- Export toolbar: take the whole grouped, sourced result set with you. -->
 			<div class="mt-3 flex flex-wrap items-center gap-2 text-xs" style="color:var(--text-faint)">
@@ -618,7 +721,7 @@
 				</a>
 				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			</div>
-		{:else if !compact && settled}
+		{:else if settled}
 			<div
 				class="rounded-[var(--radius-card)] border border-dashed p-8 text-center"
 				style="border-color:var(--border)"
@@ -632,16 +735,14 @@
 
 	<!-- History lives below the results, not inside the empty state: the moment
 	     you have a result is exactly when you want to jump back to the last one. -->
-	{#if !compact}
-		<HistoryPanel
-			{recent}
-			{saved}
-			current={queryText}
-			onrun={runSaved}
-			onsave={(q) => (saved = saveQuery(store, q))}
-			onunsave={(q) => (saved = unsaveQuery(store, q))}
-			onclearRecent={() => (recent = clearRecent(store))}
-			onclearSaved={() => (saved = clearSaved(store))}
-		/>
-	{/if}
+	<HistoryPanel
+		{recent}
+		{saved}
+		current={queryText}
+		onrun={runSaved}
+		onsave={(q) => (saved = saveQuery(store, q))}
+		onunsave={(q) => (saved = unsaveQuery(store, q))}
+		onclearRecent={() => (recent = clearRecent(store))}
+		onclearSaved={() => (saved = clearSaved(store))}
+	/>
 </div>

@@ -1,11 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
-	import { browser } from '$app/environment';
 	import Seo from '$lib/components/layout/Seo.svelte';
 	import Converter from '$lib/components/converter/Converter.svelte';
 	import ExactnessBadge from '$lib/components/badges/ExactnessBadge.svelte';
-	import { APP_VERSION } from '$lib/version';
 
 	const features = [
 		{
@@ -27,14 +24,6 @@
 			cta: 'Start learning'
 		}
 	] as const;
-
-	/**
-	 * The home converter writes its query into "?q=", so carrying the current
-	 * search string across means a visitor who typed here does not lose it.
-	 * Guarded by `browser`: this page is prerendered, and during prerender there
-	 * is no request URL — reading `page.url` at that point throws.
-	 */
-	const convertHref = $derived(`${resolve('/convert')}${browser ? page.url.search : ''}`);
 </script>
 
 <Seo
@@ -42,42 +31,24 @@
 	description="A transparent converter for units, energy, fuels and emissions. Convert values, understand assumptions, and trace every non-exact result back to its source."
 />
 
-<!-- Hero -->
+<!-- The converter IS the page: a short title, then the tool, already showing a
+     worked example. The explanation of what makes it different follows below,
+     for anyone who scrolls. -->
 <section class="border-b" style="border-color:var(--border);background:var(--bg-subtle)">
-	<div class="mx-auto max-w-5xl px-4 pt-8 pb-10 sm:px-6 sm:pt-12">
-		<!-- Hidden on phones, where it wrapped to two lines above the headline;
-		     the footer carries the version on every page. -->
-		<div
-			class="mb-4 hidden items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium sm:inline-flex"
-			style="border-color:var(--border);background:var(--surface);color:var(--text-muted)"
-		>
-			<span class="h-2 w-2 rounded-full" style="background:var(--accent)"></span>
-			v{APP_VERSION} — a sourced reference tool, not a black-box calculator
-		</div>
-		<h1 class="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-			A transparent converter for units, energy, fuels and emissions.
+	<div class="mx-auto max-w-5xl px-4 pt-6 pb-10 sm:px-6 sm:pt-10">
+		<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">
+			Convert units, fuels and emissions
 		</h1>
-		<p class="mt-4 max-w-2xl text-base sm:text-lg" style="color:var(--text-muted)">
-			Convert values, understand the assumptions, and trace every non-exact result back to its
-			source. Exact conversions and estimates are always kept apart.
+		<p class="mt-2 max-w-2xl text-sm sm:text-base" style="color:var(--text-muted)">
+			Every figure says how exact it is and where it comes from — exact conversions and estimates
+			are never mixed up.
 		</p>
 
-		<!-- Embedded converter. No hint line above it: the field's own status line
-		     already says "Type a value and a unit" with examples, and saying it
-		     twice only pushed the results further down. -->
-		<div class="mt-6">
-			<Converter compact />
-			<div class="mt-3 text-right">
-				<!-- eslint-disable svelte/no-navigation-without-resolve -->
-				<a
-					href={convertHref}
-					class="text-sm font-medium hover:underline"
-					style="color:var(--accent)"
-				>
-					Open the full converter →
-				</a>
-				<!-- eslint-enable svelte/no-navigation-without-resolve -->
-			</div>
+		<div
+			class="mt-5 rounded-[var(--radius-card)] border p-4 sm:p-6"
+			style="border-color:var(--border);background:var(--bg)"
+		>
+			<Converter />
 		</div>
 	</div>
 </section>

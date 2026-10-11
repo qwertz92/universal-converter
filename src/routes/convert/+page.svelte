@@ -13,7 +13,7 @@
 <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
 	<PageHero
 		title="Converter"
-		lede="Type a value and a unit — the unit is never guessed. Add a material, a target, a duration, your price or your appliance's efficiency; questions in English or German work too."
+		lede="Pick what you are converting and fill in the fields — or switch to “Type a query” and write it out, in English or German (10 L diesel to kg, 5 kW for 3 h). A unit is never guessed."
 	/>
 
 	<!-- People who arrive here from a shared ?q= link never see the homepage's
