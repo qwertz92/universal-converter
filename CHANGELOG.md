@@ -3,10 +3,58 @@
 All notable changes to Universal Converter. Versioning follows semver
 (pre-1.0: minor bumps may include behavior changes; they are listed here).
 
-## Unreleased — UI/UX pass (2026-10-10)
+## 0.4.0 — 2026-10-11
+
+A first-time visitor now gets a calculator instead of a text field: pick what
+you are converting, fill in a few fields, and read the answer in every unit
+that applies. Plus one calculation bug that mattered (milli read as mega).
+
+### Added
+
+- **Guided mode, the new default.** Five tasks — Units, Fuel, Electricity,
+  Power × time, Cost — each with its own small form (amount, unit, fuel, grid
+  region, duration or price). The answer follows as you type. The form only
+  writes the same query a reader could type (`10 L diesel`), so both modes share
+  one parser, one engine and one shareable `?q=` link; "Type a query" keeps the
+  free-text field for anyone who prefers it. A shared link opens in the form
+  that can express all of it, or in the text mode when none can (an
+  efficiency, a COP) rather than dropping part of the question.
+- **"At a glance" tiles** above the full results: energy (with its LHV/HHV
+  basis), mass, volume, CO₂ and CO₂e — each an existing result row with its own
+  exactness badge, never a recomputed or rounded-again figure. CO₂ and CO₂e
+  are always two tiles.
+- **Milliwatt (mW), milliwatt-hour (mWh) and millijoule (mJ)** in the unit
+  catalog (76 units).
+- **"Did you mean"** on the 404 page and in an empty index search:
+  `/fuels/natural_gass` offers _natural gas_. Names and ids only, never unit
+  symbols; it suggests, it never redirects. A unit symbol in the wrong case
+  (`/units/mw`) offers every reading with its symbol: _milliwatt (mW)_ and
+  _megawatt (MW)_.
 
 ### Fixed
 
+- **`5 mW` was converted as 5 megawatts** (and `1 ML` as one millilitre): a
+  case-insensitive fallback folded the SI prefix. Symbols are now
+  case-sensitive for m/M and p/P everywhere — the parser, shared links and
+  `/units/<symbol>` URLs, and for the energy-density units too (`5 mJ/kg`
+  was read as 5 MJ/kg). `mW` is milliwatt, `MW` megawatt; the lowercase
+  aliases `mw`, `mwh`, `mj` and `pj` were removed because they named a
+  different unit than their symbol says, and typing one now asks which was
+  meant.
+- **A mistyped unit or fuel URL showed a bare "Not Found"** on the live site:
+  `/units/*`, `/fuels/*` and `/learn/*` are static files, and the adapter's
+  static 404 was plain text. It is now the app itself, which shows the styled
+  404 page with a search link, or follows a redirect (`/units/MW` →
+  `/units/megawatt`).
+- **`/fuels/natural_gas`, `/fuels/Diesel`, `/fuels/natural gas`** now reach the
+  fuel page, like `/units/kWh` already did.
+- **`/units?q=…` and `/fuels?q=…` painted the full list, then jumped** to the
+  filtered one on a hard load.
+- **The info button's tap area overlapped its neighbours** by 1–2px at 320px.
+- **Recent and saved queries merged `5 mW` and `5 MW`**: they were compared
+  ignoring case, so saving one replaced the other. They are compared exactly.
+- **Dependencies:** all in-range updates, which close 14 reported
+  vulnerabilities (9 high) in build and dev tooling; oxlint 1.87.
 - **Two different energy figures for one fuel with nothing to tell them
   apart.** `10 L diesel` listed 356.6 MJ and 379.1 MJ in one group; the LHV/HHV
   basis sat behind "Show details" and was missing from the CSV entirely. Rows
@@ -26,6 +74,10 @@ All notable changes to Universal Converter. Versioning follows semver
 
 ### Changed
 
+- The home page is the converter: a one-line title, then the guided form with a
+  worked example (10 L diesel) already computed in the prerendered page. The
+  heating-value and grid options moved behind a "Settings" toggle that names
+  the active choice.
 - Result rows are lines in their group instead of one card each, with copy and
   details inline; badges line up in a column; the requested answer is the
   largest figure.
@@ -35,10 +87,8 @@ All notable changes to Universal Converter. Versioning follows semver
   result area of /convert moved from 1062px to 739px down the page.
 - Fuel pages: the worked example is collapsed, emission factors stack on
   phones, a shared source is cited once per card. /units has jump links and two
-  columns on phones; /units/kilowatt-hour redirects like /units/kwh; the app's
-  404 page under /units or /fuels links to a search for what was typed (on
-  Cloudflare Pages a mistyped prerendered path still gets the adapter's plain
-  static 404 — see docs/BUGS.md). /sources has an
+  columns on phones; /units/kilowatt-hour redirects like /units/kwh; the 404
+  page under /units or /fuels links to a search for what was typed. /sources has an
   index. The mobile menu closes on a tap outside it; footer links are 40px tap
   targets.
 
