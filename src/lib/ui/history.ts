@@ -91,7 +91,7 @@ export function readRecent(store: HistoryStore | undefined): string[] {
 }
 
 /**
- * Drop repeats, comparing case-insensitively — the same key `pushRecent`/`save`
+ * Drop repeats, comparing the trimmed text exactly (case included) — the same key `pushRecent`/`save`
  * use when writing.
  *
  * Reading has to do this too, and not only for tidiness: the trim above can

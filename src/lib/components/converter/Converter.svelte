@@ -215,6 +215,8 @@
 	/** Re-run after a form edit. Debounced, and it reads the form only when it
 	 *  fires, so it never sees a half-applied input event. */
 	const applyGuided = debounce(() => {
+		// A switch back to text within the debounce must not be overwritten.
+		if (mode !== 'guided') return;
 		if (!composed) return; // keep the last answer (dimmed) while a field is incomplete
 		queryText = composed;
 		pickedFuelId = undefined;
@@ -354,6 +356,7 @@
 	}
 
 	function runSaved(query: string): void {
+		heldText = undefined; // the reader chose another query
 		openQuery(query);
 		queryText = query;
 		pickedFuelId = undefined;
@@ -394,6 +397,7 @@
 	}
 
 	function useExample(input: string): void {
+		heldText = undefined;
 		queryText = input;
 		pickedFuelId = undefined;
 		runConversion(input);
@@ -412,6 +416,7 @@
 	 * whole query is replaced, which is what those chips mean.
 	 */
 	function onErrorPick(text: string, replaces?: string): void {
+		heldText = undefined;
 		if (!replaces) {
 			queryText = text;
 		} else {

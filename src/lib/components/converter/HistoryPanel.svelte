@@ -32,8 +32,9 @@
 		onclearSaved: () => void;
 	} = $props();
 
-	const savedKeys = $derived(new Set(saved.map((e) => e.query.toLowerCase())));
-	const isSaved = (q: string) => savedKeys.has(q.trim().toLowerCase());
+	// Exact, like history.ts: "5 mW" and "5 MW" are different saved queries.
+	const savedKeys = $derived(new Set(saved.map((e) => e.query)));
+	const isSaved = (q: string) => savedKeys.has(q.trim());
 	const hasAnything = $derived(recent.length > 0 || saved.length > 0);
 </script>
 
