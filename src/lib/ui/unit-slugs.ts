@@ -153,3 +153,15 @@ export function resolveUnitSlug(
 	const asId = trimmed.toLowerCase().replace(/[-\s]+/g, '_');
 	return unitIds.has(asId) ? asId : undefined;
 }
+
+/**
+ * Units whose symbol is the slug in another case: `/units/mw` → milliwatt (mW)
+ * and megawatt (MW). The resolver refuses such a slug on purpose — the case of
+ * the first letter decides between milli and mega — so the 404 page offers
+ * every reading instead of picking one.
+ */
+export function caseVariantUnits(slug: string, units: Unit[]): Unit[] {
+	const folded = slug.trim().toLowerCase();
+	if (!folded) return [];
+	return units.filter((u) => u.symbols.some((s) => s.toLowerCase() === folded));
+}

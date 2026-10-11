@@ -13,6 +13,7 @@ import {
 	buildExactSymbolMap,
 	buildUnitSlugAliases,
 	buildUnitSlugRedirects,
+	caseVariantUnits,
 	resolveUnitSlug
 } from '$lib/ui/unit-slugs';
 import type { Unit } from '$lib/conversion/types';
@@ -96,5 +97,18 @@ describe('buildUnitSlugRedirects', () => {
 		// 'a_b' and 'a-b' both spell "a-b"; 'a-b' is a real id here, so no redirect.
 		const out = buildUnitSlugRedirects([fake('a_b'), fake('a-b')]);
 		expect(out.has('a-b')).toBe(false);
+	});
+});
+
+describe('caseVariantUnits: a slug that is a symbol in the wrong case', () => {
+	const ids = (slug: string) => caseVariantUnits(slug, units).map((u) => u.id);
+
+	it('offers both readings of an ambiguous lowercase symbol', () => {
+		expect(ids('mw').sort()).toEqual(['megawatt', 'milliwatt']);
+		expect(ids('mwh').sort()).toEqual(['megawatt_hour', 'milliwatt_hour']);
+	});
+
+	it('offers nothing for a slug that is no symbol in any case', () => {
+		expect(ids('nonsense')).toEqual([]);
 	});
 });

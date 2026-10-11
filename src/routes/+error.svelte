@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { allFuels, allUnits } from '$lib/ui/engine';
 	import { closestMatches } from '$lib/ui/near-miss';
+	import { caseVariantUnits } from '$lib/ui/unit-slugs';
 
 	const status = $derived(page.status);
 	const message = $derived(page.error?.message ?? 'Something went wrong.');
@@ -28,12 +29,20 @@
 		// A slip the index search cannot absorb ("natural gass"): offer the nearest
 		// names as links. Suggestions only, never a redirect: a wrong unit or fuel is
 		// worse than a 404.
+		// A symbol in the wrong case (`mw`) could be milli or mega: offer each
+		// reading with its symbol, so the difference is visible, before any
+		// spelling near-miss.
+		const unitSuggestions = () => {
+			const byCase = caseVariantUnits(slug, allUnits());
+			const near = closestMatches(query, allUnits(), (u) => [u.id, ...u.names]);
+			return [...byCase, ...near.filter((u) => !byCase.includes(u))].slice(0, 3).map((u) => ({
+				href: resolve(`/units/${u.id}`),
+				label: byCase.includes(u) ? `${u.names[0]} (${u.symbols[0]})` : u.names[0]
+			}));
+		};
 		const suggestions =
 			m[1] === 'units'
-				? closestMatches(query, allUnits(), (u) => [u.id, ...u.names]).map((u) => ({
-						href: resolve(`/units/${u.id}`),
-						label: u.names[0]
-					}))
+				? unitSuggestions()
 				: closestMatches(query, allFuels(), (f) => [f.id, ...f.names]).map((f) => ({
 						href: resolve(`/fuels/${f.id}`),
 						label: f.names[0]
