@@ -189,19 +189,19 @@ const SPLIT_MATERIALS: Record<string, { reason: string; candidates: string[] }> 
 	{
 		heizöl: {
 			reason: 'covers several different oils.',
-			candidates: ['gas-oil', 'burning-oil', 'heating-oil']
+			candidates: ['gas-oil', 'burning-oil', 'heavy-fuel-oil']
 		},
 		heizoel: {
 			reason: 'covers several different oils.',
-			candidates: ['gas-oil', 'burning-oil', 'heating-oil']
+			candidates: ['gas-oil', 'burning-oil', 'heavy-fuel-oil']
 		},
 		'heating oil': {
 			reason: 'is not one product — the grades differ by up to 15% per litre.',
-			candidates: ['gas-oil', 'burning-oil', 'heating-oil']
+			candidates: ['gas-oil', 'burning-oil', 'heavy-fuel-oil']
 		},
 		'light fuel oil': {
 			reason: 'is not a grade this catalog carries under that name.',
-			candidates: ['gas-oil', 'burning-oil', 'heating-oil']
+			candidates: ['gas-oil', 'burning-oil', 'heavy-fuel-oil']
 		},
 		paraffin: {
 			reason: 'means heating kerosene in the UK and aviation kerosene elsewhere.',
@@ -217,6 +217,23 @@ const SPLIT_MATERIALS: Record<string, { reason: string; candidates: string[] }> 
 		}
 	}
 );
+
+/**
+ * The grades a word for several fuels covers ("heating oil", "coal"), with the
+ * reason it is not one fuel; undefined for any other phrase.
+ */
+export function splitMaterial(
+	phrase: string
+): { phrase: string; reason: string; candidates: string[] } | undefined {
+	const key = normalizeLoose(phrase);
+	const split = SPLIT_MATERIALS[key];
+	return split ? { phrase: key, ...split } : undefined;
+}
+
+/** Every word that names several fuels, as the parser normalises it. */
+export function splitMaterialPhrases(): string[] {
+	return Object.keys(SPLIT_MATERIALS);
+}
 
 /**
  * Grades to offer for a phrase that is BUILT on a split key — "coal dust",

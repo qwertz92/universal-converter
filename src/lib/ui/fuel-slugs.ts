@@ -12,6 +12,8 @@
  * testable in isolation (tests/fuel-slug-resolve.test.ts).
  */
 
+import { splitMaterial, splitMaterialPhrases } from '#lib/conversion/parser.js';
+
 /** The part of a Fuel the resolver reads. */
 export interface FuelSlugSource {
 	id: string;
@@ -78,4 +80,25 @@ export function buildFuelSlugRedirects(fuels: readonly FuelSlugSource[]): Map<st
 		if (!ids.has(alias)) redirects.set(alias, fuel.id);
 	}
 	return redirects;
+}
+
+/**
+ * A slug that names several fuels — /fuels/heating-oil, /fuels/coal — and the
+ * grades to offer for it, as the converter offers them for "1 L heating oil".
+ * Undefined for any other slug.
+ */
+export function splitFuelPage(
+	slug: string
+): { phrase: string; reason: string; candidates: string[] } | undefined {
+	return splitMaterial(slug.replace(/[-_]+/g, ' '));
+}
+
+/**
+ * The prerendered slugs of those words. ASCII only: /fuels/heizöl has no
+ * file of its own and reaches the same page at runtime, through the app shell.
+ */
+export function splitFuelSlugs(): string[] {
+	return splitMaterialPhrases()
+		.map((p) => p.replace(/\s+/g, '-'))
+		.filter((s) => /^[a-z0-9-]+$/.test(s));
 }

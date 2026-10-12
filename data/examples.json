@@ -87,11 +87,11 @@
 			"notes": "Petrol: mass, energy, and CO2/CO2e emissions per litre."
 		},
 		{
-			"id": "ex-1-l-heating-oil",
+			"id": "ex-1-l-heavy-fuel-oil",
 			"input": "1 liter fuel oil",
 			"label": "1 L fuel oil",
 			"category": "fuel",
-			"notes": "Heating oil (Fuel Oil grade): mass, energy, emissions."
+			"notes": "Heavy (residual) fuel oil, DESNZ Fuel Oil: mass, energy, emissions."
 		},
 		{
 			"id": "ex-1-barrel-crude",

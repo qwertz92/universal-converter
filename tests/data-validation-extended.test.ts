@@ -438,7 +438,7 @@ describe('§13.5 every spec §8.5 fuel exists in the catalog', () => {
 		'crude-oil',
 		'gasoline',
 		'diesel',
-		'heating-oil',
+		'heavy-fuel-oil',
 		'kerosene',
 		'lpg',
 		'propane',

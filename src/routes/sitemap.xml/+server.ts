@@ -14,6 +14,7 @@
  */
 import { allFuels, allUnits } from '#lib/ui/engine.js';
 import { LEARN_TOPICS } from '#lib/content/learn.js';
+import { splitFuelSlugs } from '#lib/ui/fuel-slugs.js';
 import type { RequestHandler } from './$types';
 
 export const prerender = true;
@@ -38,6 +39,8 @@ function allPaths(): string[] {
 		...STATIC_PATHS,
 		...allUnits().map((u) => `/units/${u.id}`),
 		...allFuels().map((f) => `/fuels/${f.id}`),
+		// Words that name several fuels (/fuels/heating-oil): a page offering the grades.
+		...splitFuelSlugs().map((slug) => `/fuels/${slug}`),
 		...LEARN_TOPICS.map((t) => `/learn/${t.slug}`)
 	];
 }

@@ -24,7 +24,7 @@
 			"typical_ranges": "Physical crude density varies by grade (~800–950 kg/m³, light vs heavy); a serious primary density was NOT FOUND in this pass, so density is omitted. The energy in one physical barrel of crude is therefore not available either: it would take a density we do not have. It is in any case NOT the same quantity as 'boe' (fixed 5.8 MMBTU convention).",
 			"source_refs": ["ipcc-2006-v2"],
 			"notes": "This is a generic crude oil figure, based on IPCC 2006 global default values; there is no matching DESNZ entry. Density is deliberately left out, because we could not find it in a reliable primary source, so volume-to-mass conversions show 'not available' instead of a made-up number.",
-			"related_fuels": ["heating-oil"],
+			"related_fuels": ["heavy-fuel-oil"],
 			"warnings": [
 				"Crude oil is not a single substance: density and energy content vary by grade (API gravity). No sourced density exists for generic crude, so volume↔mass and volume↔energy answer 'not available' rather than estimating; the energy per kilogram is a global default, not a property of a specific oil.",
 				"A physical barrel of crude is NOT the same as 'boe' (barrel of oil equivalent), which is a fixed 5.8 MMBTU energy-equivalence convention."
@@ -290,14 +290,14 @@
 				}
 			],
 			"emission_factor_ids": ["gas-oil-co2-desnz", "gas-oil-co2e-desnz"],
-			"related_fuels": ["diesel", "mineral-diesel", "heating-oil"],
+			"related_fuels": ["diesel", "mineral-diesel", "heavy-fuel-oil"],
 			"source_refs": ["uk-desnz-ghg-2025"],
 			"notes": "DESNZ 2025 'Gas oil' — the UK term for off-road diesel, dyed red for duty purposes and used in agriculture, construction and static plant. Chemically close to road diesel but NOT the same numbers: 853.971 kg/m³ and 2.75541 kgCO2e/L against road diesel's 832.361 kg/m³ and 2.57082 kgCO2e/L, about 7% more CO2e per litre. No per-litre calorific value is recorded for this fuel in docs/research-notes.md §4.3 — only the per-tonne Net/Gross CV — so per-litre energy is derived from mass via the density above and labeled accordingly.",
 			"warnings": []
 		},
 		{
-			"id": "heating-oil",
-			"names": ["fuel oil", "heavy fuel oil"],
+			"id": "heavy-fuel-oil",
+			"names": ["heavy fuel oil", "fuel oil"],
 			"aliases": [
 				"residual fuel oil",
 				"hfo",
@@ -345,7 +345,7 @@
 					"notes": "DESNZ 2025 'Fuel Oil' Gross CV 11.841 kWh/L."
 				}
 			],
-			"emission_factor_ids": ["heating-oil-co2-desnz", "heating-oil-co2e-desnz"],
+			"emission_factor_ids": ["heavy-fuel-oil-co2-desnz", "heavy-fuel-oil-co2e-desnz"],
 			"source_refs": ["uk-desnz-ghg-2025"],
 			"notes": "DESNZ has no single 'heating oil' label. This entry uses DESNZ 'Fuel Oil' (heavier industrial/boiler grade). UK DOMESTIC heating oil is usually 'Gas Oil' (see diesel notes) or kerosene-type 'Burning Oil' (see kerosene). IPCC 2006 Residual Fuel Oil NCV 40.4 MJ/kg, CO2 77,400 kg/TJ; Gas/Diesel Oil is the alternative mapping. EIA US: No.2 heating oil ~138,500 Btu/gal.",
 			"warnings": [
@@ -454,7 +454,7 @@
 				}
 			],
 			"emission_factor_ids": ["burning-oil-co2-desnz", "burning-oil-co2e-desnz"],
-			"related_fuels": ["kerosene", "heating-oil"],
+			"related_fuels": ["kerosene", "heavy-fuel-oil"],
 			"source_refs": ["uk-desnz-ghg-2025"],
 			"notes": "DESNZ 2025 'Burning Oil' — the kerosene grade burned in UK domestic heating boilers, sold as '28 second oil'. Distinct from aviation kerosene (the 'kerosene' entry, DESNZ 'Aviation Turbine Fuel') and from the heavier heating oil / gas oil grades. Beware 'home heating oil': in the UK it usually means this fuel, in the US it means No. 2 fuel oil — so the term is deliberately not an alias here.",
 			"warnings": []

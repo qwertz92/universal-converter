@@ -307,7 +307,7 @@ no density in that source); coal has no density (sold by mass).
 | crude-oil | oil | — | Y | — | Y | — | — | IPCC 2006 |
 | gasoline | oil | Y | Y | Y | Y | Y | — | DESNZ 2025 |
 | diesel | oil | Y | Y | Y | Y | Y | — | DESNZ 2025 |
-| heating-oil | oil | Y | Y | Y | Y | Y | — | DESNZ 2025 |
+| heavy-fuel-oil | oil | Y | Y | Y | Y | Y | — | DESNZ 2025 |
 | kerosene | oil | Y | Y | Y | Y | Y | — | DESNZ 2025 |
 | lpg | gas | Y | Y | Y | Y | Y | — | DESNZ 2025 |
 | propane | gas | Y | Y | Y | Y | Y | — | DESNZ 2025 |

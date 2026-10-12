@@ -157,7 +157,7 @@ describe('§13.2 parser — German aliases (real catalog)', () => {
 	});
 
 	it('"1 kg heizöl" offers the grades instead of picking one', () => {
-		// It used to resolve to the catalog's `heating-oil` entry, which is DESNZ
+		// It used to resolve to the catalog's heavy fuel oil entry, which is DESNZ
 		// "Fuel Oil" — the residual bunker grade at 983 kg/m³. German/Austrian
 		// Heizöl EL is a gasoil-grade distillate, so every answer was ~15% high
 		// and looked fully sourced. No source equates the two, so the honest move
@@ -168,7 +168,7 @@ describe('§13.2 parser — German aliases (real catalog)', () => {
 			expect(r.error.kind).toBe('unknown_fuel');
 			expect(r.error.suggestions).toContain('gas oil');
 			expect(r.error.suggestions).toContain('burning oil');
-			expect(r.error.suggestions).toContain('fuel oil');
+			expect(r.error.suggestions).toContain('heavy fuel oil');
 		}
 	});
 

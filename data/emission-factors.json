@@ -190,8 +190,8 @@
 			"notes": "DESNZ 2025 total 2.66155 kgCO2e/L (CO2 2.62818 + CH4 0.00029 + N2O 0.03308). GWP set per DESNZ 2025 methodology (IPCC AR5, 100-yr)."
 		},
 		{
-			"id": "heating-oil-co2-desnz",
-			"fuel_id": "heating-oil",
+			"id": "heavy-fuel-oil-co2-desnz",
+			"fuel_id": "heavy-fuel-oil",
 			"pollutant": "CO2",
 			"metric": "mass_per_volume",
 			"value": "3.16262",
@@ -204,8 +204,8 @@
 			"notes": "DESNZ 2025 'Fuel Oil' CO2 component 3.16262 kg CO2/L (of 3.17492 kgCO2e/L total; CH4 0.0053, N2O 0.00701)."
 		},
 		{
-			"id": "heating-oil-co2e-desnz",
-			"fuel_id": "heating-oil",
+			"id": "heavy-fuel-oil-co2e-desnz",
+			"fuel_id": "heavy-fuel-oil",
 			"pollutant": "CO2e",
 			"metric": "mass_per_volume",
 			"value": "3.17492",

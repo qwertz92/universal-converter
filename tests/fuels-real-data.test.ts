@@ -150,10 +150,9 @@ describe('§13.3 barrel crude oil -> energy degrades gracefully per catalog (no 
 describe('§13.3 every fuel in the catalog: available heating values produce basis-labeled, sourced results', () => {
 	// Use a representative amount unit per fuel (mass-based if the fuel has no
 	// density; otherwise volume, matching how the fuel is naturally metered).
-	// Query by the fuel's NAME, not by its id spelled out. `heating-oil` keeps
-	// that id so its indexed URL stays valid, but the entry is DESNZ "Fuel Oil"
-	// and "heating oil" is deliberately an ambiguity prompt now (it covers three
-	// grades that differ by up to 15% per litre).
+	// Query by the fuel's NAME, not by its id spelled out: "heating oil" is
+	// deliberately an ambiguity prompt (it covers three grades that differ by up
+	// to 15% per litre), so an id read as words can name no fuel.
 	function representativeInput(name: string, hasDensity: boolean): string {
 		const unit = hasDensity ? 'L' : 'kg';
 		return `1 ${unit} ${name}`;
