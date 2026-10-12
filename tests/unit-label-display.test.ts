@@ -12,7 +12,11 @@ describe('displayUnitLabel', () => {
 		['kg CO2', 'kg CO₂'],
 		['kg CO2e', 'kg CO₂e'],
 		['gCO2e/kWh', 'gCO₂e/kWh'],
-		['t CO2e', 't CO₂e']
+		['t CO2e', 't CO₂e'],
+		// The data writes per-volume units both ways (kgCO2/m³ but kgCO2e/m3).
+		['kgCO2e/m3', 'kgCO₂e/m³'],
+		['kg/m3', 'kg/m³'],
+		['g/cm3', 'g/cm³']
 	])('%s prints as %s', (label, shown) => {
 		expect(displayUnitLabel(label)).toBe(shown);
 	});
