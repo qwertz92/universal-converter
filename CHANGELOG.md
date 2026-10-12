@@ -16,7 +16,11 @@ All notable changes to Universal Converter. Versioning follows semver
   exactly the units the engine can answer for the chosen unit and fuel: each
   is asked for explicitly, so `10 L diesel` offers lb and therm but
   `10 kWh diesel` no longer offers litres. A unit or fuel change that leaves
-  the chosen target without an answer falls back to "Everything".
+  the chosen target without an answer falls back to "Everything", and the
+  list follows the chosen heating-value basis (LHV or HHV).
+- **All five guided tasks are visible on a phone.** The task strip scrolled
+  sideways, so at 375px "Power × time" was cut off and "Cost" was off-screen;
+  it is now two even rows (three and two) below 640px.
 - **A price per MWh (or any unit the default answer does not list) works.**
   `100 m3 natural gas at 90 EUR/MWh` returned "context required"; the MWh
   figure is now derived exactly from the kWh row, as a requested target is.
