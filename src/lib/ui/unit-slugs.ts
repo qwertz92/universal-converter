@@ -165,3 +165,39 @@ export function caseVariantUnits(slug: string, units: Unit[]): Unit[] {
 	if (!folded) return [];
 	return units.filter((u) => u.symbols.some((s) => s.toLowerCase() === folded));
 }
+
+/** What a `_redirects` source path segment may hold; case is kept. */
+const EXACT_SLUG_SAFE = /^[A-Za-z0-9_+-]+$/;
+
+/**
+ * Every symbol or alias the runtime resolver accepts exactly as written
+ * ("MW", "mW", "kWh") that has no prerendered file of its own. These cannot be
+ * prerendered — /units/MW and /units/mW would be one file on a case-insensitive
+ * filesystem — so they become rules in the root `_redirects` file, which
+ * Cloudflare Pages matches case-sensitively. Without a rule the static host
+ * answered them with the 404 shell (HTTP 404), which redirected only once the
+ * app booted in the browser.
+ */
+export function buildExactCaseRedirects(units: Unit[]): Map<string, string> {
+	const unitIds = new Set(units.map((u) => u.id));
+	const prerendered = buildUnitSlugRedirects(units);
+	const out = new Map<string, string>();
+	for (const [slug, id] of buildExactSymbolMap(units)) {
+		if (!EXACT_SLUG_SAFE.test(slug) || unitIds.has(slug) || prerendered.has(slug)) continue;
+		out.set(slug, id);
+	}
+	return new Map([...out].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+}
+
+/** The root `_redirects` file: the adapter appends its own rules after these. */
+export function redirectsFileText(redirects: ReadonlyMap<string, string>): string {
+	const lines = [...redirects].map(([slug, id]) => `/units/${slug} /units/${id} 308`);
+	return [
+		'# Generated from data/units.json by tests/exact-case-redirects.test.ts;',
+		'# rewrite with `npx vitest run -u tests/exact-case-redirects.test.ts`.',
+		'# Mixed-case unit symbols (/units/MW, /units/mW) that no prerendered file',
+		'# can hold. Cloudflare Pages matches these case-sensitively.',
+		...lines,
+		''
+	].join('\n');
+}
