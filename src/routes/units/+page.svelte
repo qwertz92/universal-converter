@@ -102,9 +102,9 @@
 
 		<div class="uc-index-results">
 			{#if grouped.length === 0}
-				<!-- min-height holds the space of the suggestions row, so they appear without
-				     moving what is below. -->
-				<div class="min-h-[4.5rem]">
+				<!-- The suggestions render together with this message, so nothing
+				     arrives late and no space is held for them. -->
+				<div>
 					<p class="text-sm" style="color:var(--text-faint)">No units match “{query}”.</p>
 					{#if suggestions.length > 0}
 						<div class="mt-3 flex flex-wrap items-center gap-2">

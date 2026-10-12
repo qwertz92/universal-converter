@@ -292,8 +292,8 @@
 	<!--
 		Live interpretation. Two fixed rows: a statement of what was understood,
 		and a second row that is EITHER the teaching hint OR the one-click unit
-		chips. Both rows always occupy their space and their text is clamped, so
-		the page cannot move while typing — the owner's hard no-layout-shift rule.
+		chips. Both rows always hold content and their text is clamped, so the
+		results below do not bounce on every keystroke while typing.
 		The full text of an error also appears in the result area below, so
 		clamping here loses nothing.
 	-->
