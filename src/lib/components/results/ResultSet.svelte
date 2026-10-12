@@ -17,6 +17,7 @@
 	import KeyFigures from './KeyFigures.svelte';
 	import { keyFigures } from '#lib/ui/key-figures.js';
 	import { unitById } from '#lib/ui/engine.js';
+	import { displayUnitLabel } from '#lib/formatting/units.js';
 
 	let {
 		resultSet,
@@ -66,11 +67,11 @@
 				     what was asked, and everything below is supporting context. -->
 					<div class="text-lg font-semibold sm:text-xl" style="color:var(--text)">
 						<span class="uc-num">{input.value}</span>
-						<span style="color:var(--text-muted)">{input.unit_label}</span>
+						<span style="color:var(--text-muted)">{displayUnitLabel(input.unit_label)}</span>
 						{#if input.fuel_label}<span style="color:var(--accent)"> {input.fuel_label}</span>{/if}
 						<span class="mx-1.5" style="color:var(--text-faint)">=</span>
 						<span class="uc-num text-2xl font-bold tracking-tight sm:text-3xl">{answer.value}</span>
-						<span style="color:var(--text-muted)">{answer.unit_label}</span>
+						<span style="color:var(--text-muted)">{displayUnitLabel(answer.unit_label)}</span>
 					</div>
 					<ExactnessBadge exactness={answer.exactness} />
 					<CopyButton text={answer.raw ?? answer.value ?? ''} label="Copy" compact />
@@ -78,7 +79,7 @@
 			{:else}
 				<div class="mt-0.5 text-lg font-semibold" style="color:var(--text)">
 					<span class="uc-num">{input.value}</span>
-					<span style="color:var(--text-muted)">{input.unit_label}</span>
+					<span style="color:var(--text-muted)">{displayUnitLabel(input.unit_label)}</span>
 					{#if input.fuel_label}<span style="color:var(--accent)"> · {input.fuel_label}</span>{/if}
 				</div>
 			{/if}

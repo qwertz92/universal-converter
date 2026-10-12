@@ -6,6 +6,7 @@
 	 */
 	import type { KeyFigure } from '#lib/ui/key-figures.js';
 	import ExactnessBadge from '#lib/components/badges/ExactnessBadge.svelte';
+	import { displayUnitLabel } from '#lib/formatting/units.js';
 
 	let { figures }: { figures: KeyFigure[] } = $props();
 </script>
@@ -21,11 +22,16 @@
 				style="border-color:var(--border);background:var(--surface)"
 			>
 				<span class="text-xs font-medium" style="color:var(--text-muted)">{f.label}</span>
-				<span class="flex flex-wrap items-baseline gap-x-1.5">
+				<!-- Number and unit are two lines in every tile. Side by side they wrapped
+				     only in the tiles whose unit is long ("kg CO₂e" dropped under its
+				     number while "kg CO₂" stayed beside it), so neighbours disagreed. -->
+				<span class="flex flex-col">
 					<span class="uc-num text-2xl font-semibold tracking-tight" style="color:var(--text)"
 						>{f.row.value}</span
 					>
-					<span class="text-sm" style="color:var(--text-muted)">{f.row.unit_label}</span>
+					<span class="text-sm" style="color:var(--text-muted)"
+						>{displayUnitLabel(f.row.unit_label)}</span
+					>
 				</span>
 				<span><ExactnessBadge exactness={f.row.exactness} size="xs" /></span>
 			</li>

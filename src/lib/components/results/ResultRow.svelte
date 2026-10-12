@@ -9,6 +9,7 @@
 	import type { ConversionResult } from '#lib/conversion/types.js';
 	import { formatRange, formatValue } from '#lib/formatting/numbers.js';
 	import { resolveSources } from '#lib/ui/engine.js';
+	import { displayUnitLabel } from '#lib/formatting/units.js';
 	import ExactnessBadge from '#lib/components/badges/ExactnessBadge.svelte';
 	import CopyButton from './CopyButton.svelte';
 	import SourceRefs from './SourceRefs.svelte';
@@ -96,11 +97,11 @@
 						{result.value}
 					</span>
 					<span class="text-sm font-medium" style="color:var(--text-muted)"
-						>{result.unit_label}</span
+						>{displayUnitLabel(result.unit_label)}</span
 					>
 					{#if rangeDisplay}
 						<span class="uc-num text-xs" style="color:var(--text-muted)"
-							>range {rangeDisplay} {result.unit_label}</span
+							>range {rangeDisplay} {displayUnitLabel(result.unit_label)}</span
 						>
 					{/if}
 				</div>
@@ -212,7 +213,9 @@
 								>
 							{/if}
 						</span>
-						<span class="uc-num" style="color:var(--text)">{ex.value} {ex.unit_label}</span>
+						<span class="uc-num" style="color:var(--text)"
+							>{ex.value} {displayUnitLabel(ex.unit_label)}</span
+						>
 					</li>
 				{/each}
 			</ul>
