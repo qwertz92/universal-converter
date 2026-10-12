@@ -661,6 +661,7 @@
 			<GuidedForm
 				bind:form
 				bind:grid
+				{basis}
 				{units}
 				{fuels}
 				onchange={onFormChange}

@@ -10,7 +10,7 @@
 	 * fields — the reader's own click, so the results moving with it is
 	 * expected; no space is held empty for a task that is not shown.
 	 */
-	import type { Dimension, Fuel, Unit } from '#lib/conversion/types.js';
+	import type { Dimension, Fuel, HeatingBasis, Unit } from '#lib/conversion/types.js';
 	import { tick } from 'svelte';
 	import { DIMENSION_LABEL, engine, gridPickerOptions } from '#lib/ui/engine.js';
 	import { displayUnitLabel } from '#lib/formatting/units.js';
@@ -30,6 +30,7 @@
 	let {
 		form = $bindable(),
 		grid = $bindable(''),
+		basis = 'lhv',
 		units,
 		fuels,
 		onchange,
@@ -39,6 +40,8 @@
 	}: {
 		form: GuidedState;
 		grid?: string;
+		/** The reader's heating-value basis: which targets have an answer depends on it. */
+		basis?: HeatingBasis;
 		units: Unit[];
 		fuels: Fuel[];
 		/** Called after every edit; the parent re-runs the conversion. */
@@ -88,7 +91,9 @@
 
 	const unit = $derived(units.find((u) => u.id === form.unitId));
 	const unitOptions = $derived(unitGroups(unitDimensions(form.task)));
-	const convert = (text: string) => engine().convertText(text);
+	// With the reader's basis: crude oil has a net but no gross value per kg, so
+	// under HHV 10 kWh of it has no mass figure to offer.
+	const convert = (text: string) => engine().convertText(text, { basis });
 	// Fuel form: only targets the engine produces a value for (10 kWh of diesel
 	// has no litre figure), each asked for explicitly. The current target stays
 	// listed so a shared link asking for one still shows it, and gets its honest
