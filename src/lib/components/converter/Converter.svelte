@@ -225,9 +225,12 @@
 		pushUrl();
 		// A task tab's worked example is not something the reader asked for;
 		// only a query they changed goes into "recent".
-		if (composed !== composeQuery(defaultState(form.task), units, fuels)) rememberSoon();
+		if (composed !== composeQuery(defaultState(form.task), units, fuels)) rememberSoon(composed);
 	}, 150);
-	const rememberSoon = debounce(() => remember(queryText), 1500);
+	// Takes the query it was scheduled for: reading queryText when it fires
+	// recorded a task tab's worked example if the tab was clicked within the
+	// delay after an edit.
+	const rememberSoon = debounce((text: string) => remember(text), 1500);
 
 	// A typed query no form can hold ("100 kWh at 85% efficiency", a half-typed
 	// one) is kept here when switching to the guided mode, which then opens on
