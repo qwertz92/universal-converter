@@ -84,21 +84,34 @@
 	target row carries an accent tint so the answer stands out in its group.
 -->
 <div
-	class="-mx-2 rounded-lg px-2 py-2"
+	class="@container -mx-2 rounded-lg px-2 py-2"
 	style={result.is_target
 		? 'background:color-mix(in srgb, var(--accent) 9%, transparent)'
 		: undefined}
 >
-	<div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-		<div class="min-w-0 flex-1">
+	<!-- The layout follows the ROW's width (container query), not the screen's: the
+	     same row is 275px wide on a phone and again in a half-width card on a
+	     tablet, and both squeezed the value into whatever the badge and buttons
+	     left over, so the unit dropped under the number on some rows only. Below
+	     25rem the badge sits under the value and the buttons span both lines, so
+	     every row has the same two-line shape; from 25rem up all three share one
+	     line. -->
+	<div
+		class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 @[25rem]:grid-cols-[minmax(0,1fr)_auto_auto]"
+	>
+		<div class="min-w-0">
 			{#if hasValue}
 				<div class="flex flex-wrap items-baseline gap-x-2">
-					<span class="uc-num text-lg font-semibold tracking-tight" style="color:var(--text)">
-						{result.value}
+					<!-- Value and unit never part: a unit alone on the next line reads as a
+					     different row. Only the range note may wrap. -->
+					<span class="inline-flex items-baseline gap-x-2 whitespace-nowrap">
+						<span class="uc-num text-lg font-semibold tracking-tight" style="color:var(--text)">
+							{result.value}
+						</span>
+						<span class="text-sm font-medium" style="color:var(--text-muted)"
+							>{displayUnitLabel(result.unit_label)}</span
+						>
 					</span>
-					<span class="text-sm font-medium" style="color:var(--text-muted)"
-						>{displayUnitLabel(result.unit_label)}</span
-					>
 					{#if rangeDisplay}
 						<span class="uc-num text-xs" style="color:var(--text-muted)"
 							>range {rangeDisplay} {displayUnitLabel(result.unit_label)}</span
@@ -125,21 +138,28 @@
 			{/if}
 		</div>
 
-		<div class="ml-auto flex shrink-0 items-center gap-1.5">
+		<div
+			class="col-start-1 row-start-2 justify-self-start @[25rem]:col-start-2 @[25rem]:row-start-1"
+		>
 			<ExactnessBadge exactness={result.exactness} />
+		</div>
+
+		<div
+			class="col-start-2 row-span-2 row-start-1 flex items-center gap-1.5 @[25rem]:col-start-3 @[25rem]:row-span-1"
+		>
 			{#if hasValue}
 				<CopyButton text={copyValue} label="Copy {result.value} {result.unit_label}" iconOnly />
 			{/if}
 			{#if hasDetail}
 				<!-- The visible word never changes ("Details"), only the chevron and
 				     the accessible state do — so toggling cannot resize the cluster
-				     and re-wrap the value opposite it. Below `sm` the word is dropped
-				     (the accessible name stays): on a phone it pushed the unit onto a
-				     second line on most rows. -->
+				     and re-wrap the value opposite it. Below `@xl` (a narrow row)
+				     the word is dropped; the accessible name stays. -->
 				<button
 					type="button"
 					class="inline-flex h-9 min-w-9 items-center justify-center gap-1 rounded-md border px-2 text-xs font-medium transition-colors hover:bg-[var(--surface-2)] sm:h-8"
 					style="border-color:var(--border);color:var(--text-muted)"
+					title="Details"
 					onclick={() => (expanded = !expanded)}
 					aria-expanded={expanded}
 					aria-controls={detailId}
@@ -159,7 +179,7 @@
 					     carries open/closed. A label that flipped to "Hide details"
 					     was read as "Hide details, expanded" — the state twice. The
 					     value makes each row's button distinguishable by name. -->
-					<span class="sr-only sm:not-sr-only">Details</span><span class="sr-only"
+					<span class="sr-only @xl:not-sr-only">Details</span><span class="sr-only"
 						>{` for ${result.value ?? 'this row'} ${result.unit_label}`}</span
 					>
 				</button>
@@ -169,7 +189,7 @@
 					class="invisible inline-flex h-9 min-w-9 items-center justify-center gap-1 rounded-md border px-2 text-xs font-medium sm:h-8"
 				>
 					<svg width="13" height="13" viewBox="0 0 24 24" fill="none"></svg>
-					<span class="hidden sm:inline">Details</span>
+					<span class="hidden @xl:inline">Details</span>
 				</span>
 			{/if}
 		</div>
