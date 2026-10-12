@@ -276,14 +276,14 @@
 {/snippet}
 
 <div class="space-y-3">
-	<!-- What is being converted. One line: a sideways strip on a phone (with
-	     room for the focus ring), a fixed five-column grid from sm. Selecting
-	     changes colours only. -->
+	<!-- What is being converted. On a phone the five tasks sit in two even
+	     rows, three and two, on a six-column grid: a sideways strip hid "Cost"
+	     off-screen at 375px, and a task nobody sees is never chosen. One row of
+	     five from sm. Selecting changes colours only. -->
 	<div
 		role="radiogroup"
 		aria-label="What do you want to convert?"
-		class="-my-1 flex gap-1.5 overflow-x-auto py-1 sm:grid sm:grid-cols-5 sm:overflow-visible"
-		style="scrollbar-width:none"
+		class="grid grid-cols-6 gap-1.5 sm:grid-cols-5"
 	>
 		{#each GUIDED_TASKS as t, i (t.id)}
 			<button
@@ -293,7 +293,9 @@
 				aria-checked={form.task === t.id}
 				tabindex={form.task === t.id ? 0 : -1}
 				onkeydown={(e) => onTaskKeydown(e, i)}
-				class="min-h-10 shrink-0 rounded-lg border px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors"
+				class="{i < 3
+					? 'col-span-2'
+					: 'col-span-3'} min-h-10 rounded-lg border px-2 py-2 text-sm font-medium whitespace-nowrap transition-colors sm:col-span-1 sm:px-3"
 				style={form.task === t.id
 					? 'background:var(--accent);border-color:var(--accent);color:var(--accent-contrast)'
 					: 'background:var(--surface);border-color:var(--border);color:var(--text-muted)'}
