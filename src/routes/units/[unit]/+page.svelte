@@ -4,6 +4,7 @@
 	import Breadcrumbs from '#lib/components/layout/Breadcrumbs.svelte';
 	import ExactnessBadge from '#lib/components/badges/ExactnessBadge.svelte';
 	import { DIMENSION_LABEL } from '#lib/ui/engine.js';
+	import { displayUnitLabel } from '#lib/formatting/units.js';
 	import { EXACTNESS_META } from '#lib/ui/exactness.js';
 	import type { PageData } from './$types';
 
@@ -25,12 +26,14 @@
 
 	<header class="mb-8">
 		<div class="flex flex-wrap items-center gap-3">
-			<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">{unit.names[0]}</h1>
+			<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">
+				{displayUnitLabel(unit.names[0])}
+			</h1>
 			<span
 				class="uc-num rounded-md border px-2 py-1 text-sm font-medium"
 				style="border-color:var(--border);color:var(--text-muted)"
 			>
-				{unit.symbols[0]}
+				{displayUnitLabel(unit.symbols[0])}
 			</span>
 			<ExactnessBadge exactness={unit.exactness} />
 		</div>
@@ -147,7 +150,7 @@
 					Common conversions
 				</h2>
 				<span class="uc-num text-xs" style="color:var(--text-faint)"
-					>for 1&nbsp;{unit.symbols[0]}</span
+					>for 1&nbsp;{displayUnitLabel(unit.symbols[0])}</span
 				>
 			</div>
 			<div class="overflow-x-auto">

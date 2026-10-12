@@ -15,6 +15,7 @@
 	 * rendered in the result area below.
 	 */
 	import { tick } from 'svelte';
+	import { displayUnitLabel } from '#lib/formatting/units.js';
 	import type { Fuel, ParseResult, Unit } from '#lib/conversion/types.js';
 	import {
 		describeQuery,
@@ -340,8 +341,8 @@
 						: `Pin ${pinnable?.symbol} so a bare number is enough`}
 				>
 					{#if anyPin}
-						📌 {pinnedUnit?.symbols[0] ?? ''}{pinnedTarget
-							? `${pinnedUnit ? ' ' : ''}→ ${pinnedTarget.symbols[0]}`
+						📌 {displayUnitLabel(pinnedUnit?.symbols[0] ?? '')}{pinnedTarget
+							? `${pinnedUnit ? ' ' : ''}→ ${displayUnitLabel(pinnedTarget.symbols[0])}`
 							: ''}
 					{:else}
 						Pin {pinnable?.symbol}
@@ -368,7 +369,7 @@
 						onclick={() => appendUnit(unit)}
 						title="Add {unit.names[0]}"
 					>
-						{unit.symbols[0]}
+						{displayUnitLabel(unit.symbols[0])}
 					</button>
 				{/each}
 			{:else}

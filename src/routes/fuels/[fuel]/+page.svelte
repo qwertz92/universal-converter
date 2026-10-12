@@ -5,6 +5,7 @@
 	import ResultSet from '#lib/components/results/ResultSet.svelte';
 	import SourceRefs from '#lib/components/results/SourceRefs.svelte';
 	import { engine, fuelById, unitById } from '#lib/ui/engine.js';
+	import { displayUnitLabel } from '#lib/formatting/units.js';
 	import { basisLabel } from '#lib/fuels/heating-values.js';
 	import { SCOPE_LABEL, POLLUTANT_LABEL } from '#lib/emissions/scopes.js';
 	import type { Density, EmissionFactor, ConversionResultSet } from '#lib/conversion/types.js';
@@ -35,7 +36,9 @@
 	 * underscores instead printed "kg co2e per l", which reads as sloppy on a
 	 * page whose whole job is to look trustworthy about numbers.
 	 */
-	const unitLabel = (id: string) => unitById(id)?.symbols[0] ?? id.replace(/_/g, ' ');
+	// Display only: CO2 is set as CO₂ on screen (the symbol itself stays ASCII).
+	const unitLabel = (id: string) =>
+		displayUnitLabel(unitById(id)?.symbols[0] ?? id.replace(/_/g, ' '));
 
 	/**
 	 * Close relatives (ADR 0005). Variants such as gas oil (red diesel) sit next

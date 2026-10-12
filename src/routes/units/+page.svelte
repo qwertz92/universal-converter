@@ -5,6 +5,7 @@
 	import PageHero from '#lib/components/layout/PageHero.svelte';
 	import ExactnessBadge from '#lib/components/badges/ExactnessBadge.svelte';
 	import { allUnits, DIMENSION_LABEL, DIMENSION_ORDER } from '#lib/ui/engine.js';
+	import { displayUnitLabel } from '#lib/formatting/units.js';
 	import { searchUnits } from '#lib/ui/search.js';
 	import { closestMatches } from '#lib/ui/near-miss.js';
 	import type { Unit } from '#lib/conversion/types.js';
@@ -114,7 +115,7 @@
 									href={resolve(`units/${s.id}`)}
 									class="inline-flex min-h-10 items-center rounded-lg border px-3 text-sm font-semibold transition-colors hover:border-[var(--accent)]"
 									style="border-color:var(--border);background:var(--surface);color:var(--accent)"
-									>{s.names[0]}</a
+									>{displayUnitLabel(s.names[0])}</a
 								>
 							{/each}
 						</div>
@@ -161,10 +162,10 @@
 										<span class="contents sm:block sm:min-w-0">
 											<span
 												class="block w-full text-sm leading-snug font-medium break-words sm:w-auto sm:truncate"
-												style="color:var(--text)">{u.names[0]}</span
+												style="color:var(--text)">{displayUnitLabel(u.names[0])}</span
 											>
 											<span class="uc-num block text-xs" style="color:var(--text-faint)"
-												>{u.symbols[0]}</span
+												>{displayUnitLabel(u.symbols[0])}</span
 											>
 										</span>
 										<!-- Non-interactive: this badge sits inside the card's own

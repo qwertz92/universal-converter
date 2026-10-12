@@ -13,6 +13,7 @@
 	import type { Dimension, Fuel, Unit } from '#lib/conversion/types.js';
 	import { tick } from 'svelte';
 	import { DIMENSION_LABEL, engine, gridPickerOptions } from '#lib/ui/engine.js';
+	import { displayUnitLabel } from '#lib/formatting/units.js';
 	import { nextRadioIndex } from '#lib/ui/radio-keys.js';
 	import {
 		CURRENCIES,
@@ -237,7 +238,9 @@
 			{#each groups as g (g.label)}
 				<optgroup label={g.label}>
 					{#each g.units as u (u.id)}
-						<option value={u.id}>{u.symbols[0]} — {u.names[0]}</option>
+						<option value={u.id}
+							>{displayUnitLabel(u.symbols[0])} — {displayUnitLabel(u.names[0])}</option
+						>
 					{/each}
 				</optgroup>
 			{/each}
