@@ -136,25 +136,31 @@ export type ConvertText = (text: string) => ConversionResultSet | { error: Parse
 
 /**
  * The units the fuel form's "Answer in" list can offer for this unit and
- * fuel: those the engine actually produces a value for. 10 kWh of diesel has
- * no litre figure (no heating value reaches back to a volume), and offering
- * it only led to a "no conversion path" row. Undefined when the engine has
- * no answer at all, so the caller keeps its full list.
+ * fuel: each candidate is asked for explicitly ("10 L diesel to lb") and kept
+ * only when that question gets a number. 10 kWh of diesel has no litre figure
+ * (no heating value reaches back to a volume), and offering it only led to a
+ * "no conversion path" row. Asking per candidate rather than reading the
+ * default answer matters: the default answer lists a handful of units, while
+ * pounds, therms or grams of CO₂ are answerable on request.
  */
-export function reachableTargets(
+export function answerableTargets(
 	unitId: string,
 	fuelId: string,
+	candidates: Unit[],
 	units: Unit[],
 	fuels: Fuel[],
 	convert: ConvertText
-): Set<string> | undefined {
-	const text = composeQuery({ ...defaultState('fuel'), unitId, fuelId }, units, fuels);
-	if (!text) return undefined;
-	const out = convert(text);
-	if ('error' in out) return undefined;
-	return new Set(
-		out.groups.flatMap((g) => g.results.filter((r) => r.value !== null).map((r) => r.unit_id))
-	);
+): Unit[] {
+	return candidates.filter((target) => {
+		const text = composeQuery(
+			{ ...defaultState('fuel'), unitId, fuelId, targetId: target.id },
+			units,
+			fuels
+		);
+		if (!text) return false;
+		const out = convert(text);
+		return !('error' in out) && out.target?.resolved === true;
+	});
 }
 
 /**

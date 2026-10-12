@@ -17,9 +17,9 @@
 	import {
 		CURRENCIES,
 		GUIDED_TASKS,
+		answerableTargets,
 		defaultState,
 		priceablePerUnits,
-		reachableTargets,
 		targetDimensions,
 		unitDimensions,
 		type GuidedState,
@@ -89,11 +89,21 @@
 	const unitOptions = $derived(unitGroups(unitDimensions(form.task)));
 	const convert = (text: string) => engine().convertText(text);
 	// Fuel form: only targets the engine produces a value for (10 kWh of diesel
-	// has no litre figure). The current target stays listed so a shared link
-	// asking for one still shows it, and gets its honest "no path" row.
-	const reachable = $derived(
+	// has no litre figure), each asked for explicitly. The current target stays
+	// listed so a shared link asking for one still shows it, and gets its honest
+	// "no path" row.
+	const answerable = $derived(
 		form.task === 'fuel'
-			? reachableTargets(form.unitId, form.fuelId, units, fuels, convert)
+			? new Set(
+					answerableTargets(
+						form.unitId,
+						form.fuelId,
+						units.filter((u) => targetDimensions('fuel', unit).includes(u.dimension)),
+						units,
+						fuels,
+						convert
+					).map((u) => u.id)
+				)
 			: undefined
 	);
 	const targetOptions = $derived(
@@ -102,7 +112,7 @@
 				...g,
 				units: g.units.filter(
 					(u) =>
-						u.id !== form.unitId && (!reachable || reachable.has(u.id) || u.id === form.targetId)
+						u.id !== form.unitId && (!answerable || answerable.has(u.id) || u.id === form.targetId)
 				)
 			}))
 			.filter((g) => g.units.length > 0)
@@ -162,7 +172,28 @@
 		) {
 			form.targetId = '';
 		}
+		dropUnanswerableTarget();
 		onchange();
+	}
+
+	function fuelChanged(): void {
+		dropUnanswerableTarget();
+		onchange();
+	}
+
+	/**
+	 * The reader's own unit or fuel change can leave the fuel form's target
+	 * without an answer (10 L diesel to mL, then the unit set to kWh). It falls
+	 * back to "Everything", which still holds every figure the old target could
+	 * have shown. A target that arrived in a shared link is left alone — only
+	 * these handlers clear it. The cost form's "Per" is deliberately kept: a
+	 * price of 0.30 EUR/kWh silently turned into 0.30 EUR/L would answer a
+	 * different question, while the kept one gets a row saying to name a fuel.
+	 */
+	function dropUnanswerableTarget(): void {
+		if (form.task === 'fuel' && form.targetId && answerable && !answerable.has(form.targetId)) {
+			form.targetId = '';
+		}
 	}
 
 	const fieldClass = 'h-[42px] w-full min-w-0 rounded-lg border px-3 text-sm outline-none uc-num';
@@ -217,7 +248,13 @@
 {#snippet fuelSelect(id: string, label: string, emptyLabel?: string)}
 	<div class="min-w-0">
 		<label for={id} class={labelClass} style="color:var(--text-muted)">{label}</label>
-		<select {id} bind:value={form.fuelId} {onchange} class={fieldClass} style={fieldStyle}>
+		<select
+			{id}
+			bind:value={form.fuelId}
+			onchange={fuelChanged}
+			class={fieldClass}
+			style={fieldStyle}
+		>
 			{#if emptyLabel}<option value="">{emptyLabel}</option>{/if}
 			{#each fuelGroups as g (g.label)}
 				<optgroup label={g.label}>

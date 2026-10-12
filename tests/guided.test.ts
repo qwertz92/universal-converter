@@ -8,12 +8,12 @@
 import { describe, expect, it } from 'vitest';
 import { getConverter, loadDataBundle } from '#lib/index.js';
 import {
+	answerableTargets,
 	composeQuery,
 	defaultState,
 	GUIDED_TASKS,
 	isAmount,
 	priceablePerUnits,
-	reachableTargets,
 	stateFromQuery,
 	unitDimensions
 } from '#lib/ui/guided.js';
@@ -108,23 +108,44 @@ describe('an incomplete form composes nothing rather than a guess', () => {
 	});
 });
 
-describe('the fuel form offers only targets the engine can answer', () => {
+describe('the fuel form offers exactly the targets the engine can answer', () => {
 	const convert = (t: string) => converter.convertText(t);
-	it('an energy amount of diesel offers no litres and no CO₂ it cannot reach', () => {
-		const reach = reachableTargets('kilowatt_hour', 'diesel', units, fuels, convert);
-		expect(reach).toBeDefined();
-		for (const id of reach!) {
-			const out = converter.convertText(
-				`10 kWh diesel to ${units.find((u) => u.id === id)!.symbols[0]}`
+	const candidates = units.filter((u) =>
+		['energy', 'mass', 'volume', 'emission_mass_co2', 'emission_mass_co2e'].includes(u.dimension)
+	);
+	const resolves = (text: string) => {
+		const out = converter.convertText(text);
+		return !('error' in out) && out.target?.resolved === true;
+	};
+	it('offers a target if and only if asking for it gives a number', () => {
+		for (const [unitId, fuelId] of [
+			['kilowatt_hour', 'diesel'],
+			['liter', 'diesel'],
+			['kilogram', 'natural-gas']
+		] as const) {
+			const offered = new Set(
+				answerableTargets(unitId, fuelId, candidates, units, fuels, convert).map((u) => u.id)
 			);
-			if ('error' in out) throw new Error(out.error.message);
-			const row = out.groups.flatMap((g) => g.results).find((r) => r.is_target);
-			expect(row?.value, id).not.toBeNull();
+			const unit = units.find((u) => u.id === unitId)!;
+			const fuel = fuels.find((f) => f.id === fuelId)!;
+			for (const c of candidates) {
+				const asked = resolves(`10 ${unit.symbols[0]} ${fuel.names[0]} to ${c.symbols[0]}`);
+				expect(offered.has(c.id), `${unitId} ${fuelId} → ${c.id}`).toBe(asked);
+			}
 		}
-		expect(reach!.has('liter')).toBe(false);
 	});
-	it('a volume of diesel reaches kilograms', () => {
-		expect(reachableTargets('liter', 'diesel', units, fuels, convert)?.has('kilogram')).toBe(true);
+	it('10 L of diesel can be answered in pounds and therms, not only the default list', () => {
+		const ids = answerableTargets('liter', 'diesel', candidates, units, fuels, convert).map(
+			(u) => u.id
+		);
+		expect(ids).toContain('pound');
+		expect(ids).toContain('therm');
+	});
+	it('10 kWh of diesel has no litre figure', () => {
+		const ids = answerableTargets('kilowatt_hour', 'diesel', candidates, units, fuels, convert).map(
+			(u) => u.id
+		);
+		expect(ids).not.toContain('liter');
 	});
 });
 
