@@ -194,7 +194,7 @@
 			<p class="mt-2 text-xs leading-relaxed" style="color:var(--text-muted)">
 				Wood and the biofuels show CO₂e from methane and nitrous oxide only. The CO₂ released when
 				biomass burns is a separate figure in the catalog (biogenic CO₂); it is printed under the
-				name and never added to the bar.
+				bar and never added to it.
 			</p>
 		{/if}
 
