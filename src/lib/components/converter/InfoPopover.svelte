@@ -12,8 +12,19 @@
 	 */
 	let {
 		label = 'More information',
+		placement = 'trigger',
 		children
-	}: { label?: string; children: import('svelte').Snippet } = $props();
+	}: {
+		label?: string;
+		/**
+		 * Where the panel is anchored. `trigger` (default) hangs it off the (i)
+		 * button. `row` anchors it to the nearest positioned ancestor, which the
+		 * caller must make `relative`: a trigger that sits mid-line (after a
+		 * heading) cannot hold a 288px panel on a phone on either side of itself.
+		 */
+		placement?: 'trigger' | 'row';
+		children: import('svelte').Snippet;
+	} = $props();
 
 	// Per-instance id: OptionsBar renders two of these side by side, and a
 	// literal would have both buttons claiming to control the same panel.
@@ -45,7 +56,12 @@
 <!-- The margin (left, top, bottom) is the slack the 40px hit area needs: the button's ::after
      reaches 10px past the circle, and its neighbours sit 8px away (the options bar's
      gap-2 and gap-y-2), so without 2.5px of margin it overlapped them by 1–2px. -->
-<span class="relative my-[2.5px] ml-[2.5px] inline-flex" bind:this={rootEl} onfocusout={onFocusOut}>
+<span
+	class="my-[2.5px] ml-[2.5px] inline-flex"
+	class:relative={placement === 'trigger'}
+	bind:this={rootEl}
+	onfocusout={onFocusOut}
+>
 	<button
 		type="button"
 		bind:this={triggerEl}
@@ -70,7 +86,9 @@
 		     aria-controls is what ties the two together while it is open. -->
 		<div
 			id={panelId}
-			class="absolute top-6 right-0 z-30 w-[min(18rem,calc(100vw-2rem))] rounded-lg border p-3 text-sm leading-snug shadow-lg sm:right-auto sm:left-0"
+			class="absolute z-30 rounded-lg border p-3 text-sm leading-snug shadow-lg {placement === 'row'
+				? 'top-full left-0 mt-1 w-[min(18rem,100%)]'
+				: 'top-6 right-0 w-[min(18rem,calc(100vw-2rem))] sm:right-auto sm:left-0'}"
 			style="background:var(--surface);border-color:var(--border);color:var(--text-muted)"
 		>
 			{@render children()}

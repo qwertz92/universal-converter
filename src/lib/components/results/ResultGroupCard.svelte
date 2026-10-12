@@ -5,6 +5,7 @@
 	import { groupMeta } from '#lib/ui/groups.js';
 	import { basisSections } from '#lib/ui/basis-sections.js';
 	import ResultRow from './ResultRow.svelte';
+	import InfoPopover from '#lib/components/converter/InfoPopover.svelte';
 	import { rowHasDetail } from '#lib/ui/result-row.js';
 
 	let {
@@ -71,19 +72,26 @@
 	{#each sections as section, s (s)}
 		{#if section.basis}
 			<div
-				class="mb-1 flex flex-wrap items-baseline justify-between gap-x-3"
+				class="relative mb-1 flex flex-wrap items-baseline justify-between gap-x-3"
 				class:mt-3={s > 0}
 				class:border-t={s > 0}
 				class:pt-3={s > 0}
 				style="border-color:var(--border)"
 			>
-				<h4
-					class="text-xs font-semibold"
-					style="color:var(--text-muted)"
-					title={BASIS_HEADING[section.basis].hint}
-				>
-					{BASIS_HEADING[section.basis].label}
-				</h4>
+				<!-- The one-line gloss was a `title` attribute, which touch screens and
+				     keyboards never show. It is now a popover button, reachable by tap
+				     and by Tab. -->
+				<div class="flex items-center gap-1">
+					<h4 class="text-xs font-semibold" style="color:var(--text-muted)">
+						{BASIS_HEADING[section.basis].label}
+					</h4>
+					<InfoPopover
+						placement="row"
+						label="About {section.basis === 'lhv' ? 'LHV/NCV' : 'HHV/GCV'}"
+					>
+						{BASIS_HEADING[section.basis].hint}
+					</InfoPopover>
+				</div>
 				{#if s === firstBasisSection}
 					<a
 						href={resolve('learn/hhv-vs-lhv')}
