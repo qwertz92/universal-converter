@@ -3,7 +3,8 @@
 	import { resolve } from '$app/paths';
 	import type { ResultGroup, ConversionResult, HeatingBasis } from '#lib/conversion/types.js';
 	import { groupMeta } from '#lib/ui/groups.js';
-	import { basisSections } from '#lib/ui/basis-sections.js';
+	import { basisSections, sharedExactness } from '#lib/ui/basis-sections.js';
+	import ExactnessBadge from '#lib/components/badges/ExactnessBadge.svelte';
 	import ResultRow from './ResultRow.svelte';
 	import InfoPopover from '#lib/components/converter/InfoPopover.svelte';
 	import { rowHasDetail } from '#lib/ui/result-row.js';
@@ -33,7 +34,13 @@
 	// Rows computed from a calorific value are split under a basis heading, so
 	// 356.6 MJ (LHV) and 379.1 MJ (HHV) can never be read as one list of
 	// equivalent figures (rulebook §C.1).
-	const sections = $derived(basisSections(group.results));
+	// Each section states the exactness most of its rows share once, above
+	// them; only a row that differs carries its own badge. Repeating the same
+	// badge on every line said nothing new and made each row two lines tall on
+	// a phone.
+	const sections = $derived(
+		basisSections(group.results).map((sec) => ({ ...sec, shared: sharedExactness(sec.rows) }))
+	);
 	const reserveDetail = $derived(group.results.some(rowHasDetail));
 	// One "What is this?" per card is enough; repeating it per heading is noise.
 	const firstBasisSection = $derived(sections.findIndex((x) => x.basis !== undefined));
@@ -101,10 +108,25 @@
 				{/if}
 			</div>
 		{/if}
+		{#if section.shared}
+			<div class="mt-1 mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+				<ExactnessBadge exactness={section.shared} size="xs" />
+				<span style="color:var(--text-faint)"
+					>{section.rows.every((r) => r.exactness === section.shared)
+						? 'every figure below'
+						: 'every figure below unless marked'}</span
+				>
+			</div>
+		{/if}
 		<div class="divide-y" style="border-color:var(--border)">
 			{#each section.rows as result, i (result.unit_id + result.category + i)}
 				<div style="border-color:var(--border)" class="py-0.5">
-					<ResultRow {result} {contextControl} {reserveDetail} />
+					<ResultRow
+						{result}
+						{contextControl}
+						{reserveDetail}
+						showBadge={result.value === null || result.exactness !== section.shared}
+					/>
 				</div>
 			{/each}
 		</div>

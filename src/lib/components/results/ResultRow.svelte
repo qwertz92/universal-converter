@@ -21,11 +21,14 @@
 		contextControl,
 		/** Keep the Details button's slot even without details, so a group's
 		 *  badges and copy buttons stay in one column. */
-		reserveDetail = false
+		reserveDetail = false,
+		/** False when the card states this row's exactness once above the rows. */
+		showBadge = true
 	}: {
 		result: ConversionResult;
 		contextControl?: import('svelte').Snippet<[ConversionResult]>;
 		reserveDetail?: boolean;
+		showBadge?: boolean;
 	} = $props();
 
 	// Per-instance id: every result set renders a stack of these rows, so a
@@ -96,8 +99,11 @@
 	     25rem the badge sits under the value and the buttons span both lines, so
 	     every row has the same two-line shape; from 25rem up all three share one
 	     line. -->
+	<!-- Without its own badge (the card states the shared one) the row is a
+	     single line at every width: value and unit left, buttons right. -->
 	<div
-		class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 @[25rem]:grid-cols-[minmax(0,1fr)_auto_auto]"
+		class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1"
+		class:@[25rem]:grid-cols-[minmax(0,1fr)_auto_auto]={showBadge}
 	>
 		<div class="min-w-0">
 			{#if hasValue}
@@ -138,14 +144,18 @@
 			{/if}
 		</div>
 
-		<div
-			class="col-start-1 row-start-2 justify-self-start @[25rem]:col-start-2 @[25rem]:row-start-1"
-		>
-			<ExactnessBadge exactness={result.exactness} />
-		</div>
+		{#if showBadge}
+			<div
+				class="col-start-1 row-start-2 justify-self-start @[25rem]:col-start-2 @[25rem]:row-start-1"
+			>
+				<ExactnessBadge exactness={result.exactness} />
+			</div>
+		{/if}
 
 		<div
-			class="col-start-2 row-span-2 row-start-1 flex items-center gap-1.5 @[25rem]:col-start-3 @[25rem]:row-span-1"
+			class={showBadge
+				? 'col-start-2 row-span-2 row-start-1 flex items-center gap-1.5 @[25rem]:col-start-3 @[25rem]:row-span-1'
+				: 'col-start-2 row-start-1 flex items-center gap-1.5'}
 		>
 			{#if hasValue}
 				<CopyButton text={copyValue} label="Copy {result.value} {result.unit_label}" iconOnly />
