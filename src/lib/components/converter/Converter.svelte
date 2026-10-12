@@ -47,6 +47,7 @@
 	import DurationPrompt from './DurationPrompt.svelte';
 	import QuickExamples from './QuickExamples.svelte';
 	import GuidedForm from './GuidedForm.svelte';
+	import { nextRadioIndex } from '#lib/ui/radio-keys.js';
 	import { composeQuery, defaultState, stateFromQuery, type GuidedState } from '#lib/ui/guided.js';
 	import ResultSet from '#lib/components/results/ResultSet.svelte';
 	import ParseErrorNote from '#lib/components/results/ParseErrorNote.svelte';
@@ -222,7 +223,9 @@
 		pickedFuelId = undefined;
 		runConversion(queryText);
 		pushUrl();
-		rememberSoon();
+		// A task tab's worked example is not something the reader asked for;
+		// only a query they changed goes into "recent".
+		if (composed !== composeQuery(defaultState(form.task), units, fuels)) rememberSoon();
 	}, 150);
 	const rememberSoon = debounce(() => remember(queryText), 1500);
 
@@ -238,7 +241,21 @@
 		applyGuided();
 	}
 
-	function setMode(next: 'guided' | 'text'): void {
+	const MODES = [
+		{ id: 'guided', label: 'Guided' },
+		{ id: 'text', label: 'Type a query' }
+	] as const;
+
+	/** Arrow keys switch the mode, as in any radio group; focus stays on it. */
+	function onModeKeydown(event: KeyboardEvent, index: number): void {
+		const next = nextRadioIndex(event.key, index, MODES.length);
+		if (next === undefined) return;
+		event.preventDefault();
+		setMode(MODES[next].id, false);
+		void tick().then(() => document.getElementById(`uc-mode-${MODES[next].id}-${uid}`)?.focus());
+	}
+
+	function setMode(next: 'guided' | 'text', focusField = true): void {
 		if (next === mode) return;
 		if (next === 'text') {
 			if (heldText !== undefined) {
@@ -254,7 +271,7 @@
 				pushUrl();
 			}
 			mode = 'text';
-			tick().then(() => document.getElementById('uc-query')?.focus());
+			if (focusField) void tick().then(() => document.getElementById('uc-query')?.focus());
 			return;
 		}
 		const parsed = engine().parse(effectiveQuery(queryText).text);
@@ -295,8 +312,18 @@
 		// The pin rides along so a shared link reproduces exactly what the sender
 		// saw — "?q=5" alone would be meaningless without it.
 		const pinParam = encodePin(pin, units);
+		// The grid only changes electricity results; written into every link it
+		// lingered in fuel and unit URLs after the Electricity task was left.
+		const parsedNow = engine().parse(effectiveQuery(queryText).text);
+		const usesGrid = parsedNow.ok && parsedNow.query.fuel_id === 'electricity';
+		const urlState: ConverterUrlState = { q: queryText, basis };
+		if (usesGrid) {
+			const g = gridParts(grid);
+			urlState.region = g.region;
+			urlState.year = g.year;
+		}
 		const params = [
-			buildQueryString({ q: queryText, basis, ...gridParts(grid) }).replace(/^\?/, ''),
+			buildQueryString(urlState).replace(/^\?/, ''),
 			pinParam ? `pin=${encodeURIComponent(pinParam)}` : ''
 		]
 			.filter(Boolean)
@@ -571,11 +598,14 @@
 			class="inline-flex rounded-lg border p-0.5"
 			style="border-color:var(--border);background:var(--surface-2)"
 		>
-			{#each [{ id: 'guided', label: 'Guided' }, { id: 'text', label: 'Type a query' }] as const as m (m.id)}
+			{#each MODES as m, i (m.id)}
 				<button
 					type="button"
 					role="radio"
+					id="uc-mode-{m.id}-{uid}"
 					aria-checked={mode === m.id}
+					tabindex={mode === m.id ? 0 : -1}
+					onkeydown={(e) => onModeKeydown(e, i)}
 					class="min-h-9 rounded-md px-3 text-sm font-medium transition-colors"
 					style={mode === m.id
 						? 'background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgb(0 0 0 / 0.08)'
@@ -616,11 +646,14 @@
 		<div id={optionsId}><OptionsBar bind:basis bind:grid /></div>
 	{/if}
 
-	<!-- The input area reserves the guided form's height in both modes, so
-	     switching modes does not move the results below. flow-root keeps the
-	     task strip's negative margin inside it; otherwise that margin escaped
-	     through the box and the guided mode sat 4px higher than the text mode. -->
-	<div class="flow-root min-h-[20.75rem] sm:min-h-[16rem]">
+	<!-- The input area is as tall as what it shows. It used to reserve the
+	     tallest task's height so a task or mode switch never moved the results,
+	     but that left up to ~100px of empty space under the shorter forms on a
+	     phone. A switch is the reader's own click, and a shift right after one's
+	     own input is expected (web.dev/articles/cls excludes shifts within 500 ms
+	     of input); empty space is paid on every visit. flow-root keeps the task
+	     strip's negative margin inside this box. -->
+	<div class="flow-root">
 		{#if mode === 'guided'}
 			<GuidedForm
 				bind:form

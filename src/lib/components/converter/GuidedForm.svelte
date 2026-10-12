@@ -5,16 +5,21 @@
 	 * COMPOSES a query in the text grammar (`#lib/ui/guided.js`) — the engine, the
 	 * guards and the shared URL are the same as the text mode's.
 	 *
-	 * Layout stability: the task buttons are a fixed grid, the blurb is one
-	 * clamped line, and the parent (Converter) reserves the height of the
-	 * tallest task (cost), so switching tasks never moves the results below.
+	 * Layout: the task buttons are a fixed grid and the blurb one clamped line,
+	 * so nothing moves while typing. Switching tasks resizes the form to its
+	 * fields — the reader's own click, so the results moving with it is
+	 * expected; no space is held empty for a task that is not shown.
 	 */
 	import type { Dimension, Fuel, Unit } from '#lib/conversion/types.js';
-	import { DIMENSION_LABEL, gridPickerOptions } from '#lib/ui/engine.js';
+	import { tick } from 'svelte';
+	import { DIMENSION_LABEL, engine, gridPickerOptions } from '#lib/ui/engine.js';
+	import { nextRadioIndex } from '#lib/ui/radio-keys.js';
 	import {
 		CURRENCIES,
 		GUIDED_TASKS,
 		defaultState,
+		priceablePerUnits,
+		reachableTargets,
 		targetDimensions,
 		unitDimensions,
 		type GuidedState,
@@ -82,14 +87,50 @@
 
 	const unit = $derived(units.find((u) => u.id === form.unitId));
 	const unitOptions = $derived(unitGroups(unitDimensions(form.task)));
+	const convert = (text: string) => engine().convertText(text);
+	// Fuel form: only targets the engine produces a value for (10 kWh of diesel
+	// has no litre figure). The current target stays listed so a shared link
+	// asking for one still shows it, and gets its honest "no path" row.
+	const reachable = $derived(
+		form.task === 'fuel'
+			? reachableTargets(form.unitId, form.fuelId, units, fuels, convert)
+			: undefined
+	);
 	const targetOptions = $derived(
-		unitGroups(targetDimensions(form.task, unit)).map((g) => ({
-			...g,
-			units: g.units.filter((u) => u.id !== form.unitId)
-		}))
+		unitGroups(targetDimensions(form.task, unit))
+			.map((g) => ({
+				...g,
+				units: g.units.filter(
+					(u) =>
+						u.id !== form.unitId && (!reachable || reachable.has(u.id) || u.id === form.targetId)
+				)
+			}))
+			.filter((g) => g.units.length > 0)
 	);
 	const timeUnits = $derived(units.filter((u) => u.dimension === 'time'));
-	const perUnitOptions = $derived(unitGroups(['energy', 'volume', 'mass']));
+	// Cost form: only per-units a price can be applied to for this amount and
+	// fuel (a price per ft³ of an amount in kWh has no path).
+	const perUnitOptions = $derived.by(() => {
+		if (form.task !== 'cost') return [];
+		const candidates = units.filter((u) => ['energy', 'volume', 'mass'].includes(u.dimension));
+		const ok = new Set(
+			priceablePerUnits(
+				form.unitId,
+				form.fuelId,
+				form.currency,
+				candidates,
+				units,
+				fuels,
+				convert
+			).map((u) => u.id)
+		);
+		return unitGroups(['energy', 'volume', 'mass'])
+			.map((g) => ({
+				...g,
+				units: g.units.filter((u) => ok.has(u.id) || u.id === form.perUnitId)
+			}))
+			.filter((g) => g.units.length > 0);
+	});
 	const gridOptions = gridPickerOptions();
 	const blurb = $derived(GUIDED_TASKS.find((t) => t.id === form.task)?.blurb ?? '');
 
@@ -97,6 +138,15 @@
 		if (task === form.task) return;
 		form = defaultState(task);
 		onchange();
+	}
+
+	/** Arrow keys move the selection, as in any radio group; focus follows it. */
+	function onTaskKeydown(event: KeyboardEvent, index: number): void {
+		const next = nextRadioIndex(event.key, index, GUIDED_TASKS.length);
+		if (next === undefined) return;
+		event.preventDefault();
+		pickTask(GUIDED_TASKS[next].id);
+		void tick().then(() => document.getElementById(fid(`task-${GUIDED_TASKS[next].id}`))?.focus());
 	}
 
 	/** A changed FROM unit can make the chosen target meaningless (kWh → kg). */
@@ -190,11 +240,14 @@
 		class="-my-1 flex gap-1.5 overflow-x-auto py-1 sm:grid sm:grid-cols-5 sm:overflow-visible"
 		style="scrollbar-width:none"
 	>
-		{#each GUIDED_TASKS as t (t.id)}
+		{#each GUIDED_TASKS as t, i (t.id)}
 			<button
 				type="button"
 				role="radio"
+				id={fid(`task-${t.id}`)}
 				aria-checked={form.task === t.id}
+				tabindex={form.task === t.id ? 0 : -1}
+				onkeydown={(e) => onTaskKeydown(e, i)}
 				class="min-h-10 shrink-0 rounded-lg border px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors"
 				style={form.task === t.id
 					? 'background:var(--accent);border-color:var(--accent);color:var(--accent-contrast)'
@@ -223,9 +276,7 @@
 	{/if}
 
 	<!-- The fields take only the rows they need, so the "typed, that is" line
-	     sits right under them. The parent reserves the tallest task's height
-	     (cost: three rows on a phone), so a task switch still cannot move the
-	     results below — the spare room is under this form, not inside it. -->
+	     sits right under them. -->
 	<div class="grid grid-cols-2 content-start gap-3 sm:grid-cols-4">
 		{#if form.task === 'units'}
 			{@render amountField(fid('amount'), 'Amount', 'amount')}

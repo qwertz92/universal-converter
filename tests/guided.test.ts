@@ -11,9 +11,13 @@ import {
 	composeQuery,
 	defaultState,
 	GUIDED_TASKS,
+	isAmount,
+	priceablePerUnits,
+	reachableTargets,
 	stateFromQuery,
 	unitDimensions
 } from '#lib/ui/guided.js';
+import { nextRadioIndex } from '#lib/ui/radio-keys.js';
 
 const converter = getConverter();
 const { units, fuels } = loadDataBundle();
@@ -101,5 +105,77 @@ describe('an incomplete form composes nothing rather than a guess', () => {
 	});
 	it('cost form without a price', () => {
 		expect(composeQuery({ ...defaultState('cost'), price: '' }, units, fuels)).toBeUndefined();
+	});
+});
+
+describe('the fuel form offers only targets the engine can answer', () => {
+	const convert = (t: string) => converter.convertText(t);
+	it('an energy amount of diesel offers no litres and no CO₂ it cannot reach', () => {
+		const reach = reachableTargets('kilowatt_hour', 'diesel', units, fuels, convert);
+		expect(reach).toBeDefined();
+		for (const id of reach!) {
+			const out = converter.convertText(
+				`10 kWh diesel to ${units.find((u) => u.id === id)!.symbols[0]}`
+			);
+			if ('error' in out) throw new Error(out.error.message);
+			const row = out.groups.flatMap((g) => g.results).find((r) => r.is_target);
+			expect(row?.value, id).not.toBeNull();
+		}
+		expect(reach!.has('liter')).toBe(false);
+	});
+	it('a volume of diesel reaches kilograms', () => {
+		expect(reachableTargets('liter', 'diesel', units, fuels, convert)?.has('kilogram')).toBe(true);
+	});
+});
+
+describe('the cost form offers only per-units a price can be applied to', () => {
+	const convert = (t: string) => converter.convertText(t);
+	const candidates = units.filter((u) => ['energy', 'volume', 'mass'].includes(u.dimension));
+	it('every offered per-unit yields a cost', () => {
+		const offered = priceablePerUnits(
+			'kilowatt_hour',
+			'',
+			'EUR',
+			candidates,
+			units,
+			fuels,
+			convert
+		);
+		expect(offered.map((u) => u.id)).toContain('kilowatt_hour');
+		for (const u of offered) {
+			const out = converter.convertText(`1000 kWh at 0.30 EUR/${u.symbols[0]}`);
+			if ('error' in out) throw new Error(out.error.message);
+			const cost = out.groups.find((g) => g.key === 'cost');
+			expect(
+				cost?.results.some((r) => r.value !== null),
+				u.id
+			).toBe(true);
+		}
+		expect(offered.map((u) => u.id)).not.toContain('cubic_foot');
+	});
+});
+
+describe('amounts the parser accepts are amounts in the form', () => {
+	it.each(['1e3', '2.5E-2', '.5', '1,5', '1000'])('%s', (t) => {
+		expect(isAmount(t)).toBe(true);
+	});
+	it.each(['abc', '1e', '--1', ''])('not %s', (t) => {
+		expect(isAmount(t)).toBe(false);
+	});
+});
+
+describe('arrow keys move through a radio group', () => {
+	it.each([
+		['ArrowRight', 0, 1],
+		['ArrowDown', 4, 0],
+		['ArrowLeft', 0, 4],
+		['ArrowUp', 2, 1],
+		['Home', 3, 0],
+		['End', 1, 4]
+	] as const)('%s from %i → %i', (key, from, to) => {
+		expect(nextRadioIndex(key, from, 5)).toBe(to);
+	});
+	it('other keys do nothing', () => {
+		expect(nextRadioIndex('a', 1, 5)).toBeUndefined();
 	});
 });

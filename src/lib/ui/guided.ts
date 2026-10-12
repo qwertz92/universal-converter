@@ -11,7 +11,14 @@
  * falls back to the text mode rather than dropping part of the question.
  */
 
-import type { Dimension, Fuel, ParsedQuery, Unit } from '#lib/conversion/types.js';
+import type {
+	ConversionResultSet,
+	Dimension,
+	Fuel,
+	ParsedQuery,
+	ParseError,
+	Unit
+} from '#lib/conversion/types.js';
 
 export type GuidedTask = 'units' | 'fuel' | 'electricity' | 'power' | 'cost';
 
@@ -115,9 +122,66 @@ export function unitToken(unit: Unit): string {
 	return unit.symbols[0] ?? unit.names[0];
 }
 
-/** A typed amount the parser will accept: digits, one decimal separator. */
+/**
+ * A typed amount the parser will accept: digits with one decimal separator,
+ * a leading separator (".5") and an exponent ("1e3", as a shared link may
+ * carry it).
+ */
 export function isAmount(text: string): boolean {
-	return /^\s*-?\d+(?:[.,]\d+)?\s*$/.test(text);
+	return /^\s*-?(?:\d+(?:[.,]\d+)?|[.,]\d+)(?:[eE][-+]?\d+)?\s*$/.test(text);
+}
+
+/** The engine's text entry point, injected so these helpers stay testable. */
+export type ConvertText = (text: string) => ConversionResultSet | { error: ParseError };
+
+/**
+ * The units the fuel form's "Answer in" list can offer for this unit and
+ * fuel: those the engine actually produces a value for. 10 kWh of diesel has
+ * no litre figure (no heating value reaches back to a volume), and offering
+ * it only led to a "no conversion path" row. Undefined when the engine has
+ * no answer at all, so the caller keeps its full list.
+ */
+export function reachableTargets(
+	unitId: string,
+	fuelId: string,
+	units: Unit[],
+	fuels: Fuel[],
+	convert: ConvertText
+): Set<string> | undefined {
+	const text = composeQuery({ ...defaultState('fuel'), unitId, fuelId }, units, fuels);
+	if (!text) return undefined;
+	const out = convert(text);
+	if ('error' in out) return undefined;
+	return new Set(
+		out.groups.flatMap((g) => g.results.filter((r) => r.value !== null).map((r) => r.unit_id))
+	);
+}
+
+/**
+ * The per-units the cost form's "Per" list can offer: those a price can be
+ * applied to for this amount unit and fuel. A price per ft³ of an amount in
+ * kWh has no path and came back as "context required".
+ */
+export function priceablePerUnits(
+	unitId: string,
+	fuelId: string,
+	currency: string,
+	candidates: Unit[],
+	units: Unit[],
+	fuels: Fuel[],
+	convert: ConvertText
+): Unit[] {
+	return candidates.filter((per) => {
+		const text = composeQuery(
+			{ ...defaultState('cost'), unitId, fuelId, currency, price: '1', perUnitId: per.id },
+			units,
+			fuels
+		);
+		if (!text) return false;
+		const out = convert(text);
+		if ('error' in out) return false;
+		return out.groups.some((g) => g.key === 'cost' && g.results.some((r) => r.value !== null));
+	});
 }
 
 /**
