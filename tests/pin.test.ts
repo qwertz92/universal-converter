@@ -102,6 +102,19 @@ describe('pins survive a URL round-trip', () => {
 		expect(decodePin('ton', units)).toEqual({});
 	});
 
+	it('a hand-written link in the wrong case still pins when only one unit fits', () => {
+		// Pin symbols are exact-case, which broke ?pin=kwh. The case-insensitive
+		// fallback is allowed only when it cannot turn milli into mega or back.
+		expect(decodePin('kwh', units)).toEqual({ from: 'kilowatt_hour' });
+		expect(decodePin('kwh>gj', units)).toEqual({ from: 'kilowatt_hour', to: 'gigajoule' });
+	});
+
+	it('the case fallback never flips milli/mega: mw pins nothing, MW and mW stay themselves', () => {
+		expect(decodePin('mw', units)).toEqual({});
+		expect(decodePin('MW', units)).toEqual({ from: 'megawatt' });
+		expect(decodePin('mW', units)).toEqual({ from: 'milliwatt' });
+	});
+
 	it('an empty pin encodes to nothing', () => {
 		expect(encodePin({}, units)).toBe('');
 		expect(decodePin(null, units)).toEqual({});

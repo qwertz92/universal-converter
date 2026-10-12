@@ -13,6 +13,18 @@
  */
 
 import type { ParseResult, Unit } from '#lib/conversion/types.js';
+import { UnitRegistry } from '#lib/units/registry.js';
+
+// decodePin runs on every URL read; building the lookup indexes is not free.
+const registries = new WeakMap<Unit[], UnitRegistry>();
+function registryFor(units: Unit[]): UnitRegistry {
+	let registry = registries.get(units);
+	if (!registry) {
+		registry = new UnitRegistry(units);
+		registries.set(units, registry);
+	}
+	return registry;
+}
 
 export interface Pin {
 	/** Unit a bare number is measured in. */
@@ -51,7 +63,13 @@ export function decodePin(raw: string | null, units: Unit[]): Pin {
 		const hits = units.filter(
 			(u) => u.id.toLowerCase() === t || u.names.some((n) => n.toLowerCase() === t)
 		);
-		return hits.length === 1 ? hits[0].id : undefined;
+		if (hits.length === 1) return hits[0].id;
+		if (hits.length > 1) return undefined;
+		// Last resort for a hand-written link ("?pin=kwh"): the unit registry's
+		// case-insensitive match, which already refuses ambiguity and never turns
+		// milli into mega or pico into peta ("mw" stays unpinned).
+		const loose = registryFor(units).resolve(raw);
+		return loose.kind === 'match' ? loose.unit.id : undefined;
 	};
 	const pin: Pin = { from: match(fromRaw), to: match(toRaw) };
 	return pin.from || pin.to ? pin : {};
