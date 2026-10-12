@@ -206,7 +206,7 @@ export function createConverter(data: DataBundle): Converter {
 			// Efficiency before price, so a cost can be asked of either the energy
 			// bought or the heat delivered without the two being confused.
 			if (query.efficiency) addDelivered(builder, query.efficiency, unit, opts);
-			if (query.price) addCost(builder, query.price, unit);
+			if (query.price) addCost(builder, query.price, unit, opts);
 		} catch (e) {
 			return unsupportedSet(
 				query,
@@ -332,13 +332,22 @@ export function createConverter(data: DataBundle): Converter {
 	 *  - if the priced unit is not among the results, the answer says which unit
 	 *    is missing instead of silently pricing something else. Pricing gas per
 	 *    kWh when the query was in m³ works only because the fuel pipeline has
-	 *    already produced the kWh row; where it has not, that is reported.
+	 *    already produced an energy row; a unit the default answer does not
+	 *    list (MWh) is reached from a row of its own dimension by an exact
+	 *    conversion, as a requested target is. Where no such row exists, that is
+	 *    reported.
 	 */
-	function addCost(builder: ResultSetBuilder, price: Price, from: Unit): void {
+	function addCost(
+		builder: ResultSetBuilder,
+		price: Price,
+		from: Unit,
+		options: EngineOptions
+	): void {
 		const perUnit = units.get(price.per_unit_id);
 		if (!perUnit) return;
 		const label = `${price.currency}/${unitLabel(perUnit)}`;
-		const row = builder.resultFor(price.per_unit_id);
+		const row =
+			builder.resultFor(price.per_unit_id) ?? bridgeFromExistingRow(builder, perUnit, options);
 
 		if (!row || row.raw === null) {
 			builder.add({

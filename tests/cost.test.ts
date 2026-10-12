@@ -68,6 +68,18 @@ describe('a price the user typed becomes a cost', () => {
 		expect(c!.explanation).toContain('source based');
 	});
 
+	it('prices per a unit the default answer does not list, by its own dimension', () => {
+		// Wholesale gas and diesel are quoted per MWh, but the default answer for
+		// a fuel lists kWh, not MWh, so this came back "context required". The
+		// MWh figure is the kWh row converted exactly, with the same basis.
+		const perMwh = cost('100 m3 natural gas at 90 EUR/MWh');
+		const perKwh = cost('100 m3 natural gas at 0.09 EUR/kWh');
+		expect(perMwh?.exactness).toBe('user_assumption');
+		expect(perMwh?.raw).not.toBeNull();
+		expect(perMwh?.value).toBe(perKwh?.value);
+		expect(perMwh?.formula).toContain('MWh');
+	});
+
 	it('rounds money to the cent but keeps full precision in raw', () => {
 		const c = cost('3 kWh at 0.333333 EUR/kWh');
 		expect(c?.value).toBe('~1.00');
