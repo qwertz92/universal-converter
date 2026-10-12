@@ -96,7 +96,10 @@ build-status dashboard.
   comparison is between neighbouring *products* (road diesel vs gas oil,
   industrial vs domestic coal), which is a real comparison rather than a
   side-by-side of sources for one product that the rulebook forbids averaging
-  anyway. Unblocked, not yet built.
+  anyway. **Partly covered (2026-10-13):** the /fuels comparison chart ranks
+  every fuel by CO₂e per kWh and by kWh per kg, so road diesel, gas oil and
+  heavy fuel oil sit side by side. A diff of two chosen products row by row
+  (density, both heating values, every factor) is still not built.
 - ~~**New prerequisite ADR:** fuel variants / multi-source values~~ — **written
   and accepted:** `docs/adr/0005-fuel-variants.md` (v0.3.1). A GWP-set field on
   emission factors is still not modeled.
@@ -122,7 +125,9 @@ no tariffs, the currency is a label that is never converted (this tool has no
 exchange rates and refuses currency conversion outright), and the cost is never
 labeled more exact than the quantity it rests on. The same reasoning applies to
 boiler efficiency and heat-pump COP — an efficiency the reader supplies is not
-an invented default — so those are unblocked too and simply not built yet.
+an invented default — and they shipped in the same release:
+`100 kWh at 85% efficiency` and `100 kWh at 3.5 COP` (typed queries only: the
+guided form has no efficiency field, so a link carrying one opens in text mode).
 
 **Why the listed calculators did not ship in 0.3.0.** Every one of them needs
 numbers this repository does not have a source for:
@@ -134,7 +139,7 @@ numbers this repository does not have a source for:
 - *Boiler efficiency, heat-pump COP* — these are equipment properties with wide
   real spread. Without a cited efficiency table, any DEFAULT would be invented —
   but a figure the reader supplies from their own appliance's data plate is not.
-  Unblocked on the same reasoning as prices; not yet built.
+  **Resolved in 0.3.2 the same way as prices: the reader types the figure.**
 - *Well-to-wheel factors* — requires an upstream/lifecycle dataset (e.g. JEC or
   a national equivalent) that has not been researched or licence-checked.
   **Still blocked**, and not by the same argument as prices: a lifecycle factor
