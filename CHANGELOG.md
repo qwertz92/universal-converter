@@ -5,7 +5,38 @@ All notable changes to Universal Converter. Versioning follows semver
 
 ## Unreleased
 
+### Fixed
+
+- **Empty space under the guided form on phones.** The input area reserved
+  the tallest task's height for every task, so the shorter forms sat above
+  ~100px of nothing; it is now as tall as its content. "At a glance" starts
+  76px higher at 375px. The same kind of empty reserve under the
+  "No units match" text on /units and /fuels is gone too.
+- **The fuel form's "Answer in" and the cost form's "Per" lists** offer
+  exactly the units the engine can answer for the chosen unit and fuel: each
+  is asked for explicitly, so `10 L diesel` offers lb and therm but
+  `10 kWh diesel` no longer offers litres. A unit or fuel change that leaves
+  the chosen target without an answer falls back to "Everything".
+- **A price per MWh (or any unit the default answer does not list) works.**
+  `100 m3 natural gas at 90 EUR/MWh` returned "context required"; the MWh
+  figure is now derived exactly from the kWh row, as a requested target is.
+- A shared `?q=1e3 kWh` no longer opens the form dimmed; a task tab's example
+  is no longer recorded as "recent", even when clicked right after an edit; the grid region/year appears in the URL
+  only for electricity queries; hand-typed `?pin=kwh` links pin again (never
+  for a milli/mega twin such as `mw`).
+- The mode switch and the task strip work with arrow keys, Home and End.
+
 ### Changed
+
+- **Result cards state a section's exactness once** ("source-based — every
+  figure below") instead of repeating the same badge on every row; a row that
+  differs keeps its own. Rows are one line at every width (56px at 375px,
+  before 52–72px with units sometimes wrapping under the value), and the
+  energy card for 10 L diesel fits one phone screen.
+- Unit labels show CO₂ and CO₂e with subscripts on screen — results, fuel and
+  unit pages, the guided selects and the unit chips (copied text, links and
+  the API stay plain `CO2`), and per-volume units read m³ and cm³ throughout;
+  the LHV/HHV explanation is a tappable info button.
 
 - **SvelteKit 3 and adapter-cloudflare 8, Vitest 5.** `npm audit` reports 0
   vulnerabilities (the last, `cookie` <0.7.0, came with SvelteKit 2). The
