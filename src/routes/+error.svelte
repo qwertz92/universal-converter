@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { allFuels, allUnits } from '#lib/ui/engine.js';
+	import { displayUnitLabel } from '#lib/formatting/units.js';
 	import { closestMatches } from '#lib/ui/near-miss.js';
 	import { caseVariantUnits } from '#lib/ui/unit-slugs.js';
 
@@ -37,7 +38,7 @@
 			const near = closestMatches(query, allUnits(), (u) => [u.id, ...u.names]);
 			return [...byCase, ...near.filter((u) => !byCase.includes(u))].slice(0, 3).map((u) => ({
 				href: resolve(`units/${u.id}`),
-				label: byCase.includes(u) ? `${u.names[0]} (${u.symbols[0]})` : u.names[0]
+				label: displayUnitLabel(byCase.includes(u) ? `${u.names[0]} (${u.symbols[0]})` : u.names[0])
 			}));
 		};
 		const suggestions =
