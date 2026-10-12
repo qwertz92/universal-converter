@@ -82,10 +82,22 @@ describe('buildFuelSlugIndex', () => {
 describe('buildFuelSlugRedirects', () => {
 	const redirects = buildFuelSlugRedirects(fuels);
 
-	it('adds the underscore spelling of every hyphenated id and nothing else', () => {
-		const expected = fuels.filter((f) => f.id.includes('-')).map((f) => f.id.replaceAll('-', '_'));
-		expect([...redirects.keys()].sort()).toEqual(expected.sort());
+	it('adds the underscore spelling of every hyphenated id', () => {
+		for (const f of fuels.filter((x) => x.id.includes('-'))) {
+			expect(redirects.get(f.id.replaceAll('-', '_'))).toBe(f.id);
+		}
 		expect(redirects.get('natural_gas')).toBe('natural-gas');
+	});
+
+	it('adds every other name as a slug, so /fuels/fuel-oil is a 308 and not a 404', () => {
+		// Names are lower-case words, so unlike unit symbols they can be files.
+		expect(redirects.get('fuel-oil')).toBe('heavy-fuel-oil');
+		expect(redirects.get('petrol')).toBe('gasoline');
+		expect(redirects.get('red-diesel')).toBe('gas-oil');
+	});
+
+	it('every redirect is what the runtime resolver would do', () => {
+		for (const [slug, id] of redirects) expect(resolveFuelSlug(slug, index), slug).toBe(id);
 	});
 
 	it('is collision-free on a case-insensitive filesystem', () => {

@@ -65,19 +65,29 @@ export function resolveFuelSlug(
 }
 
 /**
- * Spellings that also get a prerendered redirect page under /fuels/: the
- * underscore form of every hyphenated id ("natural_gas" → natural-gas). Lower
- * case only — "Diesel" and "diesel" would be one file on a case-insensitive
- * filesystem (Windows, macOS) — so case and the remaining spellings are left to
+ * Spellings that also get a prerendered redirect page under /fuels/, so a
+ * static host answers them with a 308 instead of the 404 app shell:
+ *  - the underscore form of every hyphenated id ("natural_gas" → natural-gas);
+ *  - the hyphenated form of every other name the resolver maps to one fuel
+ *    ("fuel-oil" → heavy-fuel-oil, "petrol" → gasoline).
+ * Lower case only — "Diesel" and "diesel" would be one file on a
+ * case-insensitive filesystem (Windows, macOS) — so case is left to
  * `resolveFuelSlug` at runtime.
  */
 export function buildFuelSlugRedirects(fuels: readonly FuelSlugSource[]): Map<string, string> {
 	const ids = new Set(fuels.map((f) => f.id));
+	const index = buildFuelSlugIndex(fuels);
 	const redirects = new Map<string, string>();
 	for (const fuel of fuels) {
-		if (!fuel.id.includes('-')) continue;
-		const alias = fuel.id.replaceAll('-', '_');
-		if (!ids.has(alias)) redirects.set(alias, fuel.id);
+		if (fuel.id.includes('-')) {
+			const alias = fuel.id.replaceAll('-', '_');
+			if (!ids.has(alias)) redirects.set(alias, fuel.id);
+		}
+		for (const name of fuel.names) {
+			const slug = normalise(name);
+			if (!/^[a-z0-9-]+$/.test(slug) || ids.has(slug)) continue;
+			if (index.get(slug) === fuel.id) redirects.set(slug, fuel.id);
+		}
 	}
 	return redirects;
 }
