@@ -7,6 +7,16 @@ All notable changes to Universal Converter. Versioning follows semver
 
 ### Fixed
 
+- **/fuels/heating-oil showed heavy fuel oil.** The catalog entry is DESNZ
+  "Fuel Oil", the residual grade at 983 kg/m³; most readers looking up heating
+  oil burn a lighter distillate up to 15% different per litre. The entry is now
+  `heavy-fuel-oil`, and /fuels/heating-oil (like /fuels/coal, /fuels/paraffin,
+  /fuels/heizoel) is a page offering the grades. The API's `fuel_id` for the
+  entry changes accordingly.
+- **Mixed-case unit URLs answer with a redirect, not HTTP 404.** /units/MW,
+  /units/mW, /units/kWh and every other symbol as written are 308 rules in
+  `_redirects`; before, the static host sent the 404 shell, which redirected
+  only once the app ran in the browser.
 - **Empty space under the guided form on phones.** The input area reserved
   the tallest task's height for every task, so the shorter forms sat above
   ~100px of nothing; it is now as tall as its content. "At a glance" starts
