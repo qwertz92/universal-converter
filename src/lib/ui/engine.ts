@@ -15,6 +15,7 @@ import { formatValue } from '#lib/formatting/numbers.js';
 import type {
 	Converter,
 	DataBundle,
+	EmissionFactor,
 	Fuel,
 	Source,
 	Unit,
@@ -85,6 +86,11 @@ export function allFuels(): Fuel[] {
 
 export function fuelById(id: string): Fuel | undefined {
 	return bundle().fuels.find((f) => f.id === id);
+}
+
+/** Every emission factor in the catalog (a fuel names its own in `emission_factor_ids`). */
+export function allEmissionFactors(): EmissionFactor[] {
+	return bundle().emissionFactors;
 }
 
 /* ------------------------------------------------------------------ *

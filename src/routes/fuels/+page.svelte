@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import Seo from '#lib/components/layout/Seo.svelte';
 	import PageHero from '#lib/components/layout/PageHero.svelte';
+	import FuelComparison from '#lib/components/fuels/FuelComparison.svelte';
 	import { allFuels } from '#lib/ui/engine.js';
 	import { searchFuels } from '#lib/ui/search.js';
 	import { closestMatches } from '#lib/ui/near-miss.js';
@@ -101,6 +102,10 @@
 				class="w-full max-w-md rounded-lg border px-3 py-2.5 text-sm outline-none"
 				style="background:var(--surface);border-color:var(--border);color:var(--text)"
 			/>
+		</div>
+
+		<div class="mb-8">
+			<FuelComparison />
 		</div>
 
 		<div class="uc-index-results">

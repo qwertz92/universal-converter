@@ -29,7 +29,9 @@ export function basisSections(rows: readonly ConversionResult[]): BasisSection[]
  * needs at least two of them and a strict majority. Rows that differ keep
  * their own badge, so no figure ever loses its label.
  */
-export function sharedExactness(rows: readonly ConversionResult[]): Exactness | undefined {
+export function sharedExactness(
+	rows: readonly Pick<ConversionResult, 'value' | 'exactness'>[]
+): Exactness | undefined {
 	const valued = rows.filter((r) => r.value !== null);
 	if (valued.length < 2) return undefined;
 	const counts = new Map<Exactness, number>();

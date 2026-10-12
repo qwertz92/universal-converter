@@ -5,6 +5,19 @@ All notable changes to Universal Converter. Versioning follows semver
 
 ## Unreleased
 
+### Added
+
+- **A fuel comparison on /fuels.** "Compare fuels at a glance" (closed until opened)
+  ranks the catalog by CO₂e per kWh of fuel energy or by energy per kilogram, both
+  on the net (LHV) basis, so heavy fuel oil, gas oil and road diesel, or coal, gas,
+  oil and wood, can be read against each other. Every bar is the converter's own
+  figure for 1 kg of the fuel, divided where a per-kWh value is shown; nothing is
+  typed into the page. Fuels with no CO₂e factor (methane), with a CO₂ factor only
+  (crude oil, lignite, anthracite, never offered as CO₂e), burning without CO₂
+  (hydrogen) or depending on region and year (grid electricity) are listed under
+  the chart with the reason, not drawn as zero. Wood and the biofuels carry their
+  biogenic CO₂ beside the bar, never inside it.
+
 ### Fixed
 
 - **/fuels/heating-oil showed heavy fuel oil.** The catalog entry is DESNZ
