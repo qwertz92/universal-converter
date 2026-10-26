@@ -23,7 +23,12 @@ clearly disturbing; P3 minor or rare; P4 not noticeable.
 
 ## P3
 
-None open (2026-10-12).
+- **Header exceeds a 320 px viewport by about 9 px** (2026-10-26).
+  `src/lib/components/layout/Header.svelte`: the mobile control group reaches
+  x=329.06 px. Reproduced unchanged on the previous production deployment
+  (`de8df07a`, source `760bb9b`) and the security update, with no page errors.
+  This is pre-existing, not a dependency regression. Review header flex sizing
+  at 320 px when adjusting its layout; estimated effort 10–20 minutes.
 
 ## P4
 
